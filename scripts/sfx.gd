@@ -25,6 +25,11 @@ func _ready() -> void:
 		_players.append(p)
 
 
+## Register an extra synthesised sound (same knobs as the ones in _ready).
+func add_tone(sound: String, dur: float, f0: float, f1: float, wobble: float, noise: float, decay: float) -> void:
+	_sounds[sound] = _tone(dur, f0, f1, wobble, noise, decay)
+
+
 ## Play a sound. Repeats of the same sound within `min_gap` seconds are dropped
 ## so a pile-up doesn't turn into a buzz.
 func play(sound: String, pitch: float = 1.0, volume_db: float = 0.0, min_gap: float = 0.03) -> void:

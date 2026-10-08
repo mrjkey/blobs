@@ -34,3 +34,17 @@ Made for Godot 4.7. Open `project.godot` in the editor and press F5.
 - Bots too mean → raise `BOT_REACTION`, lower `BOT_PLAYER_BIAS`.
 - Food too strong → lower `FOOD_MASS` or `MAX_MASS`.
 - Hits feel too sticky or too shaky → `HITSTOP_*`, `SHAKE_*`.
+
+## Neon night-club variant (`neon.tscn`)
+Same game, Geometry Wars look: glowing outlines, a warping background grid, motion trails,
+a synthesised 128 BPM techno loop, and laser turrets that fire on the beat.
+Open `neon.tscn` and press **F6** (Run Current Scene). To make it the default, right-click it
+in the FileSystem dock > Set as Main Scene.
+
+- Lasers: a thin line tracks a blob for 2 beats, blinks when the aim locks, then fires on the
+  next downbeat. Get out of the line before then.
+- How the glow works: the scene turns on HDR 2D and adds a WorldEnvironment with glow.
+  Anything drawn with colour values above 1.0 blooms (see `hdr()` in `neon_game.gd`).
+  Needs the Forward+ or Mobile renderer (the default).
+- Knobs: `scripts/neon/neon_tuning.gd` (glow, grid, music volume/BPM, laser timing and
+  strength, colours). Gameplay numbers still come from `scripts/tuning.gd`.

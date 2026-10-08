@@ -35,6 +35,7 @@ var _status: Label
 var _banner: Label
 var _hint: Label
 var _banner_life := -1.0
+var view_margin := 60.0      # extra world space shown around the wall
 
 
 func _ready() -> void:
@@ -43,7 +44,7 @@ func _ready() -> void:
 	camera = Camera2D.new()
 	add_child(camera)
 	camera.make_current()
-	fx = Fx.new()
+	fx = _make_fx()
 	fx.z_index = 10
 	add_child(fx)
 	sfx = Sfx.new()
@@ -87,7 +88,7 @@ func _spawn_blobs() -> void:
 	var count := T.BOT_COUNT + 1
 	var start_angle := randf() * TAU
 	for i in count:
-		var b: Blob = Blob.new()
+		var b: Blob = _make_blob()
 		b.game = self
 		b.position = Vector2.from_angle(start_angle + TAU * i / count) * T.RING_RADIUS * 0.6
 		b.look = -b.position.normalized()
@@ -156,6 +157,7 @@ func _physics_process(delta: float) -> void:
 		for b in blobs:
 			if b.brain:
 				b.brain.think(delta)
+		_before_simulate(delta)
 
 	var h := delta / T.SUBSTEPS
 	for _i in T.SUBSTEPS:
@@ -174,7 +176,7 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	var vp := get_viewport_rect().size
-	var fit := minf(vp.x, vp.y) / (T.WALL_RADIUS * 2.0 + 60.0)
+	var fit := minf(vp.x, vp.y) / (T.WALL_RADIUS * 2.0 + view_margin)
 	camera.zoom = Vector2(fit, fit)
 	shake = minf(shake, T.SHAKE_MAX)
 	camera.offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * shake
@@ -261,6 +263,7 @@ func _collide_blobs() -> void:
 
 
 func _on_blob_contact(a: Blob, b: Blob, n: Vector2, impact: float) -> void:
+	_on_impact(a.position + n * a.radius, impact)
 	var share_a := (1.0 / a.mass) / (1.0 / a.mass + 1.0 / b.mass)
 	a.bump(n, impact * share_a * 2.0)
 	b.bump(n, impact * (1.0 - share_a) * 2.0)
@@ -290,6 +293,7 @@ func _collide_walls() -> void:
 			b.vel -= n * vn * (1.0 + T.WALL_RESTITUTION)
 			b.bump(n, vn)
 			if vn > 120.0:
+				_on_impact(b.position + n * b.radius, vn)
 				wall_hits.append({"angle": n.angle(), "age": 0.0, "power": clampf(vn / 600.0, 0.0, 1.0)})
 				fx.burst(b.position + n * b.radius, T.WALL_COLOR.lightened(0.4), int(clampf(vn / 80.0, 3.0, 10.0)), vn * 0.4)
 				sfx.play("wall", randf_range(0.9, 1.1), linear_to_db(clampf(vn / 500.0, 0.2, 1.0)))
@@ -326,6 +330,7 @@ func do_push(pusher: Blob) -> void:
 		pusher.vel -= n * dv * T.PUSH_RECOIL * b.mass / pusher.mass
 		fx.burst(b.position - n * b.radius, b.color.lightened(0.4), 10, dv * 0.6)
 		hits += 1
+	_on_impact(pusher.position, T.PUSH_IMPULSE * (1.0 if hits > 0 else 0.5))
 	if hits > 0:
 		hitstop = maxf(hitstop, T.HITSTOP_PUSH)
 		add_shake(T.SHAKE_PUSH * minf(hits, 2))
@@ -336,6 +341,26 @@ func do_push(pusher: Blob) -> void:
 
 func add_shake(amount: float) -> void:
 	shake = minf(shake + amount, T.SHAKE_MAX)
+
+
+# --- Hooks for variants (see scripts/neon/neon_game.gd) ----------------------
+
+func _make_blob() -> Blob:
+	return Blob.new()
+
+
+func _make_fx() -> Fx:
+	return Fx.new()
+
+
+## Runs every unfrozen physics frame after the bots think, before movement.
+func _before_simulate(_delta: float) -> void:
+	pass
+
+
+## Something hit something at `pos` with roughly `strength` px/s.
+func _on_impact(_pos: Vector2, _strength: float) -> void:
+	pass
 
 
 # --- Rules -------------------------------------------------------------------
@@ -352,6 +377,7 @@ func _check_ring(delta: float) -> void:
 
 
 func _eliminate(b: Blob) -> void:
+	_on_impact(b.position, 1500.0)
 	blobs.erase(b)
 	b.die()
 	fx.burst(b.position, b.color, 28, 380.0)
