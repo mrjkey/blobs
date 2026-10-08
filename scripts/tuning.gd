@@ -12,9 +12,11 @@ const OUTSIDE_CONTROL := 0.5      # steering multiplier while in the mud
 # --- Blob movement -----------------------------------------------------------
 const BASE_RADIUS := 22.0
 const BASE_SPEED := 330.0         # top speed at mass 1
-const BASE_ACCEL := 1400.0        # how snappy steering is at mass 1
-const DRAG := 1.6                 # general damping; higher = slides less after a hit
-const KNOCKBACK_CONTROL := 0.2    # steering multiplier while flying faster than your top speed
+const BASE_ACCEL := 3200.0        # how snappy steering is at mass 1 (was 1400: ~0.27s to top speed felt like sludge)
+const TURN_ACCEL_MULT := 1.6      # extra accel when steering against your current motion
+const DRAG := 1.6                 # damping during normal movement
+const KNOCKBACK_DRAG := 4.0       # damping while launched faster than top speed (was effectively 1.6: long floaty glide)
+const KNOCKBACK_CONTROL := 0.3    # steering multiplier while flying faster than your top speed
 const STUN_CONTROL := 0.05        # steering multiplier right after being pushed
 const MAX_MASS := 4.0
 const SIZE_RADIUS_EXP := 0.45     # radius = BASE_RADIUS * mass^this
@@ -34,7 +36,7 @@ const PUSH_COOLDOWN := 0.9
 const PUSH_BUFFER := 0.15         # pressing slightly early still counts
 const PUSH_RANGE := 70.0          # reach beyond your own edge
 const PUSH_RANGE_MASS_EXP := 0.3  # bigger blobs reach a bit further
-const PUSH_IMPULSE := 650.0       # speed given to a mass-1 target by a mass-1 pusher, point blank
+const PUSH_IMPULSE := 1050.0      # speed given to a mass-1 target by a mass-1 pusher, point blank
 const PUSH_FALLOFF := 0.45        # impulse multiplier at the very edge of the reach
 const PUSH_MASS_EXP := 0.7        # pusher strength = mass^this
 const PUSH_RESIST_EXP := 0.85     # target resistance = mass^this

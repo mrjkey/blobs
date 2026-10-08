@@ -85,12 +85,19 @@ func step_motion(h: float) -> void:
 	if outside:
 		control *= T.OUTSIDE_CONTROL
 	var top := max_speed()
-	# Flying faster than you could run means you got launched: keep the momentum.
-	if vel.length() > top * 1.05:
+	# Flying faster than you could run means you got launched: keep the momentum,
+	# but bleed it off fast so hits read as a sharp shove, not a slow drift.
+	var launched := vel.length() > top * 1.05
+	if launched:
 		control *= T.KNOCKBACK_CONTROL
 	var target := move_dir * top
-	vel += (target - vel).limit_length(accel() * control * h)
-	var drag := T.DRAG + (T.OUTSIDE_DRAG if outside else 0.0)
+	var acc := accel()
+	if move_dir.dot(vel) < 0.0:
+		acc *= T.TURN_ACCEL_MULT  # snappy direction changes
+	vel += (target - vel).limit_length(acc * control * h)
+	var drag := T.KNOCKBACK_DRAG if launched else T.DRAG
+	if outside:
+		drag += T.OUTSIDE_DRAG
 	vel *= exp(-drag * h)
 	position += vel * h
 
