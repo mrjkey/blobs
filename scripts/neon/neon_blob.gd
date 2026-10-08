@@ -73,6 +73,9 @@ func _draw_status(r: float) -> void:
 			draw_arc(Vector2.ZERO, ring_r, 0.0, TAU, 48, hdr(color, 2.0, 0.9), 2.0, true)
 		var tip := Vector2(0.0, -r - 16.0)
 		draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(-7, -10), tip + Vector2(7, -10)]), hdr(color, 2.5))
+		if player_tag != "":
+			draw_string(ThemeDB.fallback_font, tip + Vector2(-30.0, -14.0), player_tag,
+				HORIZONTAL_ALIGNMENT_CENTER, 60.0, 16, hdr(color, 2.0))
 	if outside_time > 0.0:
 		var danger := clampf(outside_time / T.RING_OUT_TIME, 0.0, 1.0)
 		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.03)

@@ -345,6 +345,11 @@ func add_shake(amount: float) -> void:
 
 # --- Hooks for variants (see scripts/neon/neon_game.gd) ----------------------
 
+## Out-of-bounds slow zone. The arena uses everything outside the ring.
+func in_mud(pos: Vector2) -> bool:
+	return pos.length() > T.RING_RADIUS
+
+
 func _make_blob() -> Blob:
 	return Blob.new()
 

@@ -8,6 +8,7 @@ extends "res://scripts/game.gd"
 ##   - laser turrets outside the wall that fire on the beat
 
 const NT = preload("res://scripts/neon/neon_tuning.gd")
+const NeonLook = preload("res://scripts/neon/neon_look.gd")
 const NeonBlob = preload("res://scripts/neon/neon_blob.gd")
 const NeonFx = preload("res://scripts/neon/neon_fx.gd")
 const NeonGrid = preload("res://scripts/neon/neon_grid.gd")
@@ -57,21 +58,7 @@ func _ready() -> void:
 
 
 func _setup_glow() -> void:
-	# HDR 2D lets colours go above 1.0; glow makes those values bloom.
-	get_viewport().use_hdr_2d = true
-	var env := Environment.new()
-	env.background_mode = Environment.BG_CANVAS
-	env.glow_enabled = true
-	env.glow_intensity = NT.GLOW_INTENSITY
-	env.glow_strength = NT.GLOW_STRENGTH
-	env.glow_hdr_threshold = NT.GLOW_THRESHOLD
-	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
-	var levels := [0.0, 1.0, 1.0, 0.8, 0.6, 0.0, 0.0]  # wider levels = softer, bigger halo
-	for i in levels.size():
-		env.set_glow_level(i, levels[i])
-	var world_env := WorldEnvironment.new()
-	world_env.environment = env
-	add_child(world_env)
+	add_child(NeonLook.make_world_env(get_viewport()))
 
 
 func _restyle_hud() -> void:

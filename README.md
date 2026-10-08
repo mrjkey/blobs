@@ -48,3 +48,18 @@ in the FileSystem dock > Set as Main Scene.
   Needs the Forward+ or Mobile renderer (the default).
 - Knobs: `scripts/neon/neon_tuning.gd` (glow, grid, music volume/BPM, laser timing and
   strength, colours). Gameplay numbers still come from `scripts/tuning.gd`.
+
+## Treadmill mode (`treadmill.tscn`)
+The camera scrolls up through a still world, so the floor slides down the screen. Fall behind
+the red laser at the bottom (or get launched past the one at the top) and you're out. The track
+is generated ahead of you: purple walls, pink kicker walls and gold pinball bumpers that fling
+you, plus food. It gets denser the further you go. Laser ships cruise beside the side walls and
+fire across the track on the beat. Open `treadmill.tscn` and press **F6**.
+
+Menu: 1 player vs computer, 2 players versus, 2 players + computer, or watch the computer.
+- P1: WASD + Space. P2: arrows + Enter. Controllers are picked up automatically: with one
+  controller, P2 gets it; with two, one each. No controller works too (share the keyboard).
+- In a round: R or Start = rematch, Esc or Back = menu.
+- Skip the menu from the command line: `godot treadmill.tscn -- --mode=0` (0-3 = menu order).
+- Knobs: `scripts/treadmill/treadmill_tuning.gd` (scroll speed, obstacle density and gaps,
+  bumper/kicker strength, ship lasers, colours). Bot behaviour: `treadmill_brain.gd`.

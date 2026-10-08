@@ -12,6 +12,7 @@ var _rows := 0
 var _rest := PackedVector2Array()
 var _disp := PackedVector2Array()
 var _vel := PackedVector2Array()
+var _shift := 0                    # whole rows scrolled (scrolling levels only)
 
 
 func _ready() -> void:
@@ -22,6 +23,30 @@ func _ready() -> void:
 			_rest.append(Vector2(c, r) * NT.GRID_SPACING - NT.GRID_HALF_SIZE)
 	_disp.resize(_rest.size())
 	_vel.resize(_rest.size())
+
+
+## For scrolling levels: keep the grid centred on world y `center_y`. Moves
+## whole rows so the ripples stay attached to the world as it scrolls.
+func follow_y(center_y: float) -> void:
+	var shift := int(floorf(center_y / NT.GRID_SPACING))
+	var rows_moved := shift - _shift
+	if rows_moved == 0:
+		return
+	_shift = shift
+	var n := _rest.size()
+	var disp := PackedVector2Array()
+	var vel := PackedVector2Array()
+	disp.resize(n)
+	vel.resize(n)
+	var step := Vector2(0.0, rows_moved * NT.GRID_SPACING)
+	for i in n:
+		_rest[i] = _rest[i] + step
+		var src := i + rows_moved * _cols
+		if src >= 0 and src < n:
+			disp[i] = _disp[src]
+			vel[i] = _vel[src]
+	_disp = disp
+	_vel = vel
 
 
 ## Push grid points away from `pos`. Negative strength pulls them in.
@@ -56,7 +81,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(-NT.GRID_HALF_SIZE * 2.0, NT.GRID_HALF_SIZE * 4.0), Color(0.008, 0.0, 0.025))
+	var center := Vector2(0.0, _shift * NT.GRID_SPACING)
+	draw_rect(Rect2(center - NT.GRID_HALF_SIZE * 2.0, NT.GRID_HALF_SIZE * 4.0), Color(0.008, 0.0, 0.025))
 	var base := NT.GRID_COLOR
 	var dim := 0.22 + 0.12 * pulse
 	# Rows

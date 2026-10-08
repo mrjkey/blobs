@@ -11,6 +11,7 @@ var game                       # game.gd, set on spawn
 var brain                      # ai_brain.gd, or null for the human player
 var is_player := false
 var display_name := "Blob"
+var player_tag := ""           # "P1"/"P2" label in multiplayer
 var color := Color.WHITE
 
 # Physics
@@ -78,7 +79,7 @@ func is_winding_up() -> bool:
 
 
 func step_motion(h: float) -> void:
-	var outside := position.length() > T.RING_RADIUS
+	var outside: bool = game.in_mud(position)
 	var control := 1.0
 	if stun > 0.0:
 		control = T.STUN_CONTROL
