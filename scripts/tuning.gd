@@ -4,14 +4,14 @@ extends RefCounted
 
 # --- Arena -------------------------------------------------------------------
 const WALL_RADIUS := 380.0        # bouncy outer wall (keeps blobs on screen)
-const RING_RADIUS := 270.0        # the sumo ring; leave it and the clock starts
-const RING_OUT_TIME := 0.8        # how long you can be outside the ring before you're out
+const RING_RADIUS := 300.0        # the sumo ring; leave it and the clock starts
+const RING_OUT_TIME := 1.0        # how long you can be outside the ring before you're out
 const OUTSIDE_DRAG := 4.0         # extra drag in the out-of-bounds "mud"
 const OUTSIDE_CONTROL := 0.5      # steering multiplier while in the mud
 
 # --- Blob movement -----------------------------------------------------------
 const BASE_RADIUS := 22.0
-const BASE_SPEED := 230.0         # top speed at mass 1
+const BASE_SPEED := 330.0         # top speed at mass 1
 const BASE_ACCEL := 1400.0        # how snappy steering is at mass 1
 const DRAG := 1.6                 # general damping; higher = slides less after a hit
 const KNOCKBACK_CONTROL := 0.2    # steering multiplier while flying faster than your top speed
@@ -46,7 +46,7 @@ const PUSH_SWELL := 0.45          # how much the pusher visually puffs up
 const JELLY_STIFFNESS := 380.0    # higher = faster wobble
 const JELLY_DAMPING := 9.0        # lower = wobbles longer
 const JELLY_BULGE := 0.7          # sideways bulge when squashed (keeps it looking like jelly)
-const SQUASH_KICK := 0.011        # squash per px/s of impact
+const SQUASH_KICK := 0.11        # squash per px/s of impact
 const SQUASH_KICK_MAX := 9.0
 const SQUASH_MAX := 0.5
 const MOVE_STRETCH := 0.0004      # stretch along velocity per px/s
@@ -74,7 +74,7 @@ const FOOD_MASS := 0.25           # mass gained per pellet
 const FOOD_RADIUS := 7.0
 
 # --- Bots --------------------------------------------------------------------
-const BOT_COUNT := 4
+const BOT_COUNT := 1
 const BOT_THINK_TIME := 0.15      # seconds between decisions
 const BOT_REACTION := 0.18        # delay before they actually push
 const BOT_TURN_RATE := 7.0        # how fast their steering follows their intent
