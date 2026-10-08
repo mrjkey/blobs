@@ -6,6 +6,7 @@ const NT = preload("res://scripts/neon/neon_tuning.gd")
 
 
 static func hdr(c: Color, k: float, a: float = 1.0) -> Color:
+	k *= NT.BRIGHTNESS
 	return Color(c.r * k, c.g * k, c.b * k, a)
 
 

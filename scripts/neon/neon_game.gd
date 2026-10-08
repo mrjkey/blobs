@@ -23,6 +23,7 @@ var _last_bar := -1
 
 
 static func hdr(c: Color, k: float, a: float = 1.0) -> Color:
+	k *= NT.BRIGHTNESS
 	return Color(c.r * k, c.g * k, c.b * k, a)
 
 
@@ -300,7 +301,7 @@ func _draw() -> void:
 			draw_line(pts[i - 1], pts[i], hdr(b.color, 1.5, 0.35 * f), maxf(b.radius * 1.3 * f, 1.0), true)
 
 	# Ring edge thumps with the kick drum.
-	draw_arc(Vector2.ZERO, T.RING_RADIUS, 0.0, TAU, 128, hdr(NT.RING_COLOR, 1.6 + 1.6 * k), 4.0 + 2.0 * k, true)
+	draw_arc(Vector2.ZERO, T.RING_RADIUS, 0.0, TAU, 128, hdr(NT.RING_COLOR, NT.RING_GLOW + NT.RING_PULSE * k), 4.0 + NT.RING_PULSE_WIDTH * k, true)
 	draw_arc(Vector2.ZERO, T.RING_RADIUS + 9.0, 0.0, TAU, 128, hdr(NT.RING_COLOR, 0.8, 0.35), 1.5, true)
 
 	# Wall, flashing where it was hit.

@@ -5,7 +5,8 @@ extends RefCounted
 # --- Glow --------------------------------------------------------------------
 # Anything drawn brighter than GLOW_THRESHOLD blooms. Neon colours are drawn at
 # 1.5x-3x brightness on purpose; see hdr() in neon_game.gd.
-const GLOW_INTENSITY := 0.9
+const BRIGHTNESS := 0.75            # master dimmer for every neon colour (1.0 = original)
+const GLOW_INTENSITY := 0.9        # size/strength of the bloom halo around bright things
 const GLOW_STRENGTH := 1.0
 const GLOW_THRESHOLD := 0.95
 const BLOB_GLOW := 2.4             # brightness of blob outlines
@@ -24,6 +25,9 @@ const GRID_IMPACT_SCALE := 0.35    # impact speed -> grid kick
 const BPM := 128.0
 const MUSIC_DB := -9.0
 const BEAT_PULSE := 0.008          # camera zoom thump on every kick
+const RING_GLOW := 1.4            # ring edge brightness between beats (was 1.6)
+const RING_PULSE := 0.6           # extra ring brightness on each kick (was 1.6; 0 = no pulse)
+const RING_PULSE_WIDTH := 1.0     # extra ring line width on each kick (was 2.0)
 
 # --- Lasers ------------------------------------------------------------------
 const TURRET_COUNT := 6

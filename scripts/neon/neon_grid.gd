@@ -81,5 +81,5 @@ func _draw() -> void:
 
 func _line_color(base: Color, dim: float, stretch: float) -> Color:
 	# Stretched parts of the grid light up past the glow threshold.
-	var k := dim + minf(stretch / 18.0, 2.2)
+	var k := (dim + minf(stretch / 18.0, 2.2)) * NT.BRIGHTNESS
 	return Color(base.r * k, base.g * k, base.b * k, clampf(0.35 + stretch / 20.0, 0.35, 1.0))
