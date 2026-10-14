@@ -9,6 +9,15 @@ extends Resource
 @export var drag := 1.6 # damping during normal movement
 @export var knockback_drag := 4.0 # damping while launched faster than top speed (was effectively 1.6: long floaty glide)
 @export_range(0.0, 1.0) var knockback_control := 0.3 # steering multiplier while flying faster than your top speed
+@export_range(0.0, 1.0) var stun_control := 0.05 # steering multiplier right after being pushed
+@export var outside_drag := 4.0 # extra drag in the out-of-bounds "mud"
+@export_range(0.0, 1.0) var outside_control := 0.5 # steering multiplier while in the mud
+
+@export_group("Size")
+@export var max_mass := 4.0
+@export var size_radius_exp := 0.45 # radius = base_radius * mass^this
+@export var size_speed_exp := 0.35  # top speed = base_speed / mass^this
+@export var size_accel_exp := 0.45  # accel = base_accel / mass^this (big = sluggish)
 
 @export_group("Push")
 @export var push_impulse := 1050.0 # speed given to a mass-1 target by a mass-1 pusher, point blank
