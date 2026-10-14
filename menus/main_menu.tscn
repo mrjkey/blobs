@@ -1,25 +1,10 @@
 [gd_scene format=3 uid="uid://c0ge31dweawvf"]
 
 [ext_resource type="Script" uid="uid://1b62tslqpkw8" path="res://menus/main_menu.gd" id="1_8gy84"]
-
-[sub_resource type="FontFile" id="FontFile_ij7vn"]
-cache/0/variation_coordinates = {}
-cache/0/face_index = 0
-cache/0/embolden = 0.0
-cache/0/transform = Transform2D(1, 0, 0, 1, 0, 0)
-cache/0/spacing_top = 0
-cache/0/spacing_bottom = 0
-cache/0/spacing_space = 0
-cache/0/spacing_glyph = 0
-cache/0/baseline_offset = 0.0
-cache/0/16/0/ascent = 0.0
-cache/0/16/0/descent = 0.0
-cache/0/16/0/underline_position = 0.0
-cache/0/16/0/underline_thickness = 0.0
-cache/0/16/0/scale = 1.0
-
-[sub_resource type="Theme" id="Theme_8gy84"]
-default_font = SubResource("FontFile_ij7vn")
+[ext_resource type="Theme" path="res://menus/menu_theme.tres" id="2_theme"]
+[ext_resource type="PackedScene" uid="uid://bi3if5ncvhjxl" path="res://treadmill.tscn" id="3_treadmill"]
+[ext_resource type="PackedScene" uid="uid://bj6axtcqryh5e" path="res://main.tscn" id="4_classic"]
+[ext_resource type="PackedScene" path="res://neon.tscn" id="5_neon"]
 
 [node name="MainMenu" type="Control" unique_id=126013004]
 layout_mode = 3
@@ -28,45 +13,69 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = SubResource("Theme_8gy84")
+theme = ExtResource("2_theme")
 script = ExtResource("1_8gy84")
+treadmill_scene = ExtResource("3_treadmill")
+classic_scene = ExtResource("4_classic")
+neon_scene = ExtResource("5_neon")
 
 [node name="Background" type="ColorRect" parent="." unique_id=263078907]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.06, 1)
 
 [node name="Center" type="CenterContainer" parent="." unique_id=336845175]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Column" type="VBoxContainer" parent="Center" unique_id=1878229754]
 layout_mode = 2
 
 [node name="Title" type="Label" parent="Center/Column" unique_id=491305628]
 layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "BUMPER BLOBS"
+horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="Center/Column" unique_id=1604580364]
 layout_mode = 2
+theme_type_variation = &"SubtitleLabel"
+text = "Push them out. Don't get pushed."
+horizontal_alignment = 1
 
 [node name="Buttons" type="VBoxContainer" parent="Center/Column" unique_id=1591501762]
 layout_mode = 2
 
 [node name="TreadmillButton" type="Button" parent="Center/Column/Buttons" unique_id=2128967663]
+unique_name_in_owner = true
 layout_mode = 2
+text = "TREADMILL"
 
 [node name="ClassicButton" type="Button" parent="Center/Column/Buttons" unique_id=2128550065]
 layout_mode = 2
+text = "CLASSIC  RING"
 
 [node name="NeonButton" type="Button" parent="Center/Column/Buttons" unique_id=1317264583]
 layout_mode = 2
+text = "NEON"
 
 [node name="QuitButton" type="Button" parent="Center/Column/Buttons" unique_id=1584698103]
 layout_mode = 2
+text = "QUIT"
 
 [node name="Hint" type="Label" parent="Center/Column" unique_id=2074995473]
 layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "W/S, arrows or D-pad to choose     Space, Enter or A to start"
+horizontal_alignment = 1
 
 [connection signal="pressed" from="Center/Column/Buttons/TreadmillButton" to="." method="_on_treadmill_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/ClassicButton" to="." method="_on_classic_button_pressed"]
