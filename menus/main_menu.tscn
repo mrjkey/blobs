@@ -1,0 +1,74 @@
+[gd_scene format=3 uid="uid://c0ge31dweawvf"]
+
+[ext_resource type="Script" uid="uid://1b62tslqpkw8" path="res://menus/main_menu.gd" id="1_8gy84"]
+
+[sub_resource type="FontFile" id="FontFile_ij7vn"]
+cache/0/variation_coordinates = {}
+cache/0/face_index = 0
+cache/0/embolden = 0.0
+cache/0/transform = Transform2D(1, 0, 0, 1, 0, 0)
+cache/0/spacing_top = 0
+cache/0/spacing_bottom = 0
+cache/0/spacing_space = 0
+cache/0/spacing_glyph = 0
+cache/0/baseline_offset = 0.0
+cache/0/16/0/ascent = 0.0
+cache/0/16/0/descent = 0.0
+cache/0/16/0/underline_position = 0.0
+cache/0/16/0/underline_thickness = 0.0
+cache/0/16/0/scale = 1.0
+
+[sub_resource type="Theme" id="Theme_8gy84"]
+default_font = SubResource("FontFile_ij7vn")
+
+[node name="MainMenu" type="Control" unique_id=126013004]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_8gy84")
+script = ExtResource("1_8gy84")
+
+[node name="Background" type="ColorRect" parent="." unique_id=263078907]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Center" type="CenterContainer" parent="." unique_id=336845175]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Column" type="VBoxContainer" parent="Center" unique_id=1878229754]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Center/Column" unique_id=491305628]
+layout_mode = 2
+
+[node name="Subtitle" type="Label" parent="Center/Column" unique_id=1604580364]
+layout_mode = 2
+
+[node name="Buttons" type="VBoxContainer" parent="Center/Column" unique_id=1591501762]
+layout_mode = 2
+
+[node name="TreadmillButton" type="Button" parent="Center/Column/Buttons" unique_id=2128967663]
+layout_mode = 2
+
+[node name="ClassicButton" type="Button" parent="Center/Column/Buttons" unique_id=2128550065]
+layout_mode = 2
+
+[node name="NeonButton" type="Button" parent="Center/Column/Buttons" unique_id=1317264583]
+layout_mode = 2
+
+[node name="QuitButton" type="Button" parent="Center/Column/Buttons" unique_id=1584698103]
+layout_mode = 2
+
+[node name="Hint" type="Label" parent="Center/Column" unique_id=2074995473]
+layout_mode = 2
+
+[connection signal="pressed" from="Center/Column/Buttons/TreadmillButton" to="." method="_on_treadmill_button_pressed"]
+[connection signal="pressed" from="Center/Column/Buttons/ClassicButton" to="." method="_on_classic_button_pressed"]
+[connection signal="pressed" from="Center/Column/Buttons/NeonButton" to="." method="_on_neon_button_pressed"]
+[connection signal="pressed" from="Center/Column/Buttons/QuitButton" to="." method="_on_quit_button_pressed"]
