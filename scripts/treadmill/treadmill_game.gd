@@ -267,7 +267,7 @@ func _menu_input(event: InputEvent) -> void:
 			KEY_4:
 				choose = 3
 			KEY_ESCAPE:
-				get_tree().quit()
+				get_tree().change_scene_to_file("res://menus/main_menu.tscn")
 	var button := event as InputEventJoypadButton
 	if button and button.pressed:
 		match button.button_index:

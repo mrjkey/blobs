@@ -142,7 +142,7 @@ func _physics_process(delta: float) -> void:
 		get_tree().reload_current_scene()
 		return
 	if Input.is_action_just_pressed("quit"):
-		get_tree().quit()
+		get_tree().change_scene_to_file("res://menus/main_menu.tscn")
 		return
 	_read_player_input()
 	clock += delta
