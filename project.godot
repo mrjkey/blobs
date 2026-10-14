@@ -21,6 +21,10 @@ window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[global_group]
+
+blobs=""
+
 [input]
 
 move_left={
