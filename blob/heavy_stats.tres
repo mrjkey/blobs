@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="BlobStats" format=3 uid="uid://d4hehlv0iptm4"]
+
+[ext_resource type="Script" uid="uid://bmd7bm8g5o2uj" path="res://blob/blob_stats.gd" id="1_8j8n5"]
+
+[resource]
+script = ExtResource("1_8j8n5")
+metadata/_custom_type_script = "uid://bmd7bm8g5o2uj"

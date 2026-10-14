@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://hjgpqtgrbo68"]
+
+[node name="Blob" type="Node2D" unique_id=1350047165]
+
+[node name="Body" type="Node2D" parent="." unique_id=69353074]
+
+[node name="PushSound" type="AudioStreamPlayer2D" parent="." unique_id=1650287670]
+
+[node name="BumpSound" type="AudioStreamPlayer2D" parent="." unique_id=1245353179]
