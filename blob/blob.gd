@@ -37,6 +37,19 @@ func _ready() -> void:
 func request_push() -> void:
 	push_buffer = 0.15
 
+
+## Distance from this blob's centre that a push can reach.
+func push_reach() -> float:
+	return radius + stats.push_range * pow(mass, stats.push_range_mass_exp)
+
+
+func push_ready() -> bool:
+	return push_cooldown <= 0.0 and windup <= 0.0
+
+
+func is_winding_up() -> bool:
+	return windup > 0.0
+
 func step_motion(h: float) -> void:
 	pass
 	

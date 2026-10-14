@@ -13,6 +13,7 @@ extends Resource
 @export_group("Push")
 @export var push_impulse := 1050.0 # speed given to a mass-1 target by a mass-1 pusher, point blank
 @export var push_range := 70.0
+@export var push_range_mass_exp := 0.3 # bigger blobs reach a bit further
 @export var push_cooldown := 0.9
 @export var push_stun := 0.35
 
