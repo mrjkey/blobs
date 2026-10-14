@@ -4,8 +4,9 @@ extends "res://scripts/game.gd"
 ## Fall behind the bottom laser (or fly past the top one) and you're out.
 ## The track is generated in chunks ahead of the camera: solid walls, pink
 ## kicker walls, pinball bumpers and food. Laser ships cruise beside the side
-## walls and fire across the track on the beat. Starts with a mode menu:
-## 1P vs computer, 2P versus, or 2P + computer.
+## walls and fire across the track on the beat. The mode (1P vs computer,
+## 2P versus, 2P + computer, watch) is picked in menus/treadmill_menu.tscn and
+## read from Session.treadmill_mode.
 ##
 ## Reuses from game.gd: blob-vs-blob collisions, pushes, bump effects, hitstop,
 ## shake, countdown and the HUD labels. Reuses the neon look from scripts/neon/.
@@ -20,11 +21,9 @@ const Techno = preload("res://scripts/neon/techno.gd")
 const TreadmillBrain = preload("res://scripts/treadmill/treadmill_brain.gd")
 const PadInput = preload("res://scripts/treadmill/pad_input.gd")
 
-enum Mode { VS_CPU, VERSUS, VERSUS_PLUS_CPU, WATCH }
-const MODE_NAMES := ["1 PLAYER  vs  COMPUTER", "2 PLAYERS  versus", "2 PLAYERS  +  COMPUTER", "WATCH  THE  COMPUTER"]
+enum Mode { VS_CPU, VERSUS, VERSUS_PLUS_CPU, WATCH }  # same numbers as the menu's buttons
 
-static var _rematch_mode := -1     # survives the scene reload when you press R
-static var _launch_args_used := false
+const TREADMILL_MENU := "res://menus/treadmill_menu.tscn"
 
 var mode: int = Mode.VS_CPU
 var cam_y := 0.0                    # world y at the centre of the screen
@@ -44,11 +43,6 @@ var _next_chunk_y := 0.0
 var _prev_rects: Array[Rect2] = []
 var _play_time := 0.0
 var _last_bar := -1
-var _menu_layer: CanvasLayer
-var _menu_options: Array[Label] = []
-var _menu_info: Label
-var _menu_index := 0
-var _stick_held := false
 
 
 func _ready() -> void:
@@ -69,7 +63,7 @@ func _ready() -> void:
 	_overlay.draw.connect(_draw_overlay)
 	add_child(_overlay)
 
-	super._ready()  # camera, fx, sfx, HUD (blob spawning waits for the menu)
+	super._ready()  # camera, fx, sfx, HUD (blobs spawn in _start())
 
 	sfx.add_tone("zap", 0.4, 1600.0, 90.0, 0.0, 0.3, 3.5)
 	sfx.add_tone("charge", 0.9, 180.0, 700.0, 0.05, 0.0, 0.8)
@@ -81,23 +75,16 @@ func _ready() -> void:
 	_update_view()
 	_generate_ahead()
 	_make_ships()
-	_build_menu()
-	# Launch option to skip the menu, e.g. "godot treadmill.tscn -- --mode=3".
-	if not _launch_args_used:
-		_launch_args_used = true
-		for arg in OS.get_cmdline_user_args():
-			if arg.begins_with("--mode="):
-				_rematch_mode = clampi(int(arg.get_slice("=", 1)), 0, MODE_NAMES.size() - 1)
-	if _rematch_mode >= 0:
-		var m := _rematch_mode
-		_rematch_mode = -1
-		_start(m)
-	else:
-		_open_menu()
+	# Launch option to pick the mode, e.g. "godot treadmill.tscn -- --mode=3".
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--mode=") and Session.treadmill_mode < 0:
+			Session.treadmill_mode = clampi(int(arg.get_slice("=", 1)), 0, Mode.size() - 1)
+	# Run on its own (F6) with no mode chosen: default to 1P vs computer.
+	_start(Session.treadmill_mode if Session.treadmill_mode >= 0 else Mode.VS_CPU)
 
 
 func _spawn_blobs() -> void:
-	pass  # blobs spawn once a mode is picked, see _start()
+	pass  # blobs spawn in _start(), once the mode is known
 
 
 func _make_blob() -> OldBlob:
@@ -140,164 +127,28 @@ func kill_bottom() -> float:
 	return view_rect().end.y - TT.EDGE_INSET
 
 
-# --- Menu ---------------------------------------------------------------------
+# --- Input ---------------------------------------------------------------------
 
-func _build_menu() -> void:
-	_menu_layer = CanvasLayer.new()
-	_menu_layer.layer = 2
-	add_child(_menu_layer)
-	var shade := ColorRect.new()
-	shade.color = Color(0.0, 0.0, 0.02, 0.6)
-	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_menu_layer.add_child(shade)
-	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var center := CenterContainer.new()
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_menu_layer.add_child(center)
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 14)
-	center.add_child(column)
-
-	column.add_child(_menu_label("TREADMILL", 84, Color(0.4, 0.9, 1.0)))
-	column.add_child(_menu_label("Don't fall behind the laser.", 22, Color(1.0, 0.45, 0.5)))
-	column.add_child(_menu_label("", 10, Color.WHITE))
-	for i in MODE_NAMES.size():
-		var option := _menu_label(MODE_NAMES[i], 36, Color.WHITE)
-		_menu_options.append(option)
-		column.add_child(option)
-	column.add_child(_menu_label("", 10, Color.WHITE))
-	_menu_info = _menu_label("", 20, Color(0.75, 0.8, 1.0))
-	column.add_child(_menu_info)
-	column.add_child(_menu_label("W/S, arrows or D-pad to choose     Space, Enter or A to start", 18, Color(0.6, 0.6, 0.8)))
-	Input.joy_connection_changed.connect(_on_joy_connection_changed)
-
-
-func _on_joy_connection_changed(_device: int, _connected: bool) -> void:
-	_refresh_menu()
-
-
-func _menu_label(text: String, font_px: int, col: Color) -> Label:
-	var l := Label.new()
-	var ls := LabelSettings.new()
-	ls.font_size = font_px
-	ls.font_color = col
-	ls.outline_size = maxi(int(font_px * 0.15), 3)
-	ls.outline_color = Color(0.15, 0.0, 0.25, 0.9)
-	l.label_settings = ls
-	l.text = text
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	return l
-
-
-func _open_menu() -> void:
-	state = "menu"
-	_menu_layer.visible = true
-	_status.text = ""
-	_hint.text = ""
-	_banner.text = ""
-	_refresh_menu()
-
-
-func _refresh_menu() -> void:
-	if _menu_layer == null or not _menu_layer.visible:
-		return
-	for i in _menu_options.size():
-		var selected := i == _menu_index
-		_menu_options[i].text = (">  %s  <" if selected else "%s") % MODE_NAMES[i]
-		_menu_options[i].modulate = Color(1.0, 0.85, 0.3) if selected else Color(0.55, 0.6, 0.85)
-	var pads := Input.get_connected_joypads().size()
-	var info := "Controllers detected: %d\n" % pads
-	if _menu_index == Mode.WATCH:
-		info += "Four bots, no humans. Esc goes back to this menu."
-	elif _menu_index == Mode.VS_CPU:
-		info += "You: WASD or arrows, Space or Enter to push"
-		if pads > 0:
-			info += "  ·  or the controller"
-	else:
-		info += "P1: WASD + Space"
-		if pads >= 2:
-			info += "  ·  or controller 1"
-		info += "\nP2: Arrows + Enter"
-		if pads >= 1:
-			info += "  ·  or controller %d" % (2 if pads >= 2 else 1)
-		else:
-			info += "\n(no controller found, so share the keyboard)"
-	_menu_info.text = info
-
-
+## R / Start: same mode again (it lives in Session). Esc / Back: treadmill menu.
 func _input(event: InputEvent) -> void:
-	if state == "menu":
-		_menu_input(event)
-		return
 	var key := event as InputEventKey
 	if key and key.pressed and not key.echo:
 		if key.physical_keycode == KEY_R:
-			_rematch_mode = mode
 			get_tree().reload_current_scene()
 		elif key.physical_keycode == KEY_ESCAPE:
-			get_tree().reload_current_scene()
+			get_tree().change_scene_to_file(TREADMILL_MENU)
 	var button := event as InputEventJoypadButton
 	if button and button.pressed:
 		if button.button_index == JOY_BUTTON_START:
-			_rematch_mode = mode
 			get_tree().reload_current_scene()
 		elif button.button_index == JOY_BUTTON_BACK:
-			get_tree().reload_current_scene()
-
-
-func _menu_input(event: InputEvent) -> void:
-	var step := 0
-	var choose := -1
-	var key := event as InputEventKey
-	if key and key.pressed and not key.echo:
-		match key.physical_keycode:
-			KEY_W, KEY_UP:
-				step = -1
-			KEY_S, KEY_DOWN:
-				step = 1
-			KEY_SPACE, KEY_ENTER, KEY_KP_ENTER, KEY_J:
-				choose = _menu_index
-			KEY_1:
-				choose = 0
-			KEY_2:
-				choose = 1
-			KEY_3:
-				choose = 2
-			KEY_4:
-				choose = 3
-			KEY_ESCAPE:
-				get_tree().change_scene_to_file("res://menus/main_menu.tscn")
-	var button := event as InputEventJoypadButton
-	if button and button.pressed:
-		match button.button_index:
-			JOY_BUTTON_DPAD_UP:
-				step = -1
-			JOY_BUTTON_DPAD_DOWN:
-				step = 1
-			JOY_BUTTON_A, JOY_BUTTON_START:
-				choose = _menu_index
-	var motion := event as InputEventJoypadMotion
-	if motion and motion.axis == JOY_AXIS_LEFT_Y:
-		if absf(motion.axis_value) > 0.6 and not _stick_held:
-			_stick_held = true
-			step = 1 if motion.axis_value > 0.0 else -1
-		elif absf(motion.axis_value) < 0.3:
-			_stick_held = false
-	if step != 0:
-		_menu_index = wrapi(_menu_index + step, 0, MODE_NAMES.size())
-		sfx.play("pop", 1.4, -6.0, 0.0)
-		_refresh_menu()
-	if choose >= 0:
-		sfx.play("pop", 0.8, 0.0, 0.0)
-		_start(choose)
+			get_tree().change_scene_to_file(TREADMILL_MENU)
 
 
 # --- Round setup --------------------------------------------------------------
 
 func _start(m: int) -> void:
 	mode = m
-	_menu_layer.visible = false
 	var pads := Input.get_connected_joypads()
 	var inputs: Array = []
 	if m == Mode.WATCH:
@@ -361,8 +212,6 @@ func _start(m: int) -> void:
 # --- Main loop ----------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
-	if state == "menu":
-		return
 	clock += delta
 	_read_inputs()
 	if hitstop > 0.0:
@@ -431,8 +280,7 @@ func _process(delta: float) -> void:
 	grid.pulse = k
 	_record_trails()
 
-	if state != "menu":
-		_status.text = "Distance: %d m     Blobs left: %d" % [int(distance / 10.0), blobs.size()]
+	_status.text = "Distance: %d m     Blobs left: %d" % [int(distance / 10.0), blobs.size()]
 	if _banner_life > 0.0:
 		_banner_life -= delta
 		_banner.modulate.a = clampf(_banner_life / 0.4, 0.0, 1.0)

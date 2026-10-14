@@ -1,0 +1,94 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://menus/treadmill_menu.gd" id="1_script"]
+[ext_resource type="Theme" path="res://menus/menu_theme.tres" id="2_theme"]
+
+[node name="TreadmillMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+treadmill_path = "res://treadmill.tscn"
+main_menu_path = "res://menus/main_menu.tscn"
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.06, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Column" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Center/Column"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "TREADMILL"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Center/Column"]
+layout_mode = 2
+theme_type_variation = &"SubtitleLabel"
+text = "Don't fall behind the laser."
+horizontal_alignment = 1
+
+[node name="Modes" type="VBoxContainer" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="VsCpuButton" type="Button" parent="Center/Column/Modes"]
+layout_mode = 2
+text = "1 PLAYER  vs  COMPUTER"
+
+[node name="VersusButton" type="Button" parent="Center/Column/Modes"]
+layout_mode = 2
+text = "2 PLAYERS  versus"
+
+[node name="VersusCpuButton" type="Button" parent="Center/Column/Modes"]
+layout_mode = 2
+text = "2 PLAYERS  +  COMPUTER"
+
+[node name="WatchButton" type="Button" parent="Center/Column/Modes"]
+layout_mode = 2
+text = "WATCH  THE  COMPUTER"
+
+[node name="BackButton" type="Button" parent="Center/Column"]
+layout_mode = 2
+text = "BACK"
+
+[node name="Info" type="Label" parent="Center/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="Center/Column"]
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "W/S, arrows or D-pad to choose     Space, Enter or A to start     Esc to go back"
+horizontal_alignment = 1
+
+[connection signal="focus_entered" from="Center/Column/Modes/VsCpuButton" to="." method="_on_mode_focused" binds= [0]]
+[connection signal="pressed" from="Center/Column/Modes/VsCpuButton" to="." method="_on_mode_pressed" binds= [0]]
+[connection signal="focus_entered" from="Center/Column/Modes/VersusButton" to="." method="_on_mode_focused" binds= [1]]
+[connection signal="pressed" from="Center/Column/Modes/VersusButton" to="." method="_on_mode_pressed" binds= [1]]
+[connection signal="focus_entered" from="Center/Column/Modes/VersusCpuButton" to="." method="_on_mode_focused" binds= [2]]
+[connection signal="pressed" from="Center/Column/Modes/VersusCpuButton" to="." method="_on_mode_pressed" binds= [2]]
+[connection signal="focus_entered" from="Center/Column/Modes/WatchButton" to="." method="_on_mode_focused" binds= [3]]
+[connection signal="pressed" from="Center/Column/Modes/WatchButton" to="." method="_on_mode_pressed" binds= [3]]
+[connection signal="pressed" from="Center/Column/BackButton" to="." method="_on_back_button_pressed"]

@@ -2,9 +2,6 @@
 
 [ext_resource type="Script" uid="uid://1b62tslqpkw8" path="res://menus/main_menu.gd" id="1_8gy84"]
 [ext_resource type="Theme" path="res://menus/menu_theme.tres" id="2_theme"]
-[ext_resource type="PackedScene" uid="uid://bi3if5ncvhjxl" path="res://treadmill.tscn" id="3_treadmill"]
-[ext_resource type="PackedScene" uid="uid://bj6axtcqryh5e" path="res://main.tscn" id="4_classic"]
-[ext_resource type="PackedScene" path="res://neon.tscn" id="5_neon"]
 
 [node name="MainMenu" type="Control" unique_id=126013004]
 layout_mode = 3
@@ -15,9 +12,9 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_8gy84")
-treadmill_scene = ExtResource("3_treadmill")
-classic_scene = ExtResource("4_classic")
-neon_scene = ExtResource("5_neon")
+treadmill_menu_path = "res://menus/treadmill_menu.tscn"
+classic_path = "res://main.tscn"
+neon_path = "res://neon.tscn"
 
 [node name="Background" type="ColorRect" parent="." unique_id=263078907]
 layout_mode = 1
