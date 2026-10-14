@@ -9,6 +9,7 @@ signal eliminated(blob: Blob)
 @export var stats: BlobStats
 @export var color := Color.WHITE
 @export var display_name := "Blob"
+@export var show_push_ring := false # cooldown ring + arrow, for human-controlled blobs
 
 var vel := Vector2.ZERO
 var mass := 1.0
@@ -19,14 +20,19 @@ var push_cooldown := 0.0
 var push_buffer := 0.0
 var windup := 0.0
 var stun := 0.0
+var ring_danger := 0.0 # 0..1, set by the arena while outside the ring
 
-@onready var body: Node2D = $Body
+@onready var body: BlobBody = $Body
 @onready var push_sound: AudioStreamPlayer2D = $PushSound
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	#set_mass(mass)
 	pass
+
+#func set_mass(m: float) -> void:
+	#mass = clampf(m, 0.5, T.MAX_MASS)
+	#radius = T.BASE_RADIUS * pow(mass, T.SIZE_RADIUS_EXP)
 
 func request_push() -> void:
 	push_buffer = 0.15

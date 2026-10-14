@@ -19,4 +19,11 @@ extends Resource
 @export_group("Jelly")
 @export var jelly_stiffness := 380.0
 @export var jelly_damping := 9.0
-@export var squash_kick := 0.011
+@export var jelly_bulge := 0.7 # sideways bulge when squashed (keeps it looking like jelly)
+@export var squash_kick := 0.11 # squash per px/s of impact
+@export var squash_kick_max := 9.0
+@export var squash_max := 0.5
+@export var move_stretch := 0.0004 # stretch along velocity per px/s
+@export var move_stretch_max := 0.2
+@export var swell_stiffness := 300.0
+@export var swell_damping := 10.0
