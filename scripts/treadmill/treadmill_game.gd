@@ -34,7 +34,7 @@ var distance := 0.0
 var walls: Array = []               # {rect: Rect2, kicker: bool, flash: float}
 var bumpers: Array = []             # {pos: Vector2, radius: float, flash: float}
 var ships: Array = []               # laser ships, see _make_ships()
-var players: Array = []             # {blob: Blob, input: PadInput}
+var players: Array = []             # {blob: OldBlob, input: PadInput}
 var trails := {}                    # blob instance id -> recent positions
 var grid: NeonGrid
 var music: Techno
@@ -100,7 +100,7 @@ func _spawn_blobs() -> void:
 	pass  # blobs spawn once a mode is picked, see _start()
 
 
-func _make_blob() -> Blob:
+func _make_blob() -> OldBlob:
 	return NeonBlob.new()
 
 
@@ -326,7 +326,7 @@ func _start(m: int) -> void:
 		bot_count = bot_looks.size()
 	var total := inputs.size() + bot_count
 	for i in total:
-		var b: Blob = _make_blob()
+		var b: OldBlob = _make_blob()
 		b.game = self
 		var x := lerpf(-TT.TRACK_WIDTH * 0.35, TT.TRACK_WIDTH * 0.35, (i + 0.5) / total)
 		b.position = Vector2(x, cam_y + 150.0)
@@ -410,7 +410,7 @@ func _read_inputs() -> void:
 		var obj = p["blob"]
 		if not is_instance_valid(obj) or not obj.alive:
 			continue
-		var b: Blob = obj
+		var b: OldBlob = obj
 		var input = p["input"]
 		var pushed: bool = input.push_pressed()
 		if state == "countdown":
@@ -445,7 +445,7 @@ func _process(delta: float) -> void:
 func _record_trails() -> void:
 	var seen := {}
 	for other in blobs:
-		var b: Blob = other
+		var b: OldBlob = other
 		var id := b.get_instance_id()
 		seen[id] = true
 		if not trails.has(id):
@@ -464,7 +464,7 @@ func _record_trails() -> void:
 func _collide_walls() -> void:
 	var half := TT.TRACK_WIDTH * 0.5
 	for other in blobs:
-		var b: Blob = other
+		var b: OldBlob = other
 		# Side walls.
 		if b.position.x < -half + b.radius:
 			_hit_flat_wall(b, Vector2.RIGHT, -half + b.radius - b.position.x)
@@ -521,7 +521,7 @@ func _collide_walls() -> void:
 
 
 ## Solid, slightly bouncy surface. n points from the wall toward the blob.
-func _hit_flat_wall(b: Blob, n: Vector2, depth: float) -> void:
+func _hit_flat_wall(b: OldBlob, n: Vector2, depth: float) -> void:
 	b.position += n * depth
 	var vn := b.vel.dot(n)
 	if vn >= 0.0:
@@ -537,7 +537,7 @@ func _hit_flat_wall(b: Blob, n: Vector2, depth: float) -> void:
 
 
 ## Pinball-style: always fling the blob away at `speed`, however softly it touched.
-func _kick(b: Blob, n: Vector2, depth: float, speed: float) -> void:
+func _kick(b: OldBlob, n: Vector2, depth: float, speed: float) -> void:
 	b.position += n * depth
 	var vn := b.vel.dot(n)
 	if vn < 0.0:
@@ -561,7 +561,7 @@ func _check_edges() -> void:
 	var top := kill_top()
 	var bottom := kill_bottom()
 	for other in blobs.duplicate():
-		var b: Blob = other
+		var b: OldBlob = other
 		if b.position.y <= bottom and b.position.y >= top:
 			continue
 		if state == "playing":
@@ -573,7 +573,7 @@ func _check_edges() -> void:
 			b.position.y = clampf(b.position.y, top, bottom)  # round's over: keep the winner on screen
 
 
-func _eliminate(b: Blob) -> void:
+func _eliminate(b: OldBlob) -> void:
 	blobs.erase(b)
 	b.die()
 	_on_impact(b.position, 1500.0)
@@ -600,7 +600,7 @@ func _check_round_over() -> void:
 	if players.size() == 1 and humans_alive == 0:
 		_show_banner("GAME OVER", Color(1.0, 0.4, 0.4))
 	elif blobs.size() == 1 and blobs[0].is_player:
-		var winner: Blob = blobs[0]
+		var winner: OldBlob = blobs[0]
 		_show_banner("YOU WIN!" if players.size() == 1 else "%s WINS!" % winner.player_tag, winner.color)
 	elif blobs.size() == 1:
 		_show_banner("%s WINS" % blobs[0].display_name.to_upper(), blobs[0].color)
@@ -617,7 +617,7 @@ func _update_food(delta: float) -> void:
 	for f in foods.duplicate():
 		var fpos: Vector2 = f["pos"]
 		for other in blobs:
-			var b: Blob = other
+			var b: OldBlob = other
 			if b.position.distance_to(fpos) < b.radius + T.FOOD_RADIUS:
 				foods.erase(f)
 				b.eat()
@@ -842,7 +842,7 @@ func _dodge(s: Dictionary, pos: Vector2) -> void:
 	for other in s["dodgers"]:
 		if not is_instance_valid(other) or not other.alive:
 			continue
-		var b: Blob = other
+		var b: OldBlob = other
 		var rel := b.position - pos
 		var off := rel - d * clampf(rel.dot(d), 0.0, length)
 		if off.length() > b.radius + TT.LASER_WIDTH + 40.0:
@@ -861,7 +861,7 @@ func _fire(s: Dictionary, pos: Vector2) -> void:
 	add_shake(5.0)
 	var hit_any := false
 	for other in blobs:
-		var b: Blob = other
+		var b: OldBlob = other
 		var rel := b.position - pos
 		var off := rel - d * clampf(rel.dot(d), 0.0, length)
 		if off.length() > b.radius + TT.LASER_WIDTH * 0.5:
@@ -913,7 +913,7 @@ func _draw() -> void:
 
 	# Motion trails.
 	for other in blobs:
-		var b: Blob = other
+		var b: OldBlob = other
 		var id := b.get_instance_id()
 		if not trails.has(id):
 			continue

@@ -4,9 +4,9 @@ extends RefCounted
 ## from the edge. Personality numbers make each bot play a little differently.
 
 const T = preload("res://scripts/tuning.gd")
-const Blob = preload("res://scripts/blob.gd")
+const OldBlob = preload("res://scripts/blob.gd")
 
-var me: Blob
+var me: OldBlob
 var game
 
 var aggression := randf_range(0.4, 1.0)  # fighting vs. eating
@@ -14,7 +14,7 @@ var caution := randf_range(0.2, 0.9)     # how far from the edge they like to st
 var greed := randf_range(0.2, 0.9)       # how tempting food is
 var skill := randf_range(0.3, 1.0)       # flanking, push timing, reactions
 
-var target: Blob = null
+var target: OldBlob = null
 var _desired := Vector2.ZERO
 var _steer := Vector2.ZERO
 var _think_timer := randf() * T.BOT_THINK_TIME
@@ -22,7 +22,7 @@ var _push_timer := -1.0
 var _wander := randf() * TAU
 
 
-func _init(blob: Blob, g) -> void:
+func _init(blob: OldBlob, g) -> void:
 	me = blob
 	game = g
 
@@ -128,7 +128,7 @@ func _react_to_threats() -> void:
 	if not me.push_ready() or _push_timer > 0.0:
 		return
 	for other in game.blobs:
-		var o: Blob = other
+		var o: OldBlob = other
 		if o == me or not o.is_winding_up():
 			continue
 		var dist := o.position.distance_to(me.position) - me.radius
@@ -140,10 +140,10 @@ func _react_to_threats() -> void:
 func _pick_target() -> void:
 	if target != null and (not is_instance_valid(target) or not target.alive):
 		target = null
-	var best: Blob = null
+	var best: OldBlob = null
 	var best_score := -INF
 	for other in game.blobs:
-		var o: Blob = other
+		var o: OldBlob = other
 		if o == me:
 			continue
 		var score := -o.position.distance_to(me.position)

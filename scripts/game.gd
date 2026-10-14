@@ -3,7 +3,7 @@ extends Node2D
 ## Everything is built in code so main.tscn is just this one node.
 
 const T = preload("res://scripts/tuning.gd")
-const Blob = preload("res://scripts/blob.gd")
+const OldBlob = preload("res://scripts/blob.gd")
 const Brain = preload("res://scripts/ai_brain.gd")
 const Fx = preload("res://scripts/fx.gd")
 const Sfx = preload("res://scripts/sfx.gd")
@@ -20,7 +20,7 @@ var bot_looks := [
 var blobs: Array = []        # living blobs, in step order
 var foods: Array = []        # {pos, age, seed}
 var wall_hits: Array = []    # {angle, age, power}
-var player: Blob
+var player: OldBlob
 var fx: Fx
 var sfx: Sfx
 var camera: Camera2D
@@ -88,7 +88,7 @@ func _spawn_blobs() -> void:
 	var count := T.BOT_COUNT + 1
 	var start_angle := randf() * TAU
 	for i in count:
-		var b: Blob = _make_blob()
+		var b: OldBlob = _make_blob()
 		b.game = self
 		b.position = Vector2.from_angle(start_angle + TAU * i / count) * T.RING_RADIUS * 0.6
 		b.look = -b.position.normalized()
@@ -233,9 +233,9 @@ func _show_banner(text: String, col: Color, life: float = -1.0) -> void:
 
 func _collide_blobs() -> void:
 	for i in blobs.size():
-		var a: Blob = blobs[i]
+		var a: OldBlob = blobs[i]
 		for j in range(i + 1, blobs.size()):
-			var b: Blob = blobs[j]
+			var b: OldBlob = blobs[j]
 			var d := b.position - a.position
 			var rsum := a.radius + b.radius
 			var dist2 := d.length_squared()
@@ -262,7 +262,7 @@ func _collide_blobs() -> void:
 				_on_blob_contact(a, b, n, impact)
 
 
-func _on_blob_contact(a: Blob, b: Blob, n: Vector2, impact: float) -> void:
+func _on_blob_contact(a: OldBlob, b: OldBlob, n: Vector2, impact: float) -> void:
 	_on_impact(a.position + n * a.radius, impact)
 	var share_a := (1.0 / a.mass) / (1.0 / a.mass + 1.0 / b.mass)
 	a.bump(n, impact * share_a * 2.0)
@@ -281,7 +281,7 @@ func _on_blob_contact(a: Blob, b: Blob, n: Vector2, impact: float) -> void:
 
 func _collide_walls() -> void:
 	for other in blobs:
-		var b: Blob = other
+		var b: OldBlob = other
 		var dist := b.position.length()
 		var limit := T.WALL_RADIUS - b.radius
 		if dist <= limit:
@@ -302,13 +302,13 @@ func _collide_walls() -> void:
 
 
 ## Called by a blob when its push goes off.
-func do_push(pusher: Blob) -> void:
+func do_push(pusher: OldBlob) -> void:
 	var reach := pusher.push_reach()
 	fx.shockwave(pusher.position, pusher.radius, reach, pusher.color.lightened(0.5))
 	sfx.play("push", randf_range(0.95, 1.05) / sqrt(pusher.mass), 0.0, 0.0)
 	var hits := 0
 	for other in blobs:
-		var b: Blob = other
+		var b: OldBlob = other
 		if b == pusher:
 			continue
 		var d := b.position - pusher.position
@@ -350,8 +350,8 @@ func in_mud(pos: Vector2) -> bool:
 	return pos.length() > T.RING_RADIUS
 
 
-func _make_blob() -> Blob:
-	return Blob.new()
+func _make_blob() -> OldBlob:
+	return OldBlob.new()
 
 
 func _make_fx() -> Fx:
@@ -372,7 +372,7 @@ func _on_impact(_pos: Vector2, _strength: float) -> void:
 
 func _check_ring(delta: float) -> void:
 	for other in blobs.duplicate():
-		var b: Blob = other
+		var b: OldBlob = other
 		if b.position.length() > T.RING_RADIUS:
 			b.outside_time += delta
 			if b.outside_time >= T.RING_OUT_TIME and state == "playing":
@@ -381,7 +381,7 @@ func _check_ring(delta: float) -> void:
 			b.outside_time = maxf(b.outside_time - delta * 2.0, 0.0)
 
 
-func _eliminate(b: Blob) -> void:
+func _eliminate(b: OldBlob) -> void:
 	_on_impact(b.position, 1500.0)
 	blobs.erase(b)
 	b.die()
@@ -419,7 +419,7 @@ func _update_food(delta: float) -> void:
 	for f in foods.duplicate():
 		var fpos: Vector2 = f["pos"]
 		for other in blobs:
-			var b: Blob = other
+			var b: OldBlob = other
 			if b.position.distance_to(fpos) < b.radius + T.FOOD_RADIUS:
 				foods.erase(f)
 				b.eat()
@@ -433,7 +433,7 @@ func _spawn_food() -> void:
 		var p := Vector2.from_angle(randf() * TAU) * sqrt(randf()) * T.RING_RADIUS * 0.8
 		var clear := true
 		for other in blobs:
-			var b: Blob = other
+			var b: OldBlob = other
 			if b.position.distance_to(p) < b.radius + 30.0:
 				clear = false
 				break

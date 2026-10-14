@@ -68,7 +68,7 @@ func _restyle_hud() -> void:
 	_hint.text = "WASD move   ·   SPACE push   ·   lasers fire on the beat   ·   R restart"
 
 
-func _make_blob() -> Blob:
+func _make_blob() -> OldBlob:
 	return NeonBlob.new()
 
 
@@ -94,7 +94,7 @@ func _process(delta: float) -> void:
 func _record_trails() -> void:
 	var seen := {}
 	for other in blobs:
-		var b: Blob = other
+		var b: OldBlob = other
 		var id := b.get_instance_id()
 		seen[id] = true
 		if not trails.has(id):
@@ -221,7 +221,7 @@ func _dodge(t: Dictionary, pos: Vector2) -> void:
 	for other in t["dodgers"]:
 		if not is_instance_valid(other) or not other.alive:
 			continue
-		var b: Blob = other
+		var b: OldBlob = other
 		var rel := b.position - pos
 		var off := rel - d * clampf(rel.dot(d), 0.0, length)
 		if off.length() > b.radius + NT.LASER_WIDTH + 40.0:
@@ -240,7 +240,7 @@ func _fire(t: Dictionary, pos: Vector2) -> void:
 	add_shake(5.0)
 	var hit_any := false
 	for other in blobs:
-		var b: Blob = other
+		var b: OldBlob = other
 		var rel := b.position - pos
 		var off := rel - d * clampf(rel.dot(d), 0.0, length)
 		if off.length() > b.radius + NT.LASER_WIDTH * 0.5:
@@ -277,7 +277,7 @@ func _draw() -> void:
 
 	# Motion trails, under the blobs.
 	for other in blobs:
-		var b: Blob = other
+		var b: OldBlob = other
 		var id := b.get_instance_id()
 		if not trails.has(id):
 			continue
