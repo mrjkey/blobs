@@ -50,7 +50,7 @@ horizontal_alignment = 1
 [node name="ClaudeNote" type="Label" parent="Center/Column" unique_id=1739520486]
 layout_mode = 2
 theme_type_variation = &"HintLabel"
-text = "(this label was added by Claude)"
+text = "(updated again, this time by the hook)"
 horizontal_alignment = 1
 
 [node name="Modes" type="VBoxContainer" parent="Center/Column" unique_id=1405469633]

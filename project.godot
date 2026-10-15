@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.7")
 [autoload]
 
 Session="*res://session.gd"
+ClaudeSyncGame="*uid://c377xy6tuo80b"
 
 [display]
 
@@ -24,6 +25,10 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/claude_sync/plugin.cfg")
 
 [global_group]
 
