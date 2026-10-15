@@ -13,13 +13,15 @@ plus rootPath in the "initialize" request. Godot 4.7 then accepts the root as it
 own project and maps every file under it to res://. (It misreads the usual UNC form
 file://wsl.localhost/... as a host name, hence the four slashes going in.)
 
-Usage: python3 tools/godot_lsp_relay.py [--listen 6008] [--godot 6005]
-Then point VS Code at it: "godotTools.lsp.serverPort": 6008 (.vscode/settings.json).
+Usage: python3 tools/godot_lsp_relay.py [--listen 6010] [--godot 6005]
+Then point VS Code at it: "godotTools.lsp.serverPort": 6010 (.vscode/settings.json).
+Avoid 6005 and 6008: godot-tools treats both as Godot defaults and goes straight to 6005.
 The task in .vscode/tasks.json starts it when the folder opens.
 """
 
 import argparse
 import asyncio
+import errno
 import json
 import os
 import subprocess
@@ -81,7 +83,7 @@ async def handle(client_reader, client_writer, args, to_godot, to_client, win_ro
 
 async def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--listen", type=int, default=6008, help="port VS Code connects to")
+    parser.add_argument("--listen", type=int, default=6010, help="port VS Code connects to")
     parser.add_argument("--godot", type=int, default=6005, help="Godot editor's language server port")
     parser.add_argument("--project", default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     args = parser.parse_args()
@@ -92,8 +94,22 @@ async def main() -> None:
     win_uri_out = ("file:///" + win_root.lstrip("/")).encode()     # file:///wsl.localhost/Ubuntu/home/me/game
     to_godot = [(wsl_uri, win_uri_in)]
     to_client = [(win_uri_in, wsl_uri), (win_uri_out, wsl_uri)]
-    server = await asyncio.start_server(
-        lambda r, w: handle(r, w, args, to_godot, to_client, win_root), "127.0.0.1", args.listen)
+    # VS Code can launch the task again (e.g. on Reload Window) while the previous relay
+    # is still shutting down, so give the port a few seconds to free up before giving up.
+    for attempt in range(10):
+        try:
+            server = await asyncio.start_server(
+                lambda r, w: handle(r, w, args, to_godot, to_client, win_root), "127.0.0.1", args.listen)
+            break
+        except OSError as e:
+            if e.errno != errno.EADDRINUSE:
+                raise
+            if attempt == 0:
+                print(f"port {args.listen} is busy; waiting for it to free up", flush=True)
+            await asyncio.sleep(1)
+    else:
+        print(f"another relay is already listening on port {args.listen}; exiting", flush=True)
+        return
     print(f"Godot LSP relay: 127.0.0.1:{args.listen} -> 127.0.0.1:{args.godot}", flush=True)
     print(f"  {wsl_uri.decode()}  ->  {win_uri_in.decode()}", flush=True)
     async with server:

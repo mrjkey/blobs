@@ -1,6 +1,7 @@
 {
 	// Talk to Godot through tools/godot_lsp_relay.py (started by the task in tasks.json),
 	// which fixes the WSL vs Windows project path so saves hot-reload into the game.
-	"godotTools.lsp.serverPort": 6008,
+	// Not 6008: godot-tools treats 6005/6008 as Godot defaults and connects to 6005 directly.
+	"godotTools.lsp.serverPort": 6010,
 	"godotTools.editorPath.godot4": "/mnt/c/godot/Godot_v4.7.2-stable_win64_console.exe"
 }
