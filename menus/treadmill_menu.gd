@@ -56,7 +56,7 @@ func _show_info(mode: int) -> void:
 		3:  # watch
 			text += "Four bots, no humans. Esc goes back to this menu."
 		0:  # 1P vs computer
-			text += "You: WASD or arrows, Space or Enter to push"
+			text += "You: WASD or arrows, hello from the hook, Space or Enter to push"
 			if pads > 0:
 				text += "  ·  or the controller"
 		_:  # two players
