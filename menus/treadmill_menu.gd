@@ -2,8 +2,7 @@ extends Control
 ## Pick a treadmill mode. The choice goes into Session, then the treadmill
 ## scene reads it in its _ready().
 ##
-## Each mode button's pressed and focus_entered signals are connected in the
-## scene with the mode number bound as an extra argument:
+## A button's position under Modes is its mode number:
 ## 0 = 1P vs computer, 1 = 2P versus, 2 = 2P + computer, 3 = watch.
 
 @export_file("*.tscn") var treadmill_path: String
@@ -16,6 +15,10 @@ var _focused_mode := 0
 
 
 func _ready() -> void:
+	for i in modes.get_child_count():
+		var button := modes.get_child(i) as Button
+		button.pressed.connect(_on_mode_pressed.bind(i))
+		button.focus_entered.connect(_on_mode_focused.bind(i))
 	# Start on the mode you played last, so Esc + Enter is a quick restart.
 	var start: int = Session.treadmill_mode if Session.treadmill_mode >= 0 else 0
 	(modes.get_child(start) as Button).grab_focus()

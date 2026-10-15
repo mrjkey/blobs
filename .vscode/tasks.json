@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Godot LSP relay",
+			"type": "shell",
+			"command": "python3 tools/godot_lsp_relay.py",
+			"isBackground": true,
+			"problemMatcher": [],
+			"presentation": { "reveal": "silent", "panel": "dedicated" },
+			"runOptions": { "runOn": "folderOpen" }
+		}
+	]
+}
