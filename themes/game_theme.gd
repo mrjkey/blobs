@@ -1,29 +1,24 @@
 @tool
 class_name GameTheme
 extends Resource
-## A visual theme: one skin per kind of thing, plus the HUD look, the
-## background, the glow and the blob colours. The player picks one in the main
-## menu (saved as Session.theme_name); everything reads it through current(),
-## so switching themes restyles every scene without changing any scene.
-## One .tres per theme: themes/classic/classic.tres, themes/neon/neon.tres.
+## A visual theme. Elements draw themselves (one default drawing each) with the
+## theme's `style`, ask it for their colours and options with value(), and
+## fall back to their own defaults for anything the theme doesn't set. The
+## player picks a theme in the main menu (Session.theme_name); everything reads
+## it through current(). One .tres per theme: themes/classic/classic.tres,
+## themes/neon/neon.tres.
 
 const DEFAULT := "res://themes/neon/neon.tres"
 
 @export var display_name := "Neon"
-@export var brightness := 1.0 # master dimmer for HDR colours (see NeonLook.hdr())
+@export var style: ThemeStyle
 
-@export_group("Skins")
-@export var blob: BlobSkin
-@export var trail: TrailSkin # empty = no motion trails
-@export var fx: FxSkin
-@export var room: RoomSkin
-@export var ring: RingSkin
-@export var track_bed: TrackBedSkin
-@export var kill_lasers: KillLasersSkin
-@export var wall: WallSkin
-@export var bumper: BumperSkin
-@export var food: FoodSkin
-@export var laser: LaserSkin
+## Colours and options by name, e.g. "wall.color" or "food.shape". Elements
+## ask with their own default (see value()), so only differences go here.
+@export var values := {}
+
+## Rare: element name -> ThemeSkin that replaces that element's default drawing.
+@export var overrides := {}
 
 @export_group("Screen")
 @export var hud: Theme # the HUD's text style
@@ -37,7 +32,6 @@ const DEFAULT := "res://themes/neon/neon.tres"
 @export var p2_color := Color(1.0, 0.5, 0.1)
 @export var bot_colors := PackedColorArray()
 
-
 static var _editor_theme: GameTheme
 
 
@@ -48,3 +42,18 @@ static func current() -> GameTheme:
 			_editor_theme = load(DEFAULT)
 		return _editor_theme
 	return Session.theme
+
+
+## The theme's value for `key`, or `default` when it doesn't set one.
+func value(key: String, default: Variant) -> Variant:
+	return values.get(key, default)
+
+
+## Draws `node` with this theme's override for `element`, if it has one.
+## Elements start their _draw() with: if theme.draw_override("bumper", self): return
+func draw_override(element: String, node: CanvasItem) -> bool:
+	var skin: ThemeSkin = overrides.get(element)
+	if skin == null:
+		return false
+	skin.draw(node)
+	return true

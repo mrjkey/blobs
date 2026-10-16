@@ -4,8 +4,12 @@ extends Node2D
 ## it charges (tracking a random blob, with a thin telegraph line), locks its
 ## aim (bots that notice try to sidestep), fires (knockback, sparks, a grid
 ## ripple along the beam) and goes back to idle. Subclasses say where the beam
-## ends (beam_length), how they move (_idle) and which LaserSkin body they draw
-## (_draw_body). Joins group "lasers"; draws above the blobs (z_index 5 in its scene).
+## ends (beam_length), how they move (_idle) and their shape (_body_points,
+## _draw_extras). Joins group "lasers"; draws above the blobs (z_index 5 in its
+## scene). Colours from the theme: laser.beam, laser.body, laser.engine.
+
+const BEAM_COLOR := Color(1.0, 0.3, 0.35)
+const BODY_COLOR := Color(0.95, 0.5, 0.6)
 
 @export var settings: LaserSettings = preload("res://entities/enemies/lasers/turret_laser.tres")
 
@@ -148,14 +152,14 @@ func _fire(pos: Vector2) -> void:
 			continue
 		var dv := s.impulse / pow(b.mass, b.stats.push_resist_exp)
 		b.take_hit(d, dv, b.stats.push_stun, false)
-		Juice.burst(b.global_position, GameTheme.current().laser.beam_color, 18, 500.0)
+		Juice.burst(b.global_position, GameTheme.current().value("laser.beam", BEAM_COLOR), 18, 500.0)
 		hit_any = true
 	if hit_any:
 		Juice.hitstop(Juice.settings.hitstop_push)
 		Juice.shake(6.0)
 	for i in int(length / 70.0) + 1:
 		get_tree().call_group("grid", "impulse", pos + d * (i * 70.0), 260.0, 90.0)
-	Juice.burst(pos + d * length, GameTheme.current().laser.beam_color, 12, 350.0)
+	Juice.burst(pos + d * length, GameTheme.current().value("laser.beam", BEAM_COLOR), 12, 350.0)
 
 
 func _process(_delta: float) -> void:
@@ -163,17 +167,48 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
+	var theme := GameTheme.current()
+	if theme.draw_override("laser", self):
+		return
+	var st := theme.style
 	var s := settings
-	var skin := GameTheme.current().laser
-	var beat := ThemeSkin.beat(self)
+	var beam: Color = theme.value("laser.beam", BEAM_COLOR)
+	var beat := 0.0 if Engine.is_editor_hint() else Techno.current_beat(get_tree())
 	var to_fire := fire_beat - beat if fire_beat >= 0.0 else 99.0
 	var charge := 0.0
 	if to_fire > 0.0 and to_fire <= s.charge_beats:
 		charge = 1.0 - to_fire / s.charge_beats
-	skin.draw_beam(self, beat, to_fire, charge)
-	_draw_body(skin, ThemeSkin.kick(self), charge)
+
+	# Telegraph: a thin tracking line that blinks once the aim locks.
+	if charge > 0.0:
+		var alpha := 0.15 + 0.5 * charge
+		var width := 1.5
+		if to_fire <= s.lock_beats:
+			alpha = 0.9 if int(beat * 16.0) % 2 == 0 else 0.3
+			width = 2.5
+		st.line(self, Vector2.ZERO, aim * length, beam, width, 1.0 + 2.0 * charge, alpha)
+
+	# The beam itself, with a white core.
+	if fire_beat >= 0.0 and beat >= fire_beat and beat < fire_beat + s.fire_beats:
+		var q := (beat - fire_beat) / s.fire_beats
+		var end := aim * length
+		st.line(self, Vector2.ZERO, end, beam, s.width * 1.4 * (1.0 - q) + 1.0, 3.0, 1.0 - q)
+		st.line(self, Vector2.ZERO, end, Color.WHITE, s.width * 0.35 * (1.0 - q) + 1.0, 3.0, 1.0 - q)
+
+	var side := Vector2(-aim.y, aim.x)
+	var body := _body_points(side)
+	st.body(self, body, theme.value("laser.body", BODY_COLOR), charge * 0.8, 1.0,
+		(1.5 + 1.5 * st.kick(self) + 3.0 * charge) / 1.6, 2.5)
+	_draw_extras(theme, side)
+	if charge > 0.0:
+		st.dot(self, body[0], 2.0 + 6.0 * charge, beam, 2.0 + 2.0 * charge, 0.9)
 
 
-## Override: draw the emitter at the origin, pointing along `aim`, with the skin.
-func _draw_body(_skin: LaserSkin, _kick: float, _charge: float) -> void:
+## Override: the outline of the emitter at the origin, pointing along `aim`; the first point is the tip.
+func _body_points(side: Vector2) -> PackedVector2Array:
+	return PackedVector2Array([aim * 16.0, -aim * 10.0 + side * 12.0, -aim * 4.0, -aim * 10.0 - side * 12.0])
+
+
+## Override: anything drawn on top of the body (a ship's engines).
+func _draw_extras(_theme: GameTheme, _side: Vector2) -> void:
 	pass

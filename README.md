@@ -38,6 +38,8 @@ Everything can be drawn in more than one style; pick one in the main menu.
   than 1.0 blooms (needs the Forward+ or Mobile renderer).
 - **Classic**: flat, solid shapes with drop shadows and cartoon eyes.
 
+Every element has one drawing; a theme only changes its style and colours.
+
 Any scene runs on its own with F6. `sandbox/sandbox.tscn` is a walled room with you and two
 bots, for trying components.
 
@@ -55,7 +57,7 @@ the running game picks them up straight away:
 | `entities/blob/stats/default.tres` (`heavy.tres`) | Blob movement, size growth, push, jelly (`BlobStats`) |
 | `core/physics/default_feel.tres` | Bounciness of blob hits and walls (`PhysicsFeel`) |
 | `autoload/juice_settings.tres` | Hitstop, screen shake, sparks, sound volume |
-| `themes/neon/neon.tres`, `themes/classic/classic.tres` | Every colour, per theme: blobs, arenas, obstacles, food, lasers; neon brightness, glow strength, trail length, beat thump |
+| `themes/neon/neon.tres`, `themes/classic/classic.tres` | Per theme: the style (glow, fills and edges, shadows, halos, trails, spark streaks, beat pulse, wall thickness) and the colours that differ from each element's default |
 | `entities/enemies/lasers/turret_laser.tres`, `ship_laser.tres` | Laser timing in beats, width, knockback |
 | `level/arenas/track/track_settings.tres` | Treadmill: scrolling, obstacles, kick strength, ships, bots per mode |
 

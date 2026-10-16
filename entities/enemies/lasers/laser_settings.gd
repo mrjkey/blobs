@@ -2,7 +2,7 @@ class_name LaserSettings
 extends Resource
 ## How a laser emitter (turret, ship) charges, fires and hits. Timings are in
 ## beats of the music, so lasers always land on the beat. Colours come from the
-## theme's LaserSkin.
+## theme (laser.beam, laser.body, laser.engine).
 
 @export var charge_beats := 2.0 # telegraph length
 @export var lock_beats := 0.75 # aim freezes this many beats before firing

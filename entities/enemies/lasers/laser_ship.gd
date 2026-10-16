@@ -55,8 +55,16 @@ func beam_length(from: Vector2, dir: Vector2) -> float:
 	return clampf((far_x - from.x) / dir.x, 0.0, 2400.0)
 
 
-func _draw_body(skin: LaserSkin, kick: float, charge: float) -> void:
-	skin.draw_ship(self, kick, charge)
+func _body_points(side_v: Vector2) -> PackedVector2Array:
+	return PackedVector2Array([aim * 18.0, -aim * 12.0 + side_v * 14.0, -aim * 5.0, -aim * 12.0 - side_v * 14.0])
+
+
+## Two engine glows at the back.
+func _draw_extras(theme: GameTheme, side_v: Vector2) -> void:
+	var st := theme.style
+	for e: float in [-1.0, 1.0]:
+		st.dot(self, -aim * 13.0 + side_v * (8.0 * e), 3.0, theme.value("laser.engine", Color(1.0, 0.75, 0.3)),
+			2.0 + 1.5 * st.kick(self))
 
 
 func _x() -> float:

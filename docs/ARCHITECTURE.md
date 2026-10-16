@@ -15,7 +15,7 @@ in `themes/` (see Themes below).
 | `core/` | Machinery every mode composes: `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock) |
 | `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `BlobStats` + `stats/`), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
 | `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`: the floors and walls a mode plays on, with their own rules like ring-out or the kill lasers), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`) |
-| `themes/` | `GameTheme`, `ThemeSkin`, `ThemeBackdrop`; one folder per theme (`classic/`, `neon/`) with its skins, `.tres`, HUD style and backdrop |
+| `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style and backdrop |
 | `modes/` | One folder per game mode: the scene that composes components, plus the round rules (`GameMode` subclasses) |
 | `ui/` | `menus/`, `hud/`, `themes/menu_theme.tres` |
 | `sandbox/` | Test bench scene for trying components |
@@ -25,7 +25,7 @@ in `themes/` (see Themes below).
 Where a new thing goes: something that acts on its own (an enemy, a new kind of
 blob) under `entities/`; something placed in a level under `level/`: a solid
 or trap blobs bump into in `obstacles/`, something they collect in `pickups/`,
-a whole new floor in `arenas/`. Its look goes in each theme folder.
+a whole new floor in `arenas/`. It draws itself (see Themes).
 
 ## Scenes, scripts, resources
 
@@ -35,8 +35,8 @@ a whole new floor in `arenas/`. Its look goes in each theme folder.
 - **Scripts** (`.gd`) hold behaviour. Spawning instances of scenes at runtime is
   fine; building a node tree by hand in `_ready()` is not (put it in a scene).
 - **Resources** (`.tres`) hold numbers you tune: `BlobStats`, `PhysicsFeel`,
-  `JuiceSettings`, `InputProfile`, `TrackSettings`, `LaserSettings`, and every
-  colour (in the theme `.tres` files). Many nodes can share one.
+  `JuiceSettings`, `InputProfile`, `TrackSettings`, `LaserSettings`, and the
+  themes' colours and styles. Many nodes can share one.
 - Structural one-offs (a room's size, a spawn position) are `@export`s on the
   node in the scene.
 
@@ -85,7 +85,7 @@ Set with `process_physics_priority` in each script's `_ready()`:
 3. `10` `Blob`: push cooldown, windup and release
 4. `20` rules that look at where blobs ended up: `RingArena` ring-out, `KillLasers`, `Food` eating
 
-Drawing runs in `_process` / `_draw`, through the theme's skins.
+Drawing runs in `_process` / `_draw`, painted in the theme's style.
 
 ### Hitstop
 
@@ -127,31 +127,36 @@ So:
 
 The player picks a theme in the main menu (THEME: NEON / CLASSIC; neon by
 default). `Session.theme_name` saves it; `GameTheme.current()` returns its
-`GameTheme` resource (`themes/<name>/<name>.tres`), and in the editor the
-default one, so `@tool` previews draw too. Switching never changes a scene.
+`GameTheme` resource (`themes/<name>/<name>.tres`; in the editor the default
+one, so `@tool` previews draw too). Switching never changes a scene.
 
-- **Components own state and gameplay; skins only draw.** Every component's
-  `_draw()` is one line, e.g. `GameTheme.current().ring.draw(self)`. The skin
-  reads the node (`arena.wall_hits`, `body.look`, `wall.flash`...) and draws
-  with `node.draw_*()`. Skins hold no state.
-- **Every colour lives in a skin**, including the effect colours components
-  use for sparks and bursts (`GameTheme.current().ring.spark_color`,
-  `.food.color`, `.laser.beam_color`). Components and settings resources have
-  no colours.
-- **A skin slot's class is the classic look** (`themes/classic/ring_skin.gd`,
-  `class_name RingSkin`); other themes extend it and override `draw()`
-  (`themes/neon/neon_ring_skin.gd`). All extend `ThemeSkin`, which has `kick()` and
-  `beat()` helpers that read the music (0 in the editor).
-- **The `GameTheme` resource** lists one skin per slot (`blob`, `trail`, `fx`,
-  `room`, `ring`, `track_bed`, `kill_lasers`, `wall`, `bumper`, `food`, `laser`),
-  embedded with their colours, plus `hud` (the HUD's UI theme), `backdrop` (a
-  scene drawn behind everything, e.g. the neon grid), `glow` (a bloom scene,
-  used when `Session.glow` is on), `clear_color`, `beat_zoom` (camera thump on
-  the kick), `brightness` (master dimmer for `NeonLook.hdr()`), and the player,
-  P2 and bot colours. An empty `trail` slot means no trails.
-- **`ThemeBackdrop`**, near the top of every game scene, adds the backdrop and
-  glow and sets the clear colour. `Hud` takes `hud`, `GameCamera` `beat_zoom`,
-  `GameMode` the blob colours.
+**Every element has one default drawing, in its own `_draw()`.** Themes only
+adjust it, so a new element works in every theme as soon as it draws itself:
+
+- **`ThemeStyle`** (the theme's `style`) is how things are painted: plain or
+  glowing colours (`glow`, `brightness`), solid or dark-glass bodies (`fill`),
+  darker or bright edges (`edge`, `edge_flash`), and on/off features:
+  `shadows`, `highlights` (shine), `halos`, `trail_frames` (0 = no trails),
+  `spark_streak` (0 = round sparks), `pulse` (reacting to the music's kick),
+  `bold` (arena wall thickness). Draw with its primitives so the theme applies:
+  `style.body()` / `disc()` / `box()` for solid shapes (shadow, halo, fill,
+  edge), `line()`, `ring()`, `dot()`, `outline()` for strokes, `color(c, k)`
+  for a colour at glow intensity `k`, `kick(node)` for the beat. A theme is
+  numbers and flags in its `.tres`; no theme has code.
+- **Values** (`theme.value("wall.color", COLOR)`): an element's colours and
+  options by name, each with the element's own default (a `const` in the
+  element; the defaults are the classic look). A theme's `values` only lists
+  what differs. Effect colours (sparks, bursts) use the same names. Options are
+  values too: `"food.shape"` is `"round"` or `"diamond"`.
+- **Overrides** (rare): a `ThemeSkin` in the theme's `overrides` under an
+  element's name replaces that element's whole drawing. Every element's
+  `_draw()` starts with `if theme.draw_override("name", self): return`.
+  None are used yet.
+- **The rest of a `GameTheme`:** `hud` (the HUD's UI theme), `backdrop` (a scene
+  drawn behind everything, e.g. the neon grid), `glow` (a bloom scene, used when
+  `Session.glow` is on), `clear_color`, `beat_zoom` (camera thump on the kick),
+  and the player, P2 and bot colours. `ThemeBackdrop`, near the top of every
+  game scene, adds the backdrop and glow and sets the clear colour.
 
 Draw order in a game scene: backdrop z -10, arena z -1, then trails (z -1,
 later in the tree), obstacles, food and blobs at 0, lasers and kill lasers z 5,
@@ -170,24 +175,24 @@ what makes a gallery of objects possible.
 whose root script joins `blob_colliders` in `_enter_tree()` and implements
 `collide(blob, feel)`. Use `BlobPhysics.bounce()` for solid surfaces and
 `BlobPhysics.wall_feedback()` for the hit effects. Put tunables in exports or a
-resource. Give it a look (next recipe). Try it in the sandbox.
+resource. Draw it (next recipe). Try it in the sandbox.
 
-**A look for a new kind of thing:** a skin class in `themes/classic/`
-(`class_name SpikesSkin extends ThemeSkin`, colours as exports, `draw(node)`),
-a neon one in `themes/neon/` that extends it, a slot in `GameTheme`
-(`@export var spikes: SpikesSkin`), an entry in each theme's `.tres`, and
-`GameTheme.current().spikes.draw(self)` in the node's `_draw()`.
+**Drawing a new element:** in its `_draw()`, `var theme := GameTheme.current()`,
+`if theme.draw_override("spikes", self): return`, then draw with
+`theme.style` primitives and `theme.value("spikes.color", COLOR)`. That's all:
+it works in every theme. Later, a theme can set `"spikes.color"` (or a new
+option) in its `values`.
 
 **New pickup or power-up:** like `Food` in `level/pickups/`: join a group bots
 can look for, check overlap with living blobs in `_physics_process`, apply the
 effect to the blob, `queue_free()`.
 
 **New enemy:** under `entities/enemies/`. Beat-driven ones can extend
-`LaserEmitter` (see `LaserTurret`, `LaserShip`).
+`LaserEmitter` (see `LaserTurret`, `LaserShip`: they only give their shape).
 
-**New theme:** a folder under `themes/` with a `<name>.tres` (a `GameTheme`)
-and skins that extend the classic ones where the look differs (reuse a classic
-or neon skin as-is otherwise), plus an entry in `Session.THEMES`.
+**New theme:** a folder under `themes/` with a `<name>.tres` (a `GameTheme`
+with a `ThemeStyle` and the `values` that differ), a HUD theme, optionally a
+backdrop, and an entry in `Session.THEMES`.
 
 **New controller:** a node script that sets `blob.controller = self` in
 `_ready()`, runs at physics priority -10, and writes `move_dir` /

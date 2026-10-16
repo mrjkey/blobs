@@ -3,7 +3,10 @@ class_name WallBlock
 extends Node2D
 ## A rectangular wall centred on this node. Solid and slightly bouncy, or, as a
 ## pink `kicker`, a pinball wall that flings blobs away at `settings.kicker_speed`.
-## Drawn by the theme's WallSkin.
+## Colours from the theme: wall.color, wall.kicker.
+
+const COLOR := Color(0.55, 0.6, 0.8)
+const KICKER_COLOR := Color(1.0, 0.45, 0.7)
 
 @export var size := Vector2(200.0, 24.0):
 	set(v):
@@ -63,7 +66,7 @@ func collide(b: Blob, feel: PhysicsFeel) -> void:
 	else:
 		var impact := BlobPhysics.bounce(b, n, depth, feel.wall_restitution)
 		if impact > 0.0:
-			BlobPhysics.wall_feedback(b.global_position - n * b.radius, impact, GameTheme.current().wall.wall_color)
+			BlobPhysics.wall_feedback(b.global_position - n * b.radius, impact, GameTheme.current().value("wall.color", COLOR))
 
 
 func _physics_process(delta: float) -> void:
@@ -76,4 +79,12 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	GameTheme.current().wall.draw(self)
+	var theme := GameTheme.current()
+	if theme.draw_override("wall", self):
+		return
+	var st := theme.style
+	var r := Rect2(-size * 0.5, size)
+	var col: Color = theme.value("wall.kicker", KICKER_COLOR) if kicker else theme.value("wall.color", COLOR)
+	st.box(self, r, col, flash, 0.8)
+	if kicker and size.x > 14.0 and size.y > 14.0:
+		st.outline(self, ThemeStyle.rect_points(r.grow(-6.0)), st.color(col.lightened(0.35), 0.9 + flash, 0.6), 2.0)

@@ -4,11 +4,12 @@ extends Node2D
 ## The sumo ring: a round floor inside a bouncy circular wall, with slow "mud"
 ## between the two. A blob that stays in the mud for `ring_out_time` is out:
 ## the arena calls `die()` on it and emits `blob_ringed_out`. Centred on this node.
-## Drawn by the theme's RingSkin.
+## Colours from the theme: ring.floor, ring.moat, ring.stripes, ring.edge, ring.wall.
 
 signal blob_ringed_out(blob: Blob)
 
 const WALL_FLASH_TIME := 0.35
+const WALL_COLOR := Color(0.55, 0.6, 0.8)
 
 @export var ring_radius := 300.0: # the sumo ring; leave it and the clock starts
 	set(v):
@@ -51,7 +52,7 @@ func collide(b: Blob, feel: PhysicsFeel) -> void:
 	if impact <= 0.0:
 		return
 	var point := b.global_position + n * b.radius
-	BlobPhysics.wall_feedback(point, impact, GameTheme.current().ring.spark_color)
+	BlobPhysics.wall_feedback(point, impact, GameTheme.current().value("ring.wall", WALL_COLOR))
 	if impact > 120.0:
 		wall_hits.append({"angle": n.angle(), "age": 0.0, "power": clampf(impact / 600.0, 0.0, 1.0)})
 
@@ -89,4 +90,39 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	GameTheme.current().ring.draw(self)
+	var theme := GameTheme.current()
+	if theme.draw_override("ring", self):
+		return
+	var st := theme.style
+	var k := st.kick(self)
+	# Out-of-bounds mud between the ring and the wall, with slow hazard stripes.
+	draw_circle(Vector2.ZERO, wall_radius, theme.value("ring.moat", Color(0.14, 0.08, 0.11)))
+	var mid := (wall_radius + ring_radius) * 0.5
+	var stripe_w := wall_radius - ring_radius
+	var stripes := 36
+	var stripe_col: Color = theme.value("ring.stripes", Color(1.0, 0.3, 0.25, 0.07))
+	for i in stripes:
+		var a0 := TAU * i / stripes + clock * 0.05
+		draw_arc(Vector2.ZERO, mid, a0, a0 + TAU / stripes * 0.5, 6, stripe_col, stripe_w, false)
+
+	# Ring floor, with faint guide circles.
+	draw_circle(Vector2.ZERO, ring_radius, theme.value("ring.floor", Color(0.19, 0.22, 0.31)))
+	for f: float in [0.33, 0.66]:
+		st.ring(self, Vector2.ZERO, ring_radius * f, Color.WHITE, 2.0, 1.0, 0.05)
+	st.dot(self, Vector2.ZERO, 6.0, Color.WHITE, 1.0, 0.08)
+
+	# The ring edge: a slow shimmer, and a thump on each kick.
+	st.ring(self, Vector2.ZERO, ring_radius, theme.value("ring.edge", Color(1.0, 0.85, 0.55)), 5.0 + k,
+		1.4 + 0.6 * k, 0.85 + 0.15 * sin(clock * 3.0))
+
+	# Bouncy wall, with a flash where something just hit it.
+	var bold := st.bold
+	var wall_r := wall_radius + 7.0 * bold
+	st.ring(self, Vector2.ZERO, wall_r, theme.value("ring.wall", WALL_COLOR), 14.0 * bold, 1.4)
+	for hit in wall_hits:
+		var t: float = hit["age"] / WALL_FLASH_TIME
+		var power: float = hit["power"]
+		var ang: float = hit["angle"]
+		var span := 0.15 + 0.2 * power
+		st.ring(self, Vector2.ZERO, wall_r, Color.WHITE, (14.0 + 8.0 * power * (1.0 - t)) * bold, 3.0,
+			(1.0 - t) * 0.9, ang - span, ang + span)

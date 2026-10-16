@@ -2,7 +2,10 @@
 class_name Bumper
 extends Node2D
 ## A round pinball bumper: flings any blob that touches it away at
-## `settings.bumper_kick`, and pops bigger for a moment. Drawn by the theme's BumperSkin.
+## `settings.bumper_kick`, and pops bigger for a moment. Colour from the theme:
+## bumper.color (also the burst whenever anything kicks a blob).
+
+const COLOR := Color(1.0, 0.8, 0.25)
 
 @export var radius := 27.0:
 	set(v):
@@ -39,7 +42,7 @@ static func kick(b: Blob, n: Vector2, depth: float, speed: float, ts: TrackSetti
 	b.body.flash = 0.8
 	b.bump(n, speed)
 	var contact := b.global_position - n * b.radius
-	Juice.burst(contact, GameTheme.current().bumper.color, 12, 420.0)
+	Juice.burst(contact, GameTheme.current().value("bumper.color", COLOR), 12, 420.0)
 	Juice.impact_at(contact, speed)
 	Sfx.play("bumper", randf_range(0.95, 1.1), -2.0)
 	Juice.shake(4.0)
@@ -55,4 +58,12 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	GameTheme.current().bumper.draw(self)
+	var theme := GameTheme.current()
+	if theme.draw_override("bumper", self):
+		return
+	var st := theme.style
+	var col: Color = theme.value("bumper.color", COLOR)
+	var rr := radius * (1.0 + 0.25 * flash)
+	st.disc(self, Vector2.ZERO, rr, col, flash * 0.8, 0.85, 1.1 + 0.25 * st.kick(self))
+	st.ring(self, Vector2.ZERO, rr * 0.6, col.lightened(0.3), 2.0, 1.2 + 2.0 * flash, 0.8)
+	st.dot(self, Vector2.ZERO, rr * 0.22, col.lerp(Color.WHITE, 0.7), 1.5 + 3.0 * flash)

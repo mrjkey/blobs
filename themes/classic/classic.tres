@@ -1,60 +1,15 @@
 [gd_resource type="Resource" script_class="GameTheme" format=3]
 
-[ext_resource type="Script" path="res://themes/game_theme.gd" id="1"]
-[ext_resource type="Script" path="res://themes/classic/blob_skin.gd" id="2"]
-[ext_resource type="Script" path="res://themes/classic/fx_skin.gd" id="3"]
-[ext_resource type="Script" path="res://themes/classic/room_skin.gd" id="4"]
-[ext_resource type="Script" path="res://themes/classic/ring_skin.gd" id="5"]
-[ext_resource type="Script" path="res://themes/classic/track_bed_skin.gd" id="6"]
-[ext_resource type="Script" path="res://themes/classic/kill_lasers_skin.gd" id="7"]
-[ext_resource type="Script" path="res://themes/classic/wall_skin.gd" id="8"]
-[ext_resource type="Script" path="res://themes/classic/bumper_skin.gd" id="9"]
-[ext_resource type="Script" path="res://themes/classic/food_skin.gd" id="10"]
-[ext_resource type="Script" path="res://themes/classic/laser_skin.gd" id="11"]
-[ext_resource type="Theme" path="res://themes/classic/hud_theme.tres" id="12"]
+[ext_resource type="Script" path="res://themes/game_theme.gd" id="1_theme"]
+[ext_resource type="Script" path="res://themes/theme_style.gd" id="2_style"]
+[ext_resource type="Theme" path="res://themes/classic/hud_theme.tres" id="3_res"]
 
-[sub_resource type="Resource" id="blob"]
-script = ExtResource("2")
-
-[sub_resource type="Resource" id="fx"]
-script = ExtResource("3")
-
-[sub_resource type="Resource" id="room"]
-script = ExtResource("4")
-
-[sub_resource type="Resource" id="ring"]
-script = ExtResource("5")
-
-[sub_resource type="Resource" id="track_bed"]
-script = ExtResource("6")
-
-[sub_resource type="Resource" id="kill_lasers"]
-script = ExtResource("7")
-
-[sub_resource type="Resource" id="wall"]
-script = ExtResource("8")
-
-[sub_resource type="Resource" id="bumper"]
-script = ExtResource("9")
-
-[sub_resource type="Resource" id="food"]
-script = ExtResource("10")
-
-[sub_resource type="Resource" id="laser"]
-script = ExtResource("11")
+[sub_resource type="Resource" id="style"]
+script = ExtResource("2_style")
 
 [resource]
-script = ExtResource("1")
-blob = SubResource("blob")
-fx = SubResource("fx")
-room = SubResource("room")
-ring = SubResource("ring")
-track_bed = SubResource("track_bed")
-kill_lasers = SubResource("kill_lasers")
-wall = SubResource("wall")
-bumper = SubResource("bumper")
-food = SubResource("food")
-laser = SubResource("laser")
+script = ExtResource("1_theme")
 display_name = "Classic"
-hud = ExtResource("12")
+hud = ExtResource("3_res")
 bot_colors = PackedColorArray(1, 0.36, 0.36, 1, 0.45, 0.9, 0.4, 1, 0.75, 0.45, 1, 1, 1, 0.5, 0.8, 1, 1, 0.7, 0.25, 1, 0.95, 0.95, 0.4, 1)
+style = SubResource("style")

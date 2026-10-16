@@ -1,9 +1,9 @@
 class_name BlobTrail
 extends Node2D
-## A motion trail behind the parent Blob: its last few positions, drawn by the
-## theme's TrailSkin (themes without one have no trails). Sits at z_index -1 so
-## trails go under every blob; arenas sit at -1 too, earlier in the tree, so
-## trails still draw over the floor. Gone as soon as the blob dies.
+## A motion trail behind the parent Blob: a tapering line through its last few
+## positions, as long as the theme's `style.trail_frames` (0 = no trail). Sits at
+## z_index -1 so trails go under every blob; arenas sit at -1 too, earlier in
+## the tree, so trails still draw over the floor. Gone as soon as the blob dies.
 
 var points: Array[Vector2] = [] # world positions, oldest first
 
@@ -11,17 +11,22 @@ var points: Array[Vector2] = [] # world positions, oldest first
 
 
 func _process(delta: float) -> void:
-	var skin := GameTheme.current().trail
-	if not blob.alive or skin == null:
+	var frames := GameTheme.current().style.trail_frames
+	if not blob.alive or frames <= 0:
 		points.clear()
 	elif delta > 0.0: # hold still during hitstop
 		points.append(blob.global_position)
-		while points.size() > skin.frames:
+		while points.size() > frames:
 			points.pop_front()
 	queue_redraw()
 
 
 func _draw() -> void:
-	var skin := GameTheme.current().trail
-	if skin != null:
-		skin.draw(self)
+	var theme := GameTheme.current()
+	if theme.draw_override("trail", self):
+		return
+	var n := points.size()
+	for i in range(1, n):
+		var f := float(i) / n
+		theme.style.line(self, to_local(points[i - 1]), to_local(points[i]), blob.color,
+			maxf(blob.radius * 1.3 * f, 1.0), 1.5, 0.35 * f)

@@ -2,7 +2,7 @@ class_name TrackSettings
 extends Resource
 ## Treadmill knobs: the track, its obstacles, the scrolling, the ships and the
 ## bots per mode. Blob physics comes from BlobStats / PhysicsFeel as usual, and
-## every colour from the theme's skins.
+## every colour from the theme (see each piece's script for its colour names).
 ## Shared by every track piece through level/arenas/track/track_settings.tres.
 
 @export_group("Track and camera")

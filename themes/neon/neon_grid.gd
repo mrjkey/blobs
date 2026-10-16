@@ -132,5 +132,5 @@ func _draw() -> void:
 
 func _line_color(dim: float, stretch: float) -> Color:
 	# Stretched parts of the grid light up past the glow threshold.
-	var k := (dim + minf(stretch / 18.0, 2.2)) * GameTheme.current().brightness
+	var k := (dim + minf(stretch / 18.0, 2.2)) * GameTheme.current().style.brightness
 	return Color(color.r * k, color.g * k, color.b * k, clampf(0.35 + stretch / 20.0, 0.35, 1.0))

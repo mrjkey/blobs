@@ -38,10 +38,6 @@ func beam_length(from: Vector2, dir: Vector2) -> float:
 	return -b + sqrt(disc)
 
 
-func _draw_body(skin: LaserSkin, kick: float, charge: float) -> void:
-	skin.draw_turret(self, kick, charge)
-
-
 func _center() -> Vector2:
 	var arena := get_tree().get_first_node_in_group("arena")
 	return arena.global_position if arena != null else Vector2.ZERO
