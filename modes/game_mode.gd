@@ -9,7 +9,7 @@ extends Node2D
 
 enum State { COUNTDOWN, PLAYING, OVER }
 
-@export var blob_scene: PackedScene = preload("res://blob/blob.tscn")
+@export var blob_scene: PackedScene = preload("res://entities/blob/blob.tscn")
 @export var blobs_node: Node2D # spawned blobs go here
 @export var hud: Hud
 @export var countdown_time := 2.4

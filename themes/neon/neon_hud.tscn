@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="1_hud"]
+[ext_resource type="Theme" path="res://themes/neon/hud_theme.tres" id="2_theme"]
+
+[node name="Hud" instance=ExtResource("1_hud")]
+
+[node name="Frame" parent="."]
+theme = ExtResource("2_theme")

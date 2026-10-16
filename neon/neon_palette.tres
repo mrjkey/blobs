@@ -1,6 +1,0 @@
-[gd_resource type="Resource" script_class="NeonPalette" format=3]
-
-[ext_resource type="Script" path="res://neon/neon_palette.gd" id="1_script"]
-
-[resource]
-script = ExtResource("1_script")

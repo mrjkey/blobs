@@ -7,16 +7,16 @@ extends GameMode
 
 enum Mode { VS_CPU, VERSUS, VERSUS_PLUS_CPU, WATCH } # same numbers as the menu's buttons
 
-@export var settings: TrackSettings = preload("res://track/track_settings.tres")
+@export var settings: TrackSettings = preload("res://level/arenas/track/track_settings.tres")
 @export var camera: GameCamera
 @export var kill_lasers: KillLasers
 @export var laser_director: LaserDirector
 @export var grid: NeonGrid # optional, kept centred on the camera
 
 @export_group("Controls")
-@export var solo_profile: InputProfile = preload("res://blob/control/profiles/solo.tres")
-@export var p1_profile: InputProfile = preload("res://blob/control/profiles/p1.tres")
-@export var p2_profile: InputProfile = preload("res://blob/control/profiles/p2.tres")
+@export var solo_profile: InputProfile = preload("res://entities/controllers/profiles/solo.tres")
+@export var p1_profile: InputProfile = preload("res://entities/controllers/profiles/p1.tres")
+@export var p2_profile: InputProfile = preload("res://entities/controllers/profiles/p2.tres")
 
 var mode: int = Mode.VS_CPU
 var cam_y := 0.0 # world y at the centre of the screen

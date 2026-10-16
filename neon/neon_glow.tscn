@@ -1,8 +1,0 @@
-[gd_scene format=3]
-
-[ext_resource type="Script" path="res://neon/neon_glow.gd" id="1_script"]
-[ext_resource type="Environment" path="res://neon/neon_glow_env.tres" id="2_env"]
-
-[node name="NeonGlow" type="WorldEnvironment"]
-environment = ExtResource("2_env")
-script = ExtResource("1_script")
