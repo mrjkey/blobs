@@ -4,7 +4,7 @@ extends RefCounted
 
 # --- Glow --------------------------------------------------------------------
 # Anything drawn brighter than GLOW_THRESHOLD blooms. Neon colours are drawn at
-# 1.5x-3x brightness on purpose; see hdr() in neon_game.gd.
+# 1.5x-3x brightness on purpose; see hdr() in neon_look.gd.
 const BRIGHTNESS := 0.75            # master dimmer for every neon colour (1.0 = original)
 const GLOW_INTENSITY := 0.9        # size/strength of the bloom halo around bright things
 const GLOW_STRENGTH := 1.0

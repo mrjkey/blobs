@@ -23,11 +23,6 @@ var _play_time := 0.0
 var _last_bar := -1
 
 
-static func hdr(c: Color, k: float, a: float = 1.0) -> Color:
-	k *= NT.BRIGHTNESS
-	return Color(c.r * k, c.g * k, c.b * k, a)
-
-
 func _ready() -> void:
 	bot_looks = [
 		{"name": "Bonk", "color": Color(1.0, 0.2, 0.25)},
@@ -285,21 +280,21 @@ func _draw() -> void:
 		var n := pts.size()
 		for i in range(1, n):
 			var f := float(i) / n
-			draw_line(pts[i - 1], pts[i], hdr(b.color, 1.5, 0.35 * f), maxf(b.radius * 1.3 * f, 1.0), true)
+			draw_line(pts[i - 1], pts[i], NeonLook.hdr(b.color, 1.5, 0.35 * f), maxf(b.radius * 1.3 * f, 1.0), true)
 
 	# Ring edge thumps with the kick drum.
-	draw_arc(Vector2.ZERO, T.RING_RADIUS, 0.0, TAU, 128, hdr(NT.RING_COLOR, NT.RING_GLOW + NT.RING_PULSE * k), 4.0 + NT.RING_PULSE_WIDTH * k, true)
-	draw_arc(Vector2.ZERO, T.RING_RADIUS + 9.0, 0.0, TAU, 128, hdr(NT.RING_COLOR, 0.8, 0.35), 1.5, true)
+	draw_arc(Vector2.ZERO, T.RING_RADIUS, 0.0, TAU, 128, NeonLook.hdr(NT.RING_COLOR, NT.RING_GLOW + NT.RING_PULSE * k), 4.0 + NT.RING_PULSE_WIDTH * k, true)
+	draw_arc(Vector2.ZERO, T.RING_RADIUS + 9.0, 0.0, TAU, 128, NeonLook.hdr(NT.RING_COLOR, 0.8, 0.35), 1.5, true)
 
 	# Wall, flashing where it was hit.
 	var wall_r := T.WALL_RADIUS + 6.0
-	draw_arc(Vector2.ZERO, wall_r, 0.0, TAU, 128, hdr(NT.WALL_COLOR, 1.4), 4.0, true)
+	draw_arc(Vector2.ZERO, wall_r, 0.0, TAU, 128, NeonLook.hdr(NT.WALL_COLOR, 1.4), 4.0, true)
 	for hit in wall_hits:
 		var t: float = hit["age"] / 0.35
 		var power: float = hit["power"]
 		var ang: float = hit["angle"]
 		var span := 0.15 + 0.2 * power
-		draw_arc(Vector2.ZERO, wall_r, ang - span, ang + span, 16, hdr(Color.WHITE, 3.0, 1.0 - t), 4.0 + 6.0 * power * (1.0 - t), true)
+		draw_arc(Vector2.ZERO, wall_r, ang - span, ang + span, 16, NeonLook.hdr(Color.WHITE, 3.0, 1.0 - t), 4.0 + 6.0 * power * (1.0 - t), true)
 
 	# Food: spinning neon diamonds.
 	for f in foods:
@@ -313,8 +308,8 @@ func _draw() -> void:
 			pts.append(fpos + Vector2.from_angle(clock * 2.0 + fseed + j * PI / 2.0) * r)
 		var outline := pts.duplicate()
 		outline.append(pts[0])
-		draw_colored_polygon(pts, hdr(NT.FOOD_COLOR, 0.5, 0.5))
-		draw_polyline(outline, hdr(NT.FOOD_COLOR, 2.5), 2.0, true)
+		draw_colored_polygon(pts, NeonLook.hdr(NT.FOOD_COLOR, 0.5, 0.5))
+		draw_polyline(outline, NeonLook.hdr(NT.FOOD_COLOR, 2.5), 2.0, true)
 
 
 func _draw_overlay() -> void:
@@ -338,19 +333,19 @@ func _draw_overlay() -> void:
 			if to_fire <= NT.LASER_LOCK_BEATS:
 				alpha = 0.9 if int(beat * 16.0) % 2 == 0 else 0.3
 				width = 2.5
-			_overlay.draw_line(pos, pos + aim * length, hdr(NT.LASER_COLOR, 1.0 + 2.0 * charge, alpha), width, true)
+			_overlay.draw_line(pos, pos + aim * length, NeonLook.hdr(NT.LASER_COLOR, 1.0 + 2.0 * charge, alpha), width, true)
 
 		# The beam itself.
 		if fire_beat >= 0.0 and beat >= fire_beat and beat < fire_beat + NT.LASER_FIRE_BEATS:
 			var q := (beat - fire_beat) / NT.LASER_FIRE_BEATS
 			var end := pos + aim * length
-			_overlay.draw_line(pos, end, hdr(NT.LASER_COLOR, 3.0, 1.0 - q), NT.LASER_WIDTH * 1.4 * (1.0 - q) + 1.0, true)
-			_overlay.draw_line(pos, end, hdr(Color.WHITE, 3.0, 1.0 - q), NT.LASER_WIDTH * 0.35 * (1.0 - q) + 1.0, true)
+			_overlay.draw_line(pos, end, NeonLook.hdr(NT.LASER_COLOR, 3.0, 1.0 - q), NT.LASER_WIDTH * 1.4 * (1.0 - q) + 1.0, true)
+			_overlay.draw_line(pos, end, NeonLook.hdr(Color.WHITE, 3.0, 1.0 - q), NT.LASER_WIDTH * 0.35 * (1.0 - q) + 1.0, true)
 
 		# Turret: a neon arrowhead pointing where it aims.
 		var side := Vector2(-aim.y, aim.x)
 		var tip := pos + aim * 16.0
 		var body := PackedVector2Array([tip, pos - aim * 10.0 + side * 12.0, pos - aim * 4.0, pos - aim * 10.0 - side * 12.0, tip])
-		_overlay.draw_polyline(body, hdr(NT.TURRET_COLOR, 1.5 + 1.5 * k + 3.0 * charge), 2.5, true)
+		_overlay.draw_polyline(body, NeonLook.hdr(NT.TURRET_COLOR, 1.5 + 1.5 * k + 3.0 * charge), 2.5, true)
 		if charge > 0.0:
-			_overlay.draw_circle(tip, 2.0 + 6.0 * charge, hdr(NT.LASER_COLOR, 2.0 + 2.0 * charge, 0.9))
+			_overlay.draw_circle(tip, 2.0 + 6.0 * charge, NeonLook.hdr(NT.LASER_COLOR, 2.0 + 2.0 * charge, 0.9))

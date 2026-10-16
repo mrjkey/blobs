@@ -6,7 +6,7 @@ no textDocument/didSave, so Godot neither reloads the script nor pushes it into 
 running game. This sends that notification through tools/godot_lsp_relay.py, which
 fixes the paths the same way it does for VS Code.
 
-Usage: python3 tools/godot_lsp_save.py menus/treadmill_menu.gd [more.gd ...]
+Usage: python3 tools/godot_lsp_save.py ui/menus/treadmill_menu.gd [more.gd ...]
 Only .gd files are sent; Godot's language server doesn't reload scenes or resources.
 """
 

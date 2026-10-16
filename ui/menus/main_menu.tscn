@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c0ge31dweawvf"]
 
-[ext_resource type="Script" uid="uid://1b62tslqpkw8" path="res://menus/main_menu.gd" id="1_8gy84"]
-[ext_resource type="Theme" uid="uid://clopy5laifscb" path="res://menus/menu_theme.tres" id="2_theme"]
+[ext_resource type="Script" uid="uid://1b62tslqpkw8" path="res://ui/menus/main_menu.gd" id="1_8gy84"]
+[ext_resource type="Theme" uid="uid://clopy5laifscb" path="res://ui/themes/menu_theme.tres" id="2_theme"]
 
 [node name="MainMenu" type="Control" unique_id=126013004]
 layout_mode = 3
@@ -12,7 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_8gy84")
-treadmill_menu_path = "res://menus/treadmill_menu.tscn"
+treadmill_menu_path = "res://ui/menus/treadmill_menu.tscn"
 classic_path = "res://main.tscn"
 neon_path = "res://neon.tscn"
 
@@ -73,10 +73,6 @@ layout_mode = 2
 theme_type_variation = &"HintLabel"
 text = "W/S, arrows or D-pad to choose     Space, Enter or A to start"
 horizontal_alignment = 1
-
-[node name="Label" type="Label" parent="Center/Column" unique_id=991551903]
-layout_mode = 2
-text = "hi "
 
 [connection signal="pressed" from="Center/Column/Buttons/TreadmillButton" to="." method="_on_treadmill_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/ClassicButton" to="." method="_on_classic_button_pressed"]

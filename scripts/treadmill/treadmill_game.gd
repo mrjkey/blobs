@@ -5,7 +5,7 @@ extends "res://scripts/game.gd"
 ## The track is generated in chunks ahead of the camera: solid walls, pink
 ## kicker walls, pinball bumpers and food. Laser ships cruise beside the side
 ## walls and fire across the track on the beat. The mode (1P vs computer,
-## 2P versus, 2P + computer, watch) is picked in menus/treadmill_menu.tscn and
+## 2P versus, 2P + computer, watch) is picked in ui/menus/treadmill_menu.tscn and
 ## read from Session.treadmill_mode.
 ##
 ## Reuses from game.gd: blob-vs-blob collisions, pushes, bump effects, hitstop,
@@ -23,7 +23,7 @@ const PadInput = preload("res://scripts/treadmill/pad_input.gd")
 
 enum Mode { VS_CPU, VERSUS, VERSUS_PLUS_CPU, WATCH }  # same numbers as the menu's buttons
 
-const TREADMILL_MENU := "res://menus/treadmill_menu.tscn"
+const TREADMILL_MENU := "res://ui/menus/treadmill_menu.tscn"
 
 var mode: int = Mode.VS_CPU
 var cam_y := 0.0                    # world y at the centre of the screen

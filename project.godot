@@ -16,7 +16,7 @@ config/features=PackedStringArray("4.7")
 
 [autoload]
 
-Session="*res://session.gd"
+Session="*res://autoload/session.gd"
 ClaudeSyncGame="*uid://c377xy6tuo80b"
 
 [display]

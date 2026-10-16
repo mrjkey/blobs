@@ -44,7 +44,7 @@ in the FileSystem dock > Set as Main Scene.
 - Lasers: a thin line tracks a blob for 2 beats, blinks when the aim locks, then fires on the
   next downbeat. Get out of the line before then.
 - How the glow works: the scene turns on HDR 2D and adds a WorldEnvironment with glow.
-  Anything drawn with colour values above 1.0 blooms (see `hdr()` in `neon_game.gd`).
+  Anything drawn with colour values above 1.0 blooms (see `hdr()` in `neon_look.gd`).
   Needs the Forward+ or Mobile renderer (the default).
 - Knobs: `scripts/neon/neon_tuning.gd` (glow, grid, music volume/BPM, laser timing and
   strength, colours). Gameplay numbers still come from `scripts/tuning.gd`.

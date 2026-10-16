@@ -40,7 +40,6 @@ var view_margin := 60.0      # extra world space shown around the wall
 
 func _ready() -> void:
 	randomize()
-	_setup_input()
 	camera = Camera2D.new()
 	add_child(camera)
 	camera.make_current()
@@ -54,35 +53,6 @@ func _ready() -> void:
 
 
 # --- Setup -------------------------------------------------------------------
-
-func _setup_input() -> void:
-	_bind("move_left", [KEY_A, KEY_LEFT], [], JOY_AXIS_LEFT_X, -1.0)
-	_bind("move_right", [KEY_D, KEY_RIGHT], [], JOY_AXIS_LEFT_X, 1.0)
-	_bind("move_up", [KEY_W, KEY_UP], [], JOY_AXIS_LEFT_Y, -1.0)
-	_bind("move_down", [KEY_S, KEY_DOWN], [], JOY_AXIS_LEFT_Y, 1.0)
-	_bind("push", [KEY_SPACE, KEY_J], [JOY_BUTTON_A])
-	_bind("restart", [KEY_R], [JOY_BUTTON_START])
-	_bind("quit", [KEY_ESCAPE])
-
-
-func _bind(action: String, keys: Array, buttons: Array = [], axis: int = -1, axis_dir: float = 0.0) -> void:
-	if InputMap.has_action(action):
-		return  # survives scene reloads
-	InputMap.add_action(action, 0.25)
-	for k in keys:
-		var ev := InputEventKey.new()
-		ev.physical_keycode = k
-		InputMap.action_add_event(action, ev)
-	for b in buttons:
-		var ev := InputEventJoypadButton.new()
-		ev.button_index = b
-		InputMap.action_add_event(action, ev)
-	if axis >= 0:
-		var ev := InputEventJoypadMotion.new()
-		ev.axis = axis
-		ev.axis_value = axis_dir
-		InputMap.action_add_event(action, ev)
-
 
 func _spawn_blobs() -> void:
 	var count := T.BOT_COUNT + 1
@@ -142,7 +112,7 @@ func _physics_process(delta: float) -> void:
 		get_tree().reload_current_scene()
 		return
 	if Input.is_action_just_pressed("quit"):
-		get_tree().change_scene_to_file("res://menus/main_menu.tscn")
+		get_tree().change_scene_to_file("res://ui/menus/main_menu.tscn")
 		return
 	_read_player_input()
 	clock += delta
