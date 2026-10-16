@@ -6,15 +6,12 @@ extends Control
 ## 0 = 1P vs computer, 1 = 2P versus, 2 = 2P + computer, 3 = watch.
 
 @export_file("*.tscn") var treadmill_path: String
-@export_file("*.tscn") var treadmill_old_path: String # temporary: the old treadmill, for comparing feel
 @export_file("*.tscn") var main_menu_path: String
 
 @onready var modes: VBoxContainer = %Modes
 @onready var info: Label = %Info
-@onready var version_button: Button = %VersionButton
 
 var _focused_mode := 0
-static var _use_old := false # temporary, survives going back to the menu
 
 
 func _ready() -> void:
@@ -26,7 +23,6 @@ func _ready() -> void:
 	var start: int = Session.treadmill_mode if Session.treadmill_mode >= 0 else 0
 	(modes.get_child(start) as Button).grab_focus()
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
-	_show_version()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -36,16 +32,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_mode_pressed(mode: int) -> void:
 	Session.treadmill_mode = mode
-	get_tree().change_scene_to_file(treadmill_old_path if _use_old else treadmill_path)
-
-
-func _on_version_button_pressed() -> void:
-	_use_old = not _use_old
-	_show_version()
-
-
-func _show_version() -> void:
-	version_button.text = "VERSION:  OLD" if _use_old else "VERSION:  NEW"
+	get_tree().change_scene_to_file(treadmill_path)
 
 
 func _on_mode_focused(mode: int) -> void:

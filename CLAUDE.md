@@ -3,7 +3,7 @@
 Godot 4.7.2 game. The editor runs on Windows; the project lives in WSL. The user usually has the editor and the game open while we work, so changes can be checked live.
 
 - Never make git commits. The user commits.
-- Conventions and hot-reload rules: `docs/ARCHITECTURE.md`. A refactor onto composable scenes is in progress; the remaining work is in `docs/REFACTOR_PLAN.md`.
+- Folders, conventions, hot-reload rules and how to test headless: `docs/ARCHITECTURE.md`.
 
 ## Live reload
 

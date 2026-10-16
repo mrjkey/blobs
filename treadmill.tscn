@@ -1,7 +1,0 @@
-[gd_scene format=3 uid="uid://bi3if5ncvhjxl"]
-
-[ext_resource type="Script" uid="uid://3avx2xhl8q4b" path="res://scripts/treadmill/treadmill_game.gd" id="1_treadmill"]
-
-[node name="TreadmillGame" type="Node2D" unique_id=305080384]
-script = ExtResource("1_treadmill")
- 

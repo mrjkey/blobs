@@ -3,11 +3,6 @@
 How the project is put together, and the rules that keep it easy to extend and
 hot-reloadable while the game runs. Read this before adding a component or a mode.
 
-The project is mid-migration: `scripts/` holds the old code-built prototypes
-(classic, neon, treadmill extend `scripts/game.gd`). Each mode is being rebuilt
-from the components below; `scripts/` is deleted once all three are ported.
-Don't add to `scripts/`.
-
 ## Folders
 
 Group by feature, not by file type: a feature's scenes, scripts and resources
@@ -165,3 +160,36 @@ that extends `GameMode`: spawn in `_spawn_blobs()` with `spawn_player()` /
 `spawn_bot()`, switch hazards on in `_on_play_started()` and off in
 `_on_round_over()`, override `_check_round_over()` for other win rules. See
 `modes/ring/`. Add a menu button.
+
+## Working with the editor open
+
+- The editor holds open scenes in memory and saves them on F5. Close the editor
+  (or at least the affected scene tabs, choosing "Don't Save") before files are
+  moved, renamed or deleted, or before `project.godot` is edited, or it writes
+  the old versions back.
+- After new `class_name` scripts appear, a game that was already running doesn't
+  know them: restart it. Clicking into the editor lets it rescan the files.
+- Easier in the editor than in code: AnimationPlayer keyframes, tuning the glow
+  Environment with live preview, arranging spawn points and sandbox props.
+
+## Checking work without the editor
+
+Godot's Windows console binary works headless from WSL:
+
+```sh
+GD=/mnt/c/godot/Godot_v4.7.2-stable_win64_console.exe
+W=$(wslpath -w .)
+"$GD" --headless --path "$W" --import                          # rescan: class cache, .uid files
+"$GD" --headless --path "$W" res://modes/ring/ring.tscn --quit-after 400   # run a scene, print errors
+```
+
+- `--import` is needed after adding `class_name` scripts or moving files, or
+  scenes fail with stale UID paths. While the editor is open, run it on a copy
+  of the project (e.g. in a temp folder, without `.godot/`) so the two don't
+  fight over `.godot/`.
+- For a scripted test (`--script some_test.gd` extending `SceneTree`),
+  autoloads aren't compile-time identifiers yet. Don't name project classes
+  in the test script at all (no `var b: Blob`, no `x is WallBlock`): that
+  compiles them before `Juice` exists, and every script that depends on them
+  fails. Use untyped variables and duck typing (`"kicker" in node`), and reach
+  autoloads with `root.get_node("Juice")`.
