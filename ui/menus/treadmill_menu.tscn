@@ -12,7 +12,8 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_script")
-treadmill_path = "res://treadmill.tscn"
+treadmill_path = "res://modes/treadmill/treadmill.tscn"
+treadmill_old_path = "res://treadmill.tscn"
 main_menu_path = "res://ui/menus/main_menu.tscn"
 
 [node name="Background" type="ColorRect" parent="." unique_id=1303410851]
@@ -67,6 +68,11 @@ text = "2 PLAYERS  +  COMPUTER"
 layout_mode = 2
 text = "WATCH  THE  COMPUTER"
 
+[node name="VersionButton" type="Button" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "VERSION:  NEW"
+
 [node name="BackButton" type="Button" parent="Center/Column" unique_id=687293063]
 layout_mode = 2
 text = "BACK"
@@ -83,4 +89,5 @@ theme_type_variation = &"HintLabel"
 text = "W/S, arrows or D-pad to choose     Space, Enter or A to start     Esc to go back"
 horizontal_alignment = 1
 
+[connection signal="pressed" from="Center/Column/VersionButton" to="." method="_on_version_button_pressed"]
 [connection signal="pressed" from="Center/Column/BackButton" to="." method="_on_back_button_pressed"]

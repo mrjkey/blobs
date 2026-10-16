@@ -15,7 +15,6 @@ script = ExtResource("1_8gy84")
 treadmill_menu_path = "res://ui/menus/treadmill_menu.tscn"
 classic_path = "res://modes/ring/ring.tscn"
 neon_path = "res://modes/ring/neon.tscn"
-neon_old_path = "res://neon.tscn"
 sandbox_path = "res://sandbox/sandbox.tscn"
 
 [node name="Background" type="ColorRect" parent="." unique_id=263078907]
@@ -66,10 +65,6 @@ text = "CLASSIC  RING"
 layout_mode = 2
 text = "NEON"
 
-[node name="NeonOldButton" type="Button" parent="Center/Column/Buttons"]
-layout_mode = 2
-text = "NEON  (OLD)"
-
 [node name="SandboxButton" type="Button" parent="Center/Column/Buttons"]
 layout_mode = 2
 text = "SANDBOX"
@@ -92,7 +87,6 @@ horizontal_alignment = 1
 [connection signal="pressed" from="Center/Column/Buttons/TreadmillButton" to="." method="_on_treadmill_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/ClassicButton" to="." method="_on_classic_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/NeonButton" to="." method="_on_neon_button_pressed"]
-[connection signal="pressed" from="Center/Column/Buttons/NeonOldButton" to="." method="_on_neon_old_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/SandboxButton" to="." method="_on_sandbox_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/GlowButton" to="." method="_on_glow_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/QuitButton" to="." method="_on_quit_button_pressed"]

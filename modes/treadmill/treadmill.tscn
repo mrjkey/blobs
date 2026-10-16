@@ -1,0 +1,74 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modes/treadmill/treadmill_game.gd" id="1_mode"]
+[ext_resource type="Script" path="res://fx/game_camera.gd" id="2_camera"]
+[ext_resource type="Script" path="res://physics/blob_physics.gd" id="3_physics"]
+[ext_resource type="Script" path="res://track/track_generator.gd" id="4_generator"]
+[ext_resource type="PackedScene" path="res://track/side_walls.tscn" id="5_walls"]
+[ext_resource type="PackedScene" path="res://track/kill_lasers.tscn" id="6_kill"]
+[ext_resource type="PackedScene" path="res://lasers/laser_ship.tscn" id="7_ship"]
+[ext_resource type="Script" path="res://lasers/laser_director.gd" id="8_director"]
+[ext_resource type="PackedScene" path="res://fx/neon_fx_layer.tscn" id="9_fx"]
+[ext_resource type="PackedScene" path="res://ui/hud/neon_hud.tscn" id="10_hud"]
+[ext_resource type="PackedScene" path="res://blob/neon_blob.tscn" id="11_blob"]
+[ext_resource type="PackedScene" path="res://neon/neon_glow.tscn" id="12_glow"]
+[ext_resource type="PackedScene" path="res://neon/neon_grid.tscn" id="13_grid"]
+[ext_resource type="PackedScene" path="res://audio/techno.tscn" id="14_music"]
+
+[node name="Treadmill" type="Node2D" node_paths=PackedStringArray("blobs_node", "hud", "camera", "kill_lasers", "laser_director", "grid")]
+script = ExtResource("1_mode")
+blob_scene = ExtResource("11_blob")
+blobs_node = NodePath("Blobs")
+hud = NodePath("Hud")
+menu_path = "res://ui/menus/treadmill_menu.tscn"
+bot_names = PackedStringArray("Bonk", "Wobbles", "Gummy", "Blorb")
+bot_colors = PackedColorArray(1, 0.2, 0.25, 1, 0.2, 1, 0.5, 1, 0.65, 0.3, 1, 1, 1, 0.35, 0.85, 1)
+camera = NodePath("GameCamera")
+kill_lasers = NodePath("KillLasers")
+laser_director = NodePath("LaserDirector")
+grid = NodePath("NeonGrid")
+
+[node name="NeonGlow" parent="." instance=ExtResource("12_glow")]
+
+[node name="Techno" parent="." instance=ExtResource("14_music")]
+
+[node name="GameCamera" type="Camera2D" parent="."]
+script = ExtResource("2_camera")
+view_size = Vector2(1000, 820)
+beat_pulse = 0.008
+
+[node name="NeonGrid" parent="." instance=ExtResource("13_grid")]
+
+[node name="SideWalls" parent="." instance=ExtResource("5_walls")]
+
+[node name="BlobPhysics" type="Node" parent="."]
+script = ExtResource("3_physics")
+
+[node name="Track" type="Node2D" parent="."]
+script = ExtResource("4_generator")
+
+[node name="Blobs" type="Node2D" parent="."]
+
+[node name="KillLasers" parent="." instance=ExtResource("6_kill")]
+
+[node name="Ships" type="Node2D" parent="."]
+
+[node name="LeftShip1" parent="Ships" instance=ExtResource("7_ship")]
+
+[node name="LeftShip2" parent="Ships" instance=ExtResource("7_ship")]
+slot = 1
+
+[node name="RightShip1" parent="Ships" instance=ExtResource("7_ship")]
+side = 1
+
+[node name="RightShip2" parent="Ships" instance=ExtResource("7_ship")]
+side = 1
+slot = 1
+
+[node name="LaserDirector" type="Node" parent="."]
+script = ExtResource("8_director")
+start_delay = 5.0
+
+[node name="FxLayer" parent="." instance=ExtResource("9_fx")]
+
+[node name="Hud" parent="." instance=ExtResource("10_hud")]

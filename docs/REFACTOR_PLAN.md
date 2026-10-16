@@ -20,8 +20,8 @@ old scripts; default resource values equal the old `const`s.
 | 1. Foundations | done |
 | Project move to `C:\dev\example_game` | done |
 | 2. Classic ring on scenes | done |
-| 3. Neon on scenes | built; waiting on a feel check against "NEON (OLD)" |
-| 4. Treadmill on scenes | to do |
+| 3. Neon on scenes | done |
+| 4. Treadmill on scenes | built; waiting on a feel check (treadmill menu: VERSION OLD/NEW) |
 | 5. Delete the old code | to do |
 
 ## Moving the project to C:\dev\example_game (done)
@@ -88,7 +88,16 @@ New, scene-based (use these):
 | `arena/neon_ring_arena.gd`, `food/neon_food.gd/.tscn`, `fx/neon_fx_layer.gd/.tscn` | Neon ring, food diamond, streak particles |
 | `lasers/` | `LaserEmitter` (charge/lock/fire on the beat, dodging, hits), `LaserSettings` + `turret_laser.tres`, `LaserTurret`, `LaserDirector` |
 | `ui/hud/neon_hud.tscn`, `ui/themes/neon_hud_theme.tres` | HUD with the neon text colours (inherited scene) |
-| `modes/ring/neon.tscn` | Neon on `ring_game.gd` (menu: NEON; old one is NEON (OLD)) |
+| `modes/ring/neon.tscn` | Neon on `ring_game.gd` (menu: NEON) |
+| `track/track_settings.gd/.tres` | `TrackSettings`: track, scrolling, obstacles, ship speed, bots per mode, colours |
+| `track/wall_block.gd/.tscn`, `bumper.gd/.tscn` | `WallBlock` (plain or `kicker`), `Bumper`; `Bumper.kick()` is the shared pinball fling |
+| `track/side_walls.gd/.tscn` | `SideWalls`: the two long walls, the belt chevrons and the ships' zones, drawn for the visible span |
+| `track/kill_lasers.gd/.tscn` | `KillLasers` (group `kill_lasers`): top/bottom of the screen, `die()` past them; `enabled`, `lethal` |
+| `track/track_generator.gd` | `TrackGenerator`: chunks of walls, bumpers and neon food above the screen; frees what falls behind |
+| `lasers/laser_ship.gd/.tscn`, `ship_laser.tres` | `LaserShip` (`side`, `slot`): cruises beside the track, holds still while firing |
+| `blob/control/track_bot_brain.gd` | `TrackBotBrain`: the treadmill bot on `BotBrain` |
+| `modes/treadmill/treadmill.tscn`, `treadmill_game.gd` | Treadmill on the components; the treadmill menu opens it (VERSION: OLD opens the old one) |
+| `GameCamera.visible_rect()`, `GameCamera.view_of(node)` | What the camera shows; the track pieces use it |
 
 Old, still running classic/neon/treadmill (don't extend; delete in Phase 5):
 `scripts/` (`game.gd`, `blob.gd`, `ai_brain.gd`, `fx.gd`, `sfx.gd`, `tuning.gd`,
@@ -143,7 +152,7 @@ Built as below. Differences from the old version, all small:
 - Trails draw over the ring edge line (they used to go just under it).
 - The neon ring reads its colours from `NeonLook.palette`; its wall sparks still use
   `RingArena.wall_color`, as the old code used the classic wall colour.
-Left to do: the user's feel check, then remove the NEON (OLD) button.
+Feel checked against the old version.
 
 Sources: `scripts/neon/*`.
 
@@ -168,6 +177,13 @@ Sources: `scripts/neon/*`.
 Check: lasers telegraph and fire on the beat, bots dodge, grid ripples on hits, trails, glow on/off.
 
 ## Phase 4: treadmill
+
+Built as below. Notes:
+- `KillLasers` call `blob.die()` like the ring does; the mode only reacts to `Blob.died`.
+- Controls go through `PlayerInput` with the `solo` / `p1` / `p2` profiles; R/Start and
+  Esc/Back are the `restart` / `quit` actions, which have the same keys and buttons.
+- The treadmill menu has a temporary VERSION: NEW/OLD button (`treadmill_old_path`).
+Left to do: the user's feel check, then remove that button.
 
 Sources: `scripts/treadmill/*`.
 

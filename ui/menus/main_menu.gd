@@ -8,7 +8,6 @@ extends Control
 @export_file("*.tscn") var treadmill_menu_path: String
 @export_file("*.tscn") var classic_path: String
 @export_file("*.tscn") var neon_path: String
-@export_file("*.tscn") var neon_old_path: String # temporary: the old neon, for comparing feel
 @export_file("*.tscn") var sandbox_path: String
 
 @onready var treadmill_button: Button = $Center/Column/Buttons/TreadmillButton
@@ -29,10 +28,6 @@ func _on_classic_button_pressed() -> void:
 
 func _on_neon_button_pressed() -> void:
 	get_tree().change_scene_to_file(neon_path)
-
-
-func _on_neon_old_button_pressed() -> void:
-	get_tree().change_scene_to_file(neon_old_path)
 
 
 func _on_sandbox_button_pressed() -> void:

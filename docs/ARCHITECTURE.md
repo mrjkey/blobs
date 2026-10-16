@@ -23,6 +23,7 @@ sit together.
 | `physics/` | `BlobPhysics` (moves and collides blobs) and `PhysicsFeel` |
 | `arena/` | Floors and walls blobs play on (`BoxRoom`, `RingArena`) |
 | `food/` | `Food` pellets and the `FoodSpawner` |
+| `track/` | Treadmill pieces: `WallBlock`, `Bumper`, `SideWalls`, `KillLasers`, `TrackGenerator`, `TrackSettings` |
 | `fx/` | Visual-only nodes: `FxLayer` (sparks, shockwaves), `GameCamera` |
 | `neon/` | The neon look: `NeonLook.hdr()`, `NeonPalette`, `NeonGrid`, the optional glow |
 | `lasers/` | Beat-timed lasers: `LaserEmitter` and its subclasses, `LaserDirector`, `LaserSettings` |
@@ -59,6 +60,7 @@ finds what it needs:
   - `music`: at most one `Techno`. `NeonLook.beat()` / `NeonLook.kick()` read it (a steady 128 BPM / no kick without it).
   - `lasers`: every `LaserEmitter`; the `LaserDirector` schedules them.
   - `grid`: `NeonGrid`s; call `impulse(world_pos, strength, radius)` on the group to ripple them.
+  - `kill_lasers`: at most one `KillLasers`; `kill_top()` / `kill_bottom()` for treadmill bots.
 - **Signals** for reporting upward: `Blob.pushed`, `Blob.ate_food`, `Blob.died`,
   `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Juice.impact`. The
   mode script connects to them. Anything that knocks a blob out calls
@@ -82,10 +84,11 @@ controller registers itself as `blob.controller`, so `blob.is_human()` works.
 Set with `process_physics_priority` in each script's `_ready()`:
 
 1. `-10` controllers (`PlayerInput`, `BotBrain`) set `move_dir` / request pushes
+   - `-8` the treadmill mode scrolls the camera, `-7` `TrackGenerator` builds ahead
    - `-6` `LaserDirector`, `-5` `LaserEmitter`s (dodging overrides the bots' `move_dir`)
 2. `0` `BlobPhysics`: substeps of motion, blob-vs-blob, then every `blob_colliders` node
 3. `10` `Blob`: push cooldown, windup and release
-4. `20` rules that look at where blobs ended up: `RingArena` ring-out, `Food` eating
+4. `20` rules that look at where blobs ended up: `RingArena` ring-out, `KillLasers`, `Food` eating
 
 Drawing (`BlobBody`, `FxLayer`) runs in `_process`.
 
