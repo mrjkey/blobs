@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modes/ring/ring_game.gd" id="1_mode"]
+[ext_resource type="Script" path="res://fx/game_camera.gd" id="2_camera"]
+[ext_resource type="Script" path="res://arena/ring_arena.gd" id="3_arena"]
+[ext_resource type="Script" path="res://physics/blob_physics.gd" id="4_physics"]
+[ext_resource type="Script" path="res://food/food_spawner.gd" id="5_spawner"]
+[ext_resource type="PackedScene" path="res://fx/fx_layer.tscn" id="6_fx"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="7_hud"]
+
+[node name="Ring" type="Node2D" node_paths=PackedStringArray("blobs_node", "hud", "arena", "food_spawner")]
+script = ExtResource("1_mode")
+blobs_node = NodePath("Blobs")
+hud = NodePath("Hud")
+hint = "WASD / arrows: move     SPACE: push     R: restart"
+arena = NodePath("RingArena")
+food_spawner = NodePath("FoodSpawner")
+
+[node name="GameCamera" type="Camera2D" parent="."]
+script = ExtResource("2_camera")
+
+[node name="RingArena" type="Node2D" parent="."]
+script = ExtResource("3_arena")
+
+[node name="BlobPhysics" type="Node" parent="."]
+script = ExtResource("4_physics")
+
+[node name="FoodSpawner" type="Node2D" parent="."]
+script = ExtResource("5_spawner")
+
+[node name="Blobs" type="Node2D" parent="."]
+
+[node name="FxLayer" parent="." instance=ExtResource("6_fx")]
+
+[node name="Hud" parent="." instance=ExtResource("7_hud")]

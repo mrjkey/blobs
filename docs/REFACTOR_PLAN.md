@@ -18,13 +18,13 @@ old scripts; default resource values equal the old `const`s.
 |---|---|
 | 0. Cleanup and moves | done |
 | 1. Foundations | done |
-| Project move to `C:\dev\example_game` | next (see below) |
-| 2. Classic ring on scenes | to do |
+| Project move to `C:\dev\example_game` | done |
+| 2. Classic ring on scenes | built; waiting on a feel check against "CLASSIC (OLD)" |
 | 3. Neon on scenes | to do |
 | 4. Treadmill on scenes | to do |
 | 5. Delete the old code | to do |
 
-## Moving the project to C:\dev\example_game
+## Moving the project to C:\dev\example_game (done)
 
 Why: Windows Godot reads a project in WSL over the `\\wsl.localhost` share, and
 every file open is slow. Measured first scene loads (headless): sandbox 3484 ms
@@ -76,6 +76,11 @@ New, scene-based (use these):
 | `neon/neon_glow.gd/.tscn`, `neon_glow_env.tres` | Optional bloom; only on when `Session.glow`; HDR 2D on while in the tree |
 | `sandbox/sandbox.tscn` | Test bench: room, player, a bot, a heavy bot |
 | `ui/menus/`, `ui/themes/menu_theme.tres` | Menus (main menu has SANDBOX and GLOW buttons) |
+| `arena/ring_arena.gd` | `RingArena` (@tool): ring, mud, circular wall with hit flashes; ring-out timer sets `blob.ring_danger` and calls `blob.die()` while `counting` |
+| `food/food.gd/.tscn`, `food/food_spawner.gd` | `Food` (eaten on touch), `FoodSpawner` (timer, max, free spot inside the arena's ring; `enabled`) |
+| `ui/hud/hud.gd/.tscn`, `ui/themes/hud_theme.tres` | `Hud`: `set_status()`, `set_hint()`, `show_banner()`, `await play_countdown()` |
+| `modes/game_mode.gd` | `GameMode`: spawning, countdown, `Blob.died` → banner + last-standing win check; hooks `_spawn_blobs()`, `_on_play_started()`, `_on_round_over()` |
+| `modes/ring/ring.tscn`, `ring_game.gd` | Classic ring on the components (menu: CLASSIC RING; old one is CLASSIC (OLD)) |
 
 Old, still running classic/neon/treadmill (don't extend; delete in Phase 5):
 `scripts/` (`game.gd`, `blob.gd`, `ai_brain.gd`, `fx.gd`, `sfx.gd`, `tuning.gd`,
@@ -83,6 +88,11 @@ Old, still running classic/neon/treadmill (don't extend; delete in Phase 5):
 `game.gd` preloads its sound kit as `OldSfx` so it doesn't shadow the `Sfx` autoload.
 
 ## Phase 2: classic ring
+
+Built as below, except: the arena knocks blobs out itself (`blob.die()`), and
+`GameMode` reacts to `Blob.died` from any cause, so treadmill's kill lasers can
+just call `die()` too. Left to do: the user's feel check, then remove the
+CLASSIC (OLD) button (the old `main.tscn` goes in Phase 5).
 
 Source: `scripts/game.gd` (and `tuning.gd` arena/food/round consts).
 

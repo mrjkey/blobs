@@ -21,7 +21,8 @@ sit together.
 | `blob/body/` | How a blob is drawn (jelly spring, eyes, status rings); other looks subclass `BlobBody` |
 | `blob/control/` | Controllers that steer a blob: `PlayerInput` + `InputProfile`s, `BotBrain` and its subclasses |
 | `physics/` | `BlobPhysics` (moves and collides blobs) and `PhysicsFeel` |
-| `arena/` | Floors and walls blobs play on (`BoxRoom`, later the sumo ring) |
+| `arena/` | Floors and walls blobs play on (`BoxRoom`, `RingArena`) |
+| `food/` | `Food` pellets and the `FoodSpawner` |
 | `fx/` | Visual-only nodes: `FxLayer` (sparks, shockwaves), `GameCamera` |
 | `neon/` | The neon look: `hdr()` colours, the optional glow |
 | `ui/` | `menus/`, `hud/`, `themes/` |
@@ -51,11 +52,13 @@ finds what it needs:
   `_enter_tree()`, so a node can't be placed without them:
   - `blobs`: every `Blob`. Dead blobs stay in the group with `alive == false` until they free themselves.
   - `blob_colliders`: anything blobs bounce off. Implements `collide(blob: Blob, feel: PhysicsFeel)`.
-  - `arena`: at most one. Optional `is_in_mud(pos) -> bool`, and `ring_radius` for ring bots.
+  - `arena`: at most one. Optional `is_in_mud(pos) -> bool`, and `ring_radius` for ring bots and the food spawner.
   - `food`: pellets bots look for.
   - `fx`: the `FxLayer` that `Juice.burst()` / `Juice.shockwave()` draw on.
 - **Signals** for reporting upward: `Blob.pushed`, `Blob.ate_food`, `Blob.died`,
-  `BlobPhysics.blob_contact`, `Juice.impact`. The mode script connects to them.
+  `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Juice.impact`. The
+  mode script connects to them. Anything that knocks a blob out calls
+  `blob.die()`; the mode only listens to `Blob.died`.
 - **Autoloads** for feedback anything can trigger: `Juice.shake()`,
   `Juice.hitstop()`, `Juice.burst()`, `Juice.impact_at()`, `Sfx.play()`.
 - **Missing collaborators are fine.** No `FxLayer`? No sparks. No arena? No mud,
@@ -77,6 +80,7 @@ Set with `process_physics_priority` in each script's `_ready()`:
 1. `-10` controllers (`PlayerInput`, `BotBrain`) set `move_dir` / request pushes
 2. `0` `BlobPhysics`: substeps of motion, blob-vs-blob, then every `blob_colliders` node
 3. `10` `Blob`: push cooldown, windup and release
+4. `20` rules that look at where blobs ended up: `RingArena` ring-out, `Food` eating
 
 Drawing (`BlobBody`, `FxLayer`) runs in `_process`.
 
@@ -143,5 +147,8 @@ override `_decide()`, `_target_score()`, `_food_ok()`.
 (`BlobStats`, `PhysicsFeel`, `JuiceSettings`...), read it where it's used.
 
 **New mode:** a folder under `modes/` with a scene that places the components
-(camera, arena, `BlobPhysics`, `FxLayer`, HUD, spawn points) and a script with
-the round rules (spawning, countdown, win check). Add a menu button.
+(camera, arena, `BlobPhysics`, `FxLayer`, `Hud`, a `Blobs` node) and a script
+that extends `GameMode`: spawn in `_spawn_blobs()` with `spawn_player()` /
+`spawn_bot()`, switch hazards on in `_on_play_started()` and off in
+`_on_round_over()`, override `_check_round_over()` for other win rules. See
+`modes/ring/`. Add a menu button.
