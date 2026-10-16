@@ -39,12 +39,10 @@ Steps:
    or Windows) and keep using it. If using Windows git, set
    `core.autocrlf=false` so line endings don't churn.
 3. Fix the live-reload tools. They assume the project is in WSL:
-   - `tools/godot_lsp_relay.py`: `windows_project_path()` turns `wslpath -w`
-     output into `//wsl.localhost/...` and builds `file:////wsl.localhost/...`
-     URIs. For a drive path Godot uses `file:///C:/dev/example_game`, and VS
-     Code (in WSL) uses `file:///mnt/c/dev/example_game`. The URI rewriting
-     needs a drive-letter case (watch for `C:` vs `c%3A` encoding in what Godot
-     sends back).
+   - `tools/godot_lsp_relay.py`: done. `godot_uris()` sends Godot
+     `file:///C:/dev/example_game` and maps its replies (`file:///C%3A/...`,
+     checked against the live editor) back to `file:///mnt/c/dev/example_game`.
+     The `//wsl.localhost` case still works if the project moves back.
    - Alternative: open the folder in VS Code on Windows directly (not through
      Remote-WSL). Paths then match natively and the relay isn't needed; point
      `godotTools.lsp.serverPort` back at Godot's port and drop the VS Code task.

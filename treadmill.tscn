@@ -4,3 +4,4 @@
 
 [node name="TreadmillGame" type="Node2D" unique_id=305080384]
 script = ExtResource("1_treadmill")
+ 

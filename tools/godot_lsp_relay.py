@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 """Relay between VS Code (in WSL) and the Godot editor's language server (on Windows).
 
-Godot knows this project as //wsl.localhost/<distro>/home/..., while VS Code in WSL
-calls it /home/.... With mismatched paths Godot can't map a saved file to its
-res:// path, so saves from VS Code never reach the editor or the running game
-("Attempt to open script '/home/...' resulted in error 'File not found'").
+Godot knows this project by its Windows path (C:/dev/example_game), while VS Code in
+WSL calls it /mnt/c/dev/example_game. With mismatched paths Godot can't map a saved
+file to its res:// path, so saves from VS Code never reach the editor or the running
+game ("Attempt to open script '/mnt/...' resulted in error 'File not found'").
 
 This relay rewrites the project's file URIs in every message:
-    VS Code -> Godot:  file:///home/me/game  becomes  file:////wsl.localhost/Ubuntu/home/me/game
-    Godot -> VS Code:  file:///wsl.localhost/Ubuntu/home/me/game  becomes  file:///home/me/game
+    VS Code -> Godot:  file:///mnt/c/dev/game  becomes  file:///C:/dev/game
+    Godot -> VS Code:  file:///C%3A/dev/game   becomes  file:///mnt/c/dev/game
 plus rootPath in the "initialize" request. Godot 4.7 then accepts the root as its
-own project and maps every file under it to res://. (It misreads the usual UNC form
-file://wsl.localhost/... as a host name, hence the four slashes going in.)
+own project and maps every file under it to res://. Godot percent-encodes the drive
+colon in what it sends back, so both spellings (and either drive case) are mapped.
+
+A project inside WSL (//wsl.localhost/<distro>/home/...) works too: Godot gets
+file:////wsl.localhost/... (four slashes; it misreads the usual UNC form
+file://wsl.localhost/... as a host name) and sends back file:///wsl.localhost/....
 
 Usage: python3 tools/godot_lsp_relay.py [--listen 6010] [--godot 6005]
 Then point VS Code at it: "godotTools.lsp.serverPort": 6010 (.vscode/settings.json).
@@ -31,9 +35,18 @@ HEADER_END = b"\r\n\r\n"
 
 
 def windows_project_path(project_dir: str) -> str:
-    """The project path the way Windows Godot sees it, e.g. //wsl.localhost/Ubuntu/home/me/game."""
+    """The project path the way Windows Godot sees it, e.g. C:/dev/game or //wsl.localhost/Ubuntu/home/me/game."""
     win = subprocess.run(["wslpath", "-w", project_dir], capture_output=True, text=True, check=True)
     return win.stdout.strip().replace("\\", "/")
+
+
+def godot_uris(win_root: str) -> tuple[str, list[str]]:
+    """The project root's URI to send Godot, and every form Godot may use for it in replies."""
+    if win_root.startswith("//"):  # a UNC share, e.g. a project inside WSL
+        return "file://" + win_root, ["file://" + win_root, "file:///" + win_root.lstrip("/")]
+    drive, rest = win_root.split(":", 1)  # "C", "/dev/game"
+    replies = [f"file:///{d}{colon}{rest}" for d in (drive.upper(), drive.lower()) for colon in (":", "%3A", "%3a")]
+    return f"file:///{win_root}", replies
 
 
 async def read_message(reader: asyncio.StreamReader) -> bytes | None:
@@ -88,12 +101,11 @@ async def main() -> None:
     parser.add_argument("--project", default=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     args = parser.parse_args()
 
-    win_root = windows_project_path(args.project)                  # //wsl.localhost/Ubuntu/home/me/game
-    wsl_uri = ("file://" + args.project).encode()                  # file:///home/me/game
-    win_uri_in = ("file://" + win_root).encode()                   # file:////wsl.localhost/Ubuntu/home/me/game
-    win_uri_out = ("file:///" + win_root.lstrip("/")).encode()     # file:///wsl.localhost/Ubuntu/home/me/game
-    to_godot = [(wsl_uri, win_uri_in)]
-    to_client = [(win_uri_in, wsl_uri), (win_uri_out, wsl_uri)]
+    win_root = windows_project_path(args.project)    # C:/dev/game
+    wsl_uri = ("file://" + args.project).encode()    # file:///mnt/c/dev/game
+    win_uri_in, win_uris_out = godot_uris(win_root)  # file:///C:/dev/game, [file:///C%3A/dev/game, ...]
+    to_godot = [(wsl_uri, win_uri_in.encode())]
+    to_client = [(uri.encode(), wsl_uri) for uri in win_uris_out]
     # VS Code can launch the task again (e.g. on Reload Window) while the previous relay
     # is still shutting down, so give the port a few seconds to free up before giving up.
     for attempt in range(10):
@@ -111,7 +123,7 @@ async def main() -> None:
         print(f"another relay is already listening on port {args.listen}; exiting", flush=True)
         return
     print(f"Godot LSP relay: 127.0.0.1:{args.listen} -> 127.0.0.1:{args.godot}", flush=True)
-    print(f"  {wsl_uri.decode()}  ->  {win_uri_in.decode()}", flush=True)
+    print(f"  {wsl_uri.decode()}  ->  {win_uri_in}", flush=True)
     async with server:
         await server.serve_forever()
 
