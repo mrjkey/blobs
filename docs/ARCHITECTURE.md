@@ -16,7 +16,7 @@ sit together.
 | Folder | What goes there |
 |---|---|
 | `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres` |
-| `audio/` | `Sfx` autoload (synthesised sound kit); music |
+| `audio/` | `Sfx` autoload (synthesised sound kit); `Techno` music + beat clock |
 | `blob/` | `blob.tscn` and its script, `BlobStats` + `stats/*.tres` |
 | `blob/body/` | How a blob is drawn (jelly spring, eyes, status rings); other looks subclass `BlobBody` |
 | `blob/control/` | Controllers that steer a blob: `PlayerInput` + `InputProfile`s, `BotBrain` and its subclasses |
@@ -24,7 +24,8 @@ sit together.
 | `arena/` | Floors and walls blobs play on (`BoxRoom`, `RingArena`) |
 | `food/` | `Food` pellets and the `FoodSpawner` |
 | `fx/` | Visual-only nodes: `FxLayer` (sparks, shockwaves), `GameCamera` |
-| `neon/` | The neon look: `hdr()` colours, the optional glow |
+| `neon/` | The neon look: `NeonLook.hdr()`, `NeonPalette`, `NeonGrid`, the optional glow |
+| `lasers/` | Beat-timed lasers: `LaserEmitter` and its subclasses, `LaserDirector`, `LaserSettings` |
 | `ui/` | `menus/`, `hud/`, `themes/` |
 | `modes/` | One folder per game mode: the scene that composes components plus the round rules |
 | `sandbox/` | Test bench scene for trying components |
@@ -55,6 +56,9 @@ finds what it needs:
   - `arena`: at most one. Optional `is_in_mud(pos) -> bool`, and `ring_radius` for ring bots and the food spawner.
   - `food`: pellets bots look for.
   - `fx`: the `FxLayer` that `Juice.burst()` / `Juice.shockwave()` draw on.
+  - `music`: at most one `Techno`. `NeonLook.beat()` / `NeonLook.kick()` read it (a steady 128 BPM / no kick without it).
+  - `lasers`: every `LaserEmitter`; the `LaserDirector` schedules them.
+  - `grid`: `NeonGrid`s; call `impulse(world_pos, strength, radius)` on the group to ripple them.
 - **Signals** for reporting upward: `Blob.pushed`, `Blob.ate_food`, `Blob.died`,
   `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Juice.impact`. The
   mode script connects to them. Anything that knocks a blob out calls
@@ -78,6 +82,7 @@ controller registers itself as `blob.controller`, so `blob.is_human()` works.
 Set with `process_physics_priority` in each script's `_ready()`:
 
 1. `-10` controllers (`PlayerInput`, `BotBrain`) set `move_dir` / request pushes
+   - `-6` `LaserDirector`, `-5` `LaserEmitter`s (dodging overrides the bots' `move_dir`)
 2. `0` `BlobPhysics`: substeps of motion, blob-vs-blob, then every `blob_colliders` node
 3. `10` `Blob`: push cooldown, windup and release
 4. `20` rules that look at where blobs ended up: `RingArena` ring-out, `Food` eating
@@ -137,6 +142,11 @@ Try it in the sandbox.
 
 **New look for blobs:** a script that `extends BlobBody` and overrides `_draw()`;
 an inherited scene of `blob.tscn` with that script on `Body`.
+
+**Neon version of a component:** subclass it and override `_draw()` with
+`NeonLook.hdr()` colours (`NeonRingArena`, `NeonFood`, `NeonFxLayer`). Draw order
+in a neon scene: `NeonGrid` z -10, arena z -1, then trails (z -1, later in the
+tree), blobs, lasers z 5, `FxLayer` z 10.
 
 **New controller:** a node script that sets `blob.controller = self` in
 `_ready()`, runs at physics priority -10, and writes `move_dir` /

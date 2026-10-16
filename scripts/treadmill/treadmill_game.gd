@@ -13,11 +13,11 @@ extends "res://scripts/game.gd"
 
 const TT = preload("res://scripts/treadmill/treadmill_tuning.gd")
 const NT = preload("res://scripts/neon/neon_tuning.gd")
-const NeonLook = preload("res://scripts/neon/neon_look.gd")
+const OldNeonLook = preload("res://scripts/neon/neon_look.gd")
 const NeonBlob = preload("res://scripts/neon/neon_blob.gd")
 const NeonFx = preload("res://scripts/neon/neon_fx.gd")
-const NeonGrid = preload("res://scripts/neon/neon_grid.gd")
-const Techno = preload("res://scripts/neon/techno.gd")
+const OldNeonGrid = preload("res://scripts/neon/neon_grid.gd")
+const OldTechno = preload("res://scripts/neon/techno.gd")
 const TreadmillBrain = preload("res://scripts/treadmill/treadmill_brain.gd")
 const PadInput = preload("res://scripts/treadmill/pad_input.gd")
 const NEON_GLOW = preload("res://neon/neon_glow.tscn")
@@ -36,8 +36,8 @@ var bumpers: Array = []             # {pos: Vector2, radius: float, flash: float
 var ships: Array = []               # laser ships, see _make_ships()
 var players: Array = []             # {blob: OldBlob, input: PadInput}
 var trails := {}                    # blob instance id -> recent positions
-var grid: NeonGrid
-var music: Techno
+var grid: OldNeonGrid
+var music: OldTechno
 
 var _overlay: Node2D                # kill lasers, ships and beams, drawn above the blobs
 var _next_chunk_y := 0.0
@@ -54,10 +54,10 @@ func _ready() -> void:
 		{"name": "Blorb", "color": Color(1.0, 0.35, 0.85)},
 	]
 	add_child(NEON_GLOW.instantiate())
-	grid = NeonGrid.new()
+	grid = OldNeonGrid.new()
 	grid.z_index = -10
 	add_child(grid)
-	music = Techno.new()
+	music = OldTechno.new()
 	add_child(music)
 	_overlay = Node2D.new()
 	_overlay.z_index = 5
@@ -751,14 +751,14 @@ func _draw() -> void:
 		for cx: float in [-half * 0.55, 0.0, half * 0.55]:
 			var p := Vector2(cx, yy)
 			draw_polyline(PackedVector2Array([p + Vector2(-26, -10), p + Vector2(0, 8), p + Vector2(26, -10)]),
-				NeonLook.hdr(TT.BELT_COLOR, 0.8, 0.2), 3.0, true)
+				OldNeonLook.hdr(TT.BELT_COLOR, 0.8, 0.2), 3.0, true)
 		yy += step
 
 	# Side walls.
 	for sx: float in [-half, half]:
-		draw_line(Vector2(sx, y0), Vector2(sx, y1), NeonLook.hdr(TT.SIDE_WALL_COLOR, 1.6 + 0.4 * k), 5.0, true)
+		draw_line(Vector2(sx, y0), Vector2(sx, y1), OldNeonLook.hdr(TT.SIDE_WALL_COLOR, 1.6 + 0.4 * k), 5.0, true)
 		var inner := sx - signf(sx) * 10.0
-		draw_line(Vector2(inner, y0), Vector2(inner, y1), NeonLook.hdr(TT.SIDE_WALL_COLOR, 0.7, 0.4), 1.5, true)
+		draw_line(Vector2(inner, y0), Vector2(inner, y1), OldNeonLook.hdr(TT.SIDE_WALL_COLOR, 0.7, 0.4), 1.5, true)
 
 	# Motion trails.
 	for other in blobs:
@@ -769,7 +769,7 @@ func _draw() -> void:
 		var pts: Array = trails[id]
 		for i in range(1, pts.size()):
 			var f := float(i) / pts.size()
-			draw_line(pts[i - 1], pts[i], NeonLook.hdr(b.color, 1.5, 0.35 * f), maxf(b.radius * 1.3 * f, 1.0), true)
+			draw_line(pts[i - 1], pts[i], OldNeonLook.hdr(b.color, 1.5, 0.35 * f), maxf(b.radius * 1.3 * f, 1.0), true)
 
 	# Walls: dark glass with a neon edge. Kickers are pink and flash when they fire.
 	for w in walls:
@@ -779,9 +779,9 @@ func _draw() -> void:
 		var col: Color = TT.KICKER_COLOR if w["kicker"] else TT.WALL_COLOR
 		var fl: float = w["flash"]
 		draw_rect(rect, Color(col.r * 0.1, col.g * 0.1, col.b * 0.15, 0.9))
-		draw_rect(rect, NeonLook.hdr(col, 1.6 + 2.5 * fl), false, 3.0, true)
+		draw_rect(rect, OldNeonLook.hdr(col, 1.6 + 2.5 * fl), false, 3.0, true)
 		if w["kicker"] and rect.size.x > 14.0 and rect.size.y > 14.0:
-			draw_rect(rect.grow(-6.0), NeonLook.hdr(col, 0.9 + fl, 0.6), false, 1.5, true)
+			draw_rect(rect.grow(-6.0), OldNeonLook.hdr(col, 0.9 + fl, 0.6), false, 1.5, true)
 
 	# Pinball bumpers: pop bigger when hit.
 	for bp in bumpers:
@@ -791,9 +791,9 @@ func _draw() -> void:
 		var fl: float = bp["flash"]
 		var rr: float = bp["radius"] * (1.0 + 0.25 * fl)
 		draw_circle(p, rr, Color(0.08, 0.06, 0.0, 0.9))
-		draw_arc(p, rr, 0.0, TAU, 40, NeonLook.hdr(TT.BUMPER_COLOR, 1.8 + 3.0 * fl + 0.4 * k), 4.0, true)
-		draw_arc(p, rr * 0.6, 0.0, TAU, 32, NeonLook.hdr(TT.BUMPER_COLOR, 1.2 + 2.0 * fl, 0.7), 2.0, true)
-		draw_circle(p, rr * 0.22, NeonLook.hdr(TT.BUMPER_COLOR, 1.5 + 3.0 * fl))
+		draw_arc(p, rr, 0.0, TAU, 40, OldNeonLook.hdr(TT.BUMPER_COLOR, 1.8 + 3.0 * fl + 0.4 * k), 4.0, true)
+		draw_arc(p, rr * 0.6, 0.0, TAU, 32, OldNeonLook.hdr(TT.BUMPER_COLOR, 1.2 + 2.0 * fl, 0.7), 2.0, true)
+		draw_circle(p, rr * 0.22, OldNeonLook.hdr(TT.BUMPER_COLOR, 1.5 + 3.0 * fl))
 
 	# Food: spinning neon diamonds.
 	for f in foods:
@@ -809,8 +809,8 @@ func _draw() -> void:
 			pts.append(fpos + Vector2.from_angle(clock * 2.0 + fseed + j * PI / 2.0) * r)
 		var outline := pts.duplicate()
 		outline.append(pts[0])
-		draw_colored_polygon(pts, NeonLook.hdr(NT.FOOD_COLOR, 0.5, 0.5))
-		draw_polyline(outline, NeonLook.hdr(NT.FOOD_COLOR, 2.5), 2.0, true)
+		draw_colored_polygon(pts, OldNeonLook.hdr(NT.FOOD_COLOR, 0.5, 0.5))
+		draw_polyline(outline, OldNeonLook.hdr(NT.FOOD_COLOR, 2.5), 2.0, true)
 
 
 func _draw_overlay() -> void:
@@ -823,10 +823,10 @@ func _draw_overlay() -> void:
 		var flicker := 0.85 + 0.15 * sin(clock * 40.0 + y * 0.1)
 		var a := Vector2(-half, y)
 		var b := Vector2(half, y)
-		_overlay.draw_line(a, b, NeonLook.hdr(TT.EDGE_LASER_COLOR, 0.9, 0.25), 14.0, true)
-		_overlay.draw_line(a, b, NeonLook.hdr(TT.EDGE_LASER_COLOR, (2.2 + 0.5 * k) * flicker), 3.0, true)
+		_overlay.draw_line(a, b, OldNeonLook.hdr(TT.EDGE_LASER_COLOR, 0.9, 0.25), 14.0, true)
+		_overlay.draw_line(a, b, OldNeonLook.hdr(TT.EDGE_LASER_COLOR, (2.2 + 0.5 * k) * flicker), 3.0, true)
 		for end: Vector2 in [a, b]:
-			_overlay.draw_circle(end, 6.0, NeonLook.hdr(TT.EDGE_LASER_COLOR, 2.5))
+			_overlay.draw_circle(end, 6.0, OldNeonLook.hdr(TT.EDGE_LASER_COLOR, 2.5))
 
 	# Ships, their telegraphs and beams.
 	for s in ships:
@@ -845,21 +845,21 @@ func _draw_overlay() -> void:
 			if to_fire <= TT.LASER_LOCK_BEATS:
 				alpha = 0.9 if int(beat * 16.0) % 2 == 0 else 0.3
 				width = 2.5
-			_overlay.draw_line(pos, pos + aim * length, NeonLook.hdr(TT.BEAM_COLOR, 1.0 + 2.0 * charge, alpha), width, true)
+			_overlay.draw_line(pos, pos + aim * length, OldNeonLook.hdr(TT.BEAM_COLOR, 1.0 + 2.0 * charge, alpha), width, true)
 
 		if fire_beat >= 0.0 and beat >= fire_beat and beat < fire_beat + TT.LASER_FIRE_BEATS:
 			var q := (beat - fire_beat) / TT.LASER_FIRE_BEATS
 			var end := pos + aim * length
-			_overlay.draw_line(pos, end, NeonLook.hdr(TT.BEAM_COLOR, 3.0, 1.0 - q), TT.LASER_WIDTH * 1.4 * (1.0 - q) + 1.0, true)
-			_overlay.draw_line(pos, end, NeonLook.hdr(Color.WHITE, 3.0, 1.0 - q), TT.LASER_WIDTH * 0.35 * (1.0 - q) + 1.0, true)
+			_overlay.draw_line(pos, end, OldNeonLook.hdr(TT.BEAM_COLOR, 3.0, 1.0 - q), TT.LASER_WIDTH * 1.4 * (1.0 - q) + 1.0, true)
+			_overlay.draw_line(pos, end, OldNeonLook.hdr(Color.WHITE, 3.0, 1.0 - q), TT.LASER_WIDTH * 0.35 * (1.0 - q) + 1.0, true)
 
 		# Ship body: a neon arrowhead with two little engine glows.
 		var side_v := Vector2(-aim.y, aim.x)
 		var tip := pos + aim * 18.0
 		var body := PackedVector2Array([tip, pos - aim * 12.0 + side_v * 14.0, pos - aim * 5.0,
 			pos - aim * 12.0 - side_v * 14.0, tip])
-		_overlay.draw_polyline(body, NeonLook.hdr(TT.SHIP_COLOR, 1.5 + 1.0 * k + 3.0 * charge), 2.5, true)
+		_overlay.draw_polyline(body, OldNeonLook.hdr(TT.SHIP_COLOR, 1.5 + 1.0 * k + 3.0 * charge), 2.5, true)
 		for e: float in [-1.0, 1.0]:
-			_overlay.draw_circle(pos - aim * 13.0 + side_v * (8.0 * e), 2.5, NeonLook.hdr(TT.SHIP_COLOR, 2.0 + 1.5 * k))
+			_overlay.draw_circle(pos - aim * 13.0 + side_v * (8.0 * e), 2.5, OldNeonLook.hdr(TT.SHIP_COLOR, 2.0 + 1.5 * k))
 		if charge > 0.0:
-			_overlay.draw_circle(tip, 2.0 + 6.0 * charge, NeonLook.hdr(TT.BEAM_COLOR, 2.0 + 2.0 * charge, 0.9))
+			_overlay.draw_circle(tip, 2.0 + 6.0 * charge, OldNeonLook.hdr(TT.BEAM_COLOR, 2.0 + 2.0 * charge, 0.9))

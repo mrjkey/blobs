@@ -1,0 +1,13 @@
+[gd_resource type="Theme" format=3]
+
+[resource]
+Label/colors/font_color = Color(0.8, 0.95, 1, 1)
+Label/colors/font_outline_color = Color(0.3, 0, 0.4, 0.9)
+Label/constants/outline_size = 4
+StatusLabel/base_type = &"Label"
+StatusLabel/font_sizes/font_size = 24
+HintLabel/base_type = &"Label"
+HintLabel/font_sizes/font_size = 20
+BannerLabel/base_type = &"Label"
+BannerLabel/constants/outline_size = 19
+BannerLabel/font_sizes/font_size = 96

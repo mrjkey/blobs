@@ -19,8 +19,8 @@ old scripts; default resource values equal the old `const`s.
 | 0. Cleanup and moves | done |
 | 1. Foundations | done |
 | Project move to `C:\dev\example_game` | done |
-| 2. Classic ring on scenes | built; waiting on a feel check against "CLASSIC (OLD)" |
-| 3. Neon on scenes | to do |
+| 2. Classic ring on scenes | done |
+| 3. Neon on scenes | built; waiting on a feel check against "NEON (OLD)" |
 | 4. Treadmill on scenes | to do |
 | 5. Delete the old code | to do |
 
@@ -80,19 +80,28 @@ New, scene-based (use these):
 | `food/food.gd/.tscn`, `food/food_spawner.gd` | `Food` (eaten on touch), `FoodSpawner` (timer, max, free spot inside the arena's ring; `enabled`) |
 | `ui/hud/hud.gd/.tscn`, `ui/themes/hud_theme.tres` | `Hud`: `set_status()`, `set_hint()`, `show_banner()`, `await play_countdown()` |
 | `modes/game_mode.gd` | `GameMode`: spawning, countdown, `Blob.died` → banner + last-standing win check; hooks `_spawn_blobs()`, `_on_play_started()`, `_on_round_over()` |
-| `modes/ring/ring.tscn`, `ring_game.gd` | Classic ring on the components (menu: CLASSIC RING; old one is CLASSIC (OLD)) |
+| `modes/ring/ring.tscn`, `ring_game.gd` | Classic ring on the components (menu: CLASSIC RING) |
+| `neon/neon_look.gd`, `neon_palette.gd/.tres` | `NeonLook`: `hdr()`, `music()`, `beat()`, `kick()`; `NeonLook.palette` (`NeonPalette`): brightness, blob glow, trail length, ring colours |
+| `neon/neon_grid.gd/.tscn` | `NeonGrid` (group `grid`): ripples on `Juice.impact` and on `impulse()` calls, flashes on the kick, `follow_y()` for scrolling |
+| `audio/techno.gd/.tscn` | `Techno` (group `music`): the loop and the beat clock |
+| `blob/body/neon_blob_body.gd`, `blob_trail.gd`, `blob/neon_blob.tscn` | Neon blob look (draws `blob.tag`), `BlobTrail` (z -1), the inherited neon blob scene |
+| `arena/neon_ring_arena.gd`, `food/neon_food.gd/.tscn`, `fx/neon_fx_layer.gd/.tscn` | Neon ring, food diamond, streak particles |
+| `lasers/` | `LaserEmitter` (charge/lock/fire on the beat, dodging, hits), `LaserSettings` + `turret_laser.tres`, `LaserTurret`, `LaserDirector` |
+| `ui/hud/neon_hud.tscn`, `ui/themes/neon_hud_theme.tres` | HUD with the neon text colours (inherited scene) |
+| `modes/ring/neon.tscn` | Neon on `ring_game.gd` (menu: NEON; old one is NEON (OLD)) |
 
 Old, still running classic/neon/treadmill (don't extend; delete in Phase 5):
 `scripts/` (`game.gd`, `blob.gd`, `ai_brain.gd`, `fx.gd`, `sfx.gd`, `tuning.gd`,
 `neon/*`, `treadmill/*`), root `main.tscn`, `neon.tscn`, `treadmill.tscn`.
-`game.gd` preloads its sound kit as `OldSfx` so it doesn't shadow the `Sfx` autoload.
+`game.gd` preloads its sound kit as `OldSfx` so it doesn't shadow the `Sfx` autoload; the
+old neon and treadmill scripts likewise call theirs `OldNeonLook`, `OldNeonGrid`, `OldTechno`.
 
 ## Phase 2: classic ring
 
 Built as below, except: the arena knocks blobs out itself (`blob.die()`), and
 `GameMode` reacts to `Blob.died` from any cause, so treadmill's kill lasers can
-just call `die()` too. Left to do: the user's feel check, then remove the
-CLASSIC (OLD) button (the old `main.tscn` goes in Phase 5).
+just call `die()` too. Feel checked against the old version. The old `main.tscn`
+goes in Phase 5.
 
 Source: `scripts/game.gd` (and `tuning.gd` arena/food/round consts).
 
@@ -125,6 +134,16 @@ Source: `scripts/game.gd` (and `tuning.gd` arena/food/round consts).
 Check: countdown, push, food growth, mud, ring-out timer ring, wall flashes, win banner, R, Esc; compare against "CLASSIC (old)".
 
 ## Phase 3: neon
+
+Built as below. Differences from the old version, all small:
+- Lasers ripple the grid by calling `impulse()` on group `grid` (keeps the old
+  260/90 numbers) rather than through `Juice.impact_at`.
+- Turrets orbit during the countdown (the old ones stood still), and the grid
+  and trails freeze during hitstop (the old grid kept rippling).
+- Trails draw over the ring edge line (they used to go just under it).
+- The neon ring reads its colours from `NeonLook.palette`; its wall sparks still use
+  `RingArena.wall_color`, as the old code used the classic wall colour.
+Left to do: the user's feel check, then remove the NEON (OLD) button.
 
 Sources: `scripts/neon/*`.
 

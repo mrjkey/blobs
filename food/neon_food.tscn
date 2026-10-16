@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://food/neon_food.gd" id="1_food"]
+
+[node name="NeonFood" type="Node2D"]
+script = ExtResource("1_food")
+color = Color(0.9, 1, 0.3, 1)
