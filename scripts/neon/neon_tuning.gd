@@ -3,12 +3,10 @@ extends RefCounted
 ## scripts/tuning.gd; these only cover the look, the music and the lasers.
 
 # --- Glow --------------------------------------------------------------------
-# Anything drawn brighter than GLOW_THRESHOLD blooms. Neon colours are drawn at
-# 1.5x-3x brightness on purpose; see hdr() in neon_look.gd.
+# With glow on (main menu), anything drawn brighter than 1.0 blooms. Neon colours
+# are drawn at 1.5x-3x brightness on purpose; see hdr() in neon_look.gd. The bloom
+# settings live in neon/neon_glow_env.tres.
 const BRIGHTNESS := 0.75            # master dimmer for every neon colour (1.0 = original)
-const GLOW_INTENSITY := 0.9        # size/strength of the bloom halo around bright things
-const GLOW_STRENGTH := 1.0
-const GLOW_THRESHOLD := 0.95
 const BLOB_GLOW := 2.4             # brightness of blob outlines
 const TRAIL_FRAMES := 12           # trail length in frames
 

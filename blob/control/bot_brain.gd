@@ -1,0 +1,131 @@
+class_name BotBrain
+extends Node
+## Shared bot plumbing: a decision every `think_time`, smooth wobbly steering,
+## delayed pushes, counter-pushes and target picking. Subclasses say where to
+## go in _decide() and what makes a good target in _target_score().
+## Personality numbers make each bot play a little differently.
+
+@export var randomize_personality := true # re-roll the four numbers below on spawn
+
+@export_group("Personality")
+@export_range(0, 1) var aggression := 0.7 # fighting vs. eating
+@export_range(0, 1) var caution := 0.55   # how far from danger they like to stay
+@export_range(0, 1) var greed := 0.55     # how tempting food is
+@export_range(0, 1) var skill := 0.65     # positioning, push timing, reactions, dodging
+
+@export_group("Reflexes")
+@export var think_time := 0.15    # seconds between decisions
+@export var reaction := 0.18      # delay before they actually push
+@export var turn_rate := 7.0      # how fast their steering follows their intent
+@export var wobble := 0.25        # random wiggle so they don't look robotic
+@export var lead := 0.25          # how far ahead they aim at a moving target (s)
+@export var player_bias := 60.0   # how much more they like picking on a human
+
+var target: Blob = null
+var _desired := Vector2.ZERO # where _decide() wants to go, length <= 1
+var _steer := Vector2.ZERO
+var _think_timer := 0.0
+var _push_timer := -1.0
+var _wander := randf() * TAU
+
+@onready var me: Blob = get_parent()
+
+
+func _ready() -> void:
+	process_physics_priority = -10 # before BlobPhysics moves the blob
+	me.controller = self
+	if randomize_personality:
+		aggression = randf_range(0.4, 1.0)
+		caution = randf_range(0.2, 0.9)
+		greed = randf_range(0.2, 0.9)
+		skill = randf_range(0.3, 1.0)
+	_think_timer = randf() * think_time
+
+
+func _physics_process(delta: float) -> void:
+	if not me.alive or not me.active:
+		return
+	_think_timer -= delta
+	if _think_timer <= 0.0:
+		_think_timer = think_time * randf_range(0.7, 1.3)
+		_decide()
+	if _push_timer > 0.0:
+		_push_timer -= delta
+		if _push_timer <= 0.0:
+			me.request_push()
+	# Smooth, slightly wobbly steering so they look alive rather than robotic.
+	_wander += randf_range(-3.0, 3.0) * delta
+	var wiggle := Vector2.from_angle(_wander) * wobble
+	_steer = _steer.lerp((_desired + wiggle).limit_length(1.0), 1.0 - exp(-turn_rate * delta))
+	me.move_dir = _steer
+
+
+## Override: set `_desired`.
+func _decide() -> void:
+	pass
+
+
+## Override: extra score for picking `o` as the target (higher = more tempting).
+func _target_score(_o: Blob) -> float:
+	return 0.0
+
+
+## Override: false for food that isn't worth going for.
+func _food_ok(_pos: Vector2) -> bool:
+	return true
+
+
+## Push after a short, skill-dependent reaction delay.
+func _queue_push() -> void:
+	_push_timer = reaction * randf_range(0.6, 1.4) * lerpf(1.6, 0.6, skill)
+
+
+func _push_queued() -> bool:
+	return _push_timer > 0.0
+
+
+## Counter-push anyone who is winding up a push right next to us.
+func _react_to_threats() -> void:
+	if not me.push_ready() or _push_queued():
+		return
+	for o: Blob in get_tree().get_nodes_in_group("blobs"):
+		if o == me or not o.alive or not o.is_winding_up():
+			continue
+		var dist := o.global_position.distance_to(me.global_position) - me.radius
+		if dist < o.push_reach() + 20.0 and randf() < skill * 0.5:
+			_push_timer = 0.01
+			return
+
+
+func _pick_target() -> void:
+	if target != null and (not is_instance_valid(target) or not target.alive):
+		target = null
+	var best: Blob = null
+	var best_score := -INF
+	for o: Blob in get_tree().get_nodes_in_group("blobs"):
+		if o == me or not o.alive:
+			continue
+		var score := -o.global_position.distance_to(me.global_position)
+		score += _target_score(o)
+		score += (me.mass - o.mass) * 80.0 * caution  # pick on smaller ones
+		if o.is_human():
+			score += player_bias
+		if o == target:
+			score += 60.0  # don't flip-flop between targets
+		if score > best_score:
+			best_score = score
+			best = o
+	target = best
+
+
+func _best_food() -> Node2D:
+	var best: Node2D = null
+	var best_d := INF
+	for f: Node2D in get_tree().get_nodes_in_group("food"):
+		if not _food_ok(f.global_position):
+			continue
+		var d := f.global_position.distance_to(me.global_position)
+		if d < best_d:
+			best_d = d
+			best = f
+	return best

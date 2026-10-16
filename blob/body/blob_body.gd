@@ -63,6 +63,11 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+## Puff up (positive) or tense up (negative). Springs back on its own.
+func swell_kick(amount: float) -> void:
+	swell_vel += amount
+
+
 ## Squash along n. `impact_speed` is in px/s.
 func bump(n: Vector2, impact_speed: float) -> void:
 	deform_vel += _tensor(n, minf(impact_speed * blob.stats.squash_kick, blob.stats.squash_kick_max))
@@ -133,7 +138,7 @@ func _draw_eyes(r: float) -> void:
 func _draw_status(r: float) -> void:
 	if not blob.alive:
 		return
-	if blob.show_push_ring:
+	if blob.is_human():
 		var ring_r := r + 8.0
 		if blob.push_cooldown > 0.0:
 			var frac := 1.0 - blob.push_cooldown / blob.stats.push_cooldown

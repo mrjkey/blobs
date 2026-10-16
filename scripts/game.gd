@@ -6,7 +6,7 @@ const T = preload("res://scripts/tuning.gd")
 const OldBlob = preload("res://scripts/blob.gd")
 const Brain = preload("res://scripts/ai_brain.gd")
 const Fx = preload("res://scripts/fx.gd")
-const Sfx = preload("res://scripts/sfx.gd")
+const OldSfx = preload("res://scripts/sfx.gd")
 
 var bot_looks := [
 	{"name": "Bonk", "color": Color(1.0, 0.36, 0.36)},
@@ -22,7 +22,7 @@ var foods: Array = []        # {pos, age, seed}
 var wall_hits: Array = []    # {angle, age, power}
 var player: OldBlob
 var fx: Fx
-var sfx: Sfx
+var sfx: OldSfx
 var camera: Camera2D
 var shake := 0.0
 var hitstop := 0.0
@@ -46,7 +46,7 @@ func _ready() -> void:
 	fx = _make_fx()
 	fx.z_index = 10
 	add_child(fx)
-	sfx = Sfx.new()
+	sfx = OldSfx.new()
 	add_child(sfx)
 	_build_hud()
 	_spawn_blobs()

@@ -2,6 +2,8 @@
 
 Godot 4.7.2 game. The editor runs on Windows; the project lives in WSL. The user usually has the editor and the game open while we work, so changes can be checked live.
 
+- Never make git commits. The user commits.
+
 ## Live reload
 
 - Saves in VS Code reach Godot through `tools/godot_lsp_relay.py` (port 6010, started by the VS Code task), which fixes the WSL/Windows paths.

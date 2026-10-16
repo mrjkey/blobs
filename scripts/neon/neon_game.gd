@@ -13,6 +13,7 @@ const NeonBlob = preload("res://scripts/neon/neon_blob.gd")
 const NeonFx = preload("res://scripts/neon/neon_fx.gd")
 const NeonGrid = preload("res://scripts/neon/neon_grid.gd")
 const Techno = preload("res://scripts/neon/techno.gd")
+const NEON_GLOW = preload("res://neon/neon_glow.tscn")
 
 var grid: NeonGrid
 var music: Techno
@@ -33,7 +34,7 @@ func _ready() -> void:
 		{"name": "Squish", "color": Color(0.3, 0.5, 1.0)},
 	]
 	view_margin = 2.0 * (NT.TURRET_DISTANCE + 40.0)  # zoom out so turrets fit
-	_setup_glow()
+	add_child(NEON_GLOW.instantiate())
 	grid = NeonGrid.new()
 	grid.z_index = -10
 	add_child(grid)
@@ -50,10 +51,6 @@ func _ready() -> void:
 	sfx.add_tone("charge", 0.9, 180.0, 700.0, 0.05, 0.0, 0.8)
 	_make_turrets()
 	_restyle_hud()
-
-
-func _setup_glow() -> void:
-	add_child(NeonLook.make_world_env(get_viewport()))
 
 
 func _restyle_hud() -> void:

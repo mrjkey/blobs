@@ -1,9 +1,0 @@
-[gd_scene format=3 uid="uid://dx2688l00ghsp"]
-
-[ext_resource type="PackedScene" uid="uid://hjgpqtgrbo68" path="res://blob/blob.tscn" id="1_ajqxe"]
-[ext_resource type="Script" uid="uid://cqutpsfkh44qx" path="res://blob/bot_brain.gd" id="2_pal4p"]
-
-[node name="Blob" unique_id=1350047165 instance=ExtResource("1_ajqxe")]
-
-[node name="BotBrain" type="Node" parent="." index="3" unique_id=1320365270]
-script = ExtResource("2_pal4p")

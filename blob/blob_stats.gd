@@ -1,5 +1,8 @@
 class_name BlobStats
 extends Resource
+## How one kind of blob moves, pushes and wobbles. Shared by every blob that
+## uses the same .tres, so edits apply to all of them (live, while the game runs).
+## Speeds are pixels/second, times are seconds. Mass starts at 1.0.
 
 @export_group("Movement")
 @export var base_radius := 22.0
@@ -15,16 +18,24 @@ extends Resource
 
 @export_group("Size")
 @export var max_mass := 4.0
+@export var food_mass := 0.25       # mass gained per pellet
 @export var size_radius_exp := 0.45 # radius = base_radius * mass^this
 @export var size_speed_exp := 0.35  # top speed = base_speed / mass^this
 @export var size_accel_exp := 0.45  # accel = base_accel / mass^this (big = sluggish)
 
 @export_group("Push")
 @export var push_impulse := 1050.0 # speed given to a mass-1 target by a mass-1 pusher, point blank
-@export var push_range := 70.0
+@export var push_range := 70.0     # reach beyond your own edge
 @export var push_range_mass_exp := 0.3 # bigger blobs reach a bit further
+@export var push_falloff := 0.45   # impulse multiplier at the very edge of the reach
+@export var push_mass_exp := 0.7   # pusher strength = mass^this
+@export var push_resist_exp := 0.85 # how hard this blob is to shove: resistance = mass^this
+@export var push_recoil := 0.12    # how much the pusher gets shoved back
+@export var push_windup := 0.07    # tiny tense-up before the blast
 @export var push_cooldown := 0.9
-@export var push_stun := 0.35
+@export var push_buffer := 0.15    # pressing slightly early still counts
+@export var push_stun := 0.35      # how long this blob loses control after being pushed
+@export var push_swell := 0.45     # how much the pusher visually puffs up
 
 @export_group("Jelly")
 @export var jelly_stiffness := 380.0

@@ -1,51 +1,40 @@
 class_name BlobPhysics
 extends Node
-## Moves and collides every blob in the "blobs" group. Blobs never move
+## Moves and collides every living blob in the "blobs" group. Blobs never move
 ## themselves: stepping them all here, in tree order, keeps collisions resolving
 ## the same way every frame.
+##
+## Walls and obstacles join the "blob_colliders" group and implement
+##     func collide(blob: Blob, feel: PhysicsFeel) -> void
+## which is called for every blob on every substep, after blob-vs-blob contacts.
+## The node in group "arena" (if any) can slow blobs down with
+##     func is_in_mud(pos: Vector2) -> bool
 
-## Every blob-vs-blob contact. Main listens: sparks, boing, shake, hitstop.
+## Every blob-vs-blob contact.
 signal blob_contact(a: Blob, b: Blob, point: Vector2, impact: float)
-## Every bounce off the outer wall. Main listens: sparks, thud, shake.
-signal wall_hit(blob: Blob, point: Vector2, impact: float)
 
-@export var substeps := 2               # physics substeps per frame (stops fast blobs tunnelling)
-@export var blob_restitution := 0.9     # 0 = dead thud, 1 = perfect bounce
-@export var bump_pop := 70.0            # extra separation speed on every real contact (the "boing")
-@export var bump_pop_min_impact := 40.0
-@export var wall_restitution := 0.7
+@export var feel: PhysicsFeel = preload("res://physics/default_feel.tres")
 
-## Used until there is an Arena node in the "arena" group to read them from.
-@export var fallback_ring_radius := 300.0
-@export var fallback_wall_radius := 380.0
 
-var _center := Vector2.ZERO
-var _ring_r := 300.0
-var _wall_r := 380.0
+func _ready() -> void:
+	process_physics_priority = 0 # after controllers (-10), before blob abilities (10)
 
 
 func _physics_process(delta: float) -> void:
-	_update_arena()
+	if delta <= 0.0:
+		return
 	var blobs := _living_blobs()
-	var h := delta / substeps
-	for _i in substeps:
+	var colliders := get_tree().get_nodes_in_group("blob_colliders")
+	var arena := get_tree().get_first_node_in_group("arena")
+	var has_mud := arena != null and arena.has_method("is_in_mud")
+	var h := delta / feel.substeps
+	for _i in feel.substeps:
 		for b in blobs:
-			b.step_motion(h, b.global_position.distance_to(_center) > _ring_r)
+			b.step_motion(h, has_mud and arena.is_in_mud(b.global_position))
 		_collide_blobs(blobs)
-		_collide_walls(blobs)
-
-
-## Read the ring and wall from the Arena if there is one, else assume the origin.
-func _update_arena() -> void:
-	var arena = get_tree().get_first_node_in_group("arena")
-	if arena != null:
-		_center = arena.global_position
-		_ring_r = arena.ring_radius
-		_wall_r = arena.wall_radius
-	else:
-		_center = Vector2.ZERO
-		_ring_r = fallback_ring_radius
-		_wall_r = fallback_wall_radius
+		for c in colliders:
+			for b in blobs:
+				c.collide(b, feel)
 
 
 func _living_blobs() -> Array[Blob]:
@@ -79,29 +68,53 @@ func _collide_blobs(blobs: Array[Blob]) -> void:
 			var vn := (b.vel - a.vel).dot(n)
 			if vn < 0.0:
 				var impact := -vn
-				var jimp := (1.0 + blob_restitution) * impact / isum
-				if impact > bump_pop_min_impact:
-					jimp += bump_pop / isum
+				var jimp := (1.0 + feel.blob_restitution) * impact / isum
+				if impact > feel.bump_pop_min_impact:
+					jimp += feel.bump_pop / isum
 				a.vel -= n * jimp * ia
 				b.vel += n * jimp * ib
-				# Lighter blob squashes more.
-				var share_a := ia / isum
-				a.body.bump(n, impact * share_a * 2.0)
-				b.body.bump(n, impact * (1.0 - share_a) * 2.0)
-				blob_contact.emit(a, b, a.global_position + n * a.radius, impact)
+				_contact_feedback(a, b, n, impact)
 
 
-func _collide_walls(blobs: Array[Blob]) -> void:
-	for b in blobs:
-		var rel := b.global_position - _center
-		var dist := rel.length()
-		var limit := _wall_r - b.radius
-		if dist <= limit:
-			continue
-		var n := rel / dist
-		b.global_position = _center + n * limit
-		var vn := b.vel.dot(n)
-		if vn > 0.0:
-			b.vel -= n * vn * (1.0 + wall_restitution)
-			b.body.bump(n, vn)
-			wall_hit.emit(b, b.global_position + n * b.radius, vn)
+func _contact_feedback(a: Blob, b: Blob, n: Vector2, impact: float) -> void:
+	var js := Juice.settings
+	var point := a.global_position + n * a.radius
+	Juice.impact_at(point, impact)
+	# Lighter blob squashes more.
+	var share_a := (1.0 / a.mass) / (1.0 / a.mass + 1.0 / b.mass)
+	a.bump(n, impact * share_a * 2.0)
+	b.bump(n, impact * (1.0 - share_a) * 2.0)
+	if impact > 90.0:
+		var pitch := randf_range(0.9, 1.15) / sqrt((a.mass + b.mass) * 0.5)
+		Sfx.play("boing", pitch, linear_to_db(clampf(impact / 500.0, 0.2, 1.0)))
+	if impact > js.spark_min_impact:
+		Juice.burst(point, a.color.lerp(b.color, 0.5).lightened(0.3), int(clampf(impact / 60.0, 3.0, 14.0)), impact * 0.5)
+	if impact > js.shake_min_impact:
+		Juice.shake(impact * js.shake_per_impact)
+	if impact > js.hitstop_min_impact:
+		Juice.hitstop(js.hitstop_bump)
+	blob_contact.emit(a, b, point, impact)
+
+
+## For colliders: move `b` out of a solid surface by `depth` along `n` (pointing
+## from the surface toward the blob) and bounce it. Returns the impact speed,
+## or 0 if the blob wasn't moving into the surface.
+static func bounce(b: Blob, n: Vector2, depth: float, restitution: float) -> float:
+	b.global_position += n * depth
+	var vn := b.vel.dot(n)
+	if vn >= 0.0:
+		return 0.0
+	b.vel -= n * vn * (1.0 + restitution)
+	b.bump(n, -vn)
+	return -vn
+
+
+## For colliders: the sparks, thud and shake of a blob hitting a wall at `point`.
+static func wall_feedback(point: Vector2, impact: float, color: Color) -> void:
+	var js := Juice.settings
+	if impact > 120.0:
+		Juice.impact_at(point, impact)
+		Juice.burst(point, color.lightened(0.4), int(clampf(impact / 80.0, 3.0, 10.0)), impact * 0.4)
+		Sfx.play("wall", randf_range(0.9, 1.1), linear_to_db(clampf(impact / 500.0, 0.2, 1.0)))
+	if impact > js.shake_min_impact:
+		Juice.shake(impact * js.shake_per_impact * 0.7)

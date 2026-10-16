@@ -20,6 +20,7 @@ const NeonGrid = preload("res://scripts/neon/neon_grid.gd")
 const Techno = preload("res://scripts/neon/techno.gd")
 const TreadmillBrain = preload("res://scripts/treadmill/treadmill_brain.gd")
 const PadInput = preload("res://scripts/treadmill/pad_input.gd")
+const NEON_GLOW = preload("res://neon/neon_glow.tscn")
 
 enum Mode { VS_CPU, VERSUS, VERSUS_PLUS_CPU, WATCH }  # same numbers as the menu's buttons
 
@@ -52,7 +53,7 @@ func _ready() -> void:
 		{"name": "Gummy", "color": Color(0.65, 0.3, 1.0)},
 		{"name": "Blorb", "color": Color(1.0, 0.35, 0.85)},
 	]
-	add_child(NeonLook.make_world_env(get_viewport()))
+	add_child(NEON_GLOW.instantiate())
 	grid = NeonGrid.new()
 	grid.z_index = -10
 	add_child(grid)

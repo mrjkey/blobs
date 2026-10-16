@@ -1,9 +1,0 @@
-[gd_scene format=3 uid="uid://byvlu6bd5j0tm"]
-
-[ext_resource type="PackedScene" uid="uid://hjgpqtgrbo68" path="res://blob/blob.tscn" id="1_2fmbg"]
-[ext_resource type="Script" uid="uid://blmvxmv5yrxbr" path="res://blob/player_input.gd" id="2_xhxo0"]
-
-[node name="Blob" unique_id=1350047165 instance=ExtResource("1_2fmbg")]
-
-[node name="PlayerInput" type="Node" parent="." index="3" unique_id=306065755]
-script = ExtResource("2_xhxo0")

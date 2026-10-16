@@ -1,0 +1,70 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://sandbox/sandbox.gd" id="1_sandbox"]
+[ext_resource type="Script" path="res://fx/game_camera.gd" id="2_camera"]
+[ext_resource type="Script" path="res://arena/box_room.gd" id="3_room"]
+[ext_resource type="Script" path="res://physics/blob_physics.gd" id="4_physics"]
+[ext_resource type="PackedScene" path="res://blob/blob.tscn" id="5_blob"]
+[ext_resource type="Script" path="res://blob/control/player_input.gd" id="6_player"]
+[ext_resource type="Script" path="res://blob/control/ring_bot_brain.gd" id="7_bot"]
+[ext_resource type="Resource" path="res://blob/stats/heavy.tres" id="8_heavy"]
+[ext_resource type="PackedScene" path="res://fx/fx_layer.tscn" id="9_fx"]
+
+[node name="Sandbox" type="Node2D"]
+script = ExtResource("1_sandbox")
+
+[node name="GameCamera" type="Camera2D" parent="."]
+script = ExtResource("2_camera")
+view_size = Vector2(1080, 720)
+
+[node name="Room" type="Node2D" parent="."]
+script = ExtResource("3_room")
+
+[node name="BlobPhysics" type="Node" parent="."]
+script = ExtResource("4_physics")
+
+[node name="Blobs" type="Node2D" parent="."]
+
+[node name="Player" parent="Blobs" instance=ExtResource("5_blob")]
+position = Vector2(-240, 0)
+color = Color(0.3, 0.85, 1, 1)
+display_name = "You"
+
+[node name="PlayerInput" type="Node" parent="Blobs/Player"]
+script = ExtResource("6_player")
+
+[node name="Bonk" parent="Blobs" instance=ExtResource("5_blob")]
+position = Vector2(200, -140)
+color = Color(1, 0.36, 0.36, 1)
+display_name = "Bonk"
+
+[node name="RingBotBrain" type="Node" parent="Blobs/Bonk"]
+script = ExtResource("7_bot")
+
+[node name="Mochi" parent="Blobs" instance=ExtResource("5_blob")]
+position = Vector2(200, 140)
+stats = ExtResource("8_heavy")
+color = Color(1, 0.7, 0.25, 1)
+display_name = "Mochi (heavy)"
+
+[node name="RingBotBrain" type="Node" parent="Blobs/Mochi"]
+script = ExtResource("7_bot")
+
+[node name="FxLayer" parent="." instance=ExtResource("9_fx")]
+
+[node name="Hud" type="CanvasLayer" parent="."]
+
+[node name="Hint" type="Label" parent="Hud"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 20
+text = "SANDBOX     WASD / arrows: move     SPACE: push     R: reset     Esc: menu"
+horizontal_alignment = 1
+vertical_alignment = 2

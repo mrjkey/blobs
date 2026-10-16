@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="InputProfile" format=3]
+
+[ext_resource type="Script" path="res://blob/control/input_profile.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+left = Array[int]([65, 4194319])
+right = Array[int]([68, 4194321])
+up = Array[int]([87, 4194320])
+down = Array[int]([83, 4194322])
+push = Array[int]([32, 74, 4194309, 4194310])
