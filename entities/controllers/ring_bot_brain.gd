@@ -97,7 +97,30 @@ func _attack_dir() -> Vector2:
 		var near_edge := t_rel.length() > _ring_r * 0.6
 		if lined_up > -0.1 or near_edge:
 			_queue_push()
+	if _dash_ok() and randf() < skill * 0.5:
+		var dash_len := me.dash_speed() * me.stats.dash_time
+		var closing := lined_up > 0.2 and gap > reach * 0.8 and gap < dash_len + reach * 0.6
+		if me.rules.dash == MoveRules.Dash.GHOST and lined_up < -0.3 and dist < 170.0:
+			me.request_dash(to_t_n) # on the wrong side of them: phase straight through
+		elif closing:
+			me.request_dash(to_t_n) # just out of reach: ram them (bump), or close in to push (ghost)
+			if me.rules.dash == MoveRules.Dash.GHOST:
+				_queue_push()
 	return dir
+
+
+## Dodge sideways and toward the middle; a ghost dash goes straight through
+## the attacker when that's toward the middle.
+func _dodge_dir(threat: Blob) -> Vector2:
+	var pos := me.global_position
+	var to_t := (threat.global_position - pos).normalized()
+	var home := -_rel(pos).normalized() if _rel(pos).length() > 1.0 else -to_t
+	if me.rules.dash == MoveRules.Dash.GHOST and to_t.dot(home) > 0.3:
+		return to_t
+	var side := Vector2(-to_t.y, to_t.x)
+	if side.dot(home) < 0.0:
+		side = -side
+	return (side + home * 0.5 - to_t * 0.3).normalized()
 
 
 ## Read the ring from the Arena if there is one, else assume it's at the origin.

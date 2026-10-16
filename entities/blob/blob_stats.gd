@@ -36,6 +36,21 @@ extends Resource
 @export var push_buffer := 0.15    # pressing slightly early still counts
 @export var push_stun := 0.35      # how long this blob loses control after being pushed
 @export var push_swell := 0.45     # how much the pusher visually puffs up
+@export var push_energy_cooldown := 0.3 # replaces push_cooldown when pushes cost energy
+
+@export_group("Dash")
+@export var dash_speed := 1150.0   # launch speed at mass 1 (scaled like top speed)
+@export var dash_time := 0.16      # seconds of flight: distance is about speed * time
+@export var dash_exit_speed := 1.0 # speed when the dash runs out, as a multiple of top speed
+@export var dash_cooldown := 1.1   # used when energy is off
+@export var dash_hit_stun := 0.3   # a solid dash knocks the blob it hits out of control this long
+
+@export_group("Energy")
+@export var energy_segments := 3   # size of the bar
+@export var energy_regen := 0.45   # segments refilled per second
+@export var energy_regen_delay := 0.35 # refilling pauses this long after spending
+@export var dash_cost := 1.0
+@export var push_cost := 1.0
 
 @export_group("Jelly")
 @export var jelly_stiffness := 380.0

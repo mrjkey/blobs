@@ -10,9 +10,16 @@
 [ext_resource type="Resource" path="res://entities/blob/stats/heavy.tres" id="8_heavy"]
 [ext_resource type="PackedScene" path="res://core/fx/fx_layer.tscn" id="9_fx"]
 [ext_resource type="Script" path="res://themes/theme_backdrop.gd" id="10_backdrop"]
+[ext_resource type="PackedScene" path="res://sandbox/lab/lab_menu.tscn" id="11_lab"]
+[ext_resource type="Script" path="res://ui/hud/energy_hud.gd" id="12_energy_hud"]
+[ext_resource type="PackedScene" path="res://sandbox/sandbox_props.tscn" id="13_props"]
 
-[node name="Sandbox" type="Node2D"]
+[node name="Sandbox" type="Node2D" node_paths=PackedStringArray("lab", "props_parent", "hint")]
 script = ExtResource("1_sandbox")
+lab = NodePath("LabMenu")
+props_parent = NodePath("Props")
+props_scene = ExtResource("13_props")
+hint = NodePath("Hud/Hint")
 
 [node name="ThemeBackdrop" type="Node2D" parent="."]
 script = ExtResource("10_backdrop")
@@ -27,6 +34,8 @@ script = ExtResource("3_room")
 
 [node name="BlobPhysics" type="Node" parent="."]
 script = ExtResource("4_physics")
+
+[node name="Props" type="Node2D" parent="."]
 
 [node name="Blobs" type="Node2D" parent="."]
 
@@ -59,6 +68,16 @@ script = ExtResource("7_bot")
 
 [node name="Hud" type="CanvasLayer" parent="."]
 
+[node name="EnergyHud" type="Control" parent="Hud"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("12_energy_hud")
+
 [node name="Hint" type="Label" parent="Hud"]
 anchors_preset = 15
 anchor_right = 1.0
@@ -70,6 +89,8 @@ mouse_filter = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
 theme_override_constants/outline_size = 6
 theme_override_font_sizes/font_size = 20
-text = "SANDBOX     WASD / arrows: move     SPACE: push     R: reset     Esc: menu"
+text = "WASD / arrows: move     SPACE: push     SHIFT / K: dash     TAB: lab     R: reset     Esc: menu"
 horizontal_alignment = 1
 vertical_alignment = 2
+
+[node name="LabMenu" parent="." instance=ExtResource("11_lab")]

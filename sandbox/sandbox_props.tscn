@@ -1,0 +1,21 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://level/obstacles/wall_block.tscn" id="1_wall"]
+[ext_resource type="PackedScene" path="res://level/obstacles/bumper.tscn" id="2_bumper"]
+
+[node name="SandboxProps" type="Node2D"]
+
+[node name="Divider" parent="." instance=ExtResource("1_wall")]
+position = Vector2(-60, 0)
+size = Vector2(24, 200)
+
+[node name="Kicker" parent="." instance=ExtResource("1_wall")]
+position = Vector2(0, 260)
+size = Vector2(240, 20)
+kicker = true
+
+[node name="BumperLeft" parent="." instance=ExtResource("2_bumper")]
+position = Vector2(-330, -200)
+
+[node name="BumperRight" parent="." instance=ExtResource("2_bumper")]
+position = Vector2(330, -200)

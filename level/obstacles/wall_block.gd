@@ -31,6 +31,8 @@ func rect() -> Rect2:
 
 
 func collide(b: Blob, feel: PhysicsFeel) -> void:
+	if b.phases_obstacles():
+		return
 	var r := rect()
 	var pos := b.global_position
 	var closest := pos.clamp(r.position, r.end)

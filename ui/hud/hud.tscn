@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://ui/hud/hud.gd" id="1_hud"]
 [ext_resource type="Theme" path="res://themes/classic/hud_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://ui/hud/energy_hud.gd" id="3_energy"]
 
 [node name="Hud" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -42,6 +43,17 @@ mouse_filter = 2
 theme_type_variation = &"HintLabel"
 horizontal_alignment = 1
 vertical_alignment = 2
+
+[node name="EnergyHud" type="Control" parent="Frame"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_energy")
+top = 64.0
 
 [node name="Banner" type="Label" parent="Frame"]
 unique_name_in_owner = true

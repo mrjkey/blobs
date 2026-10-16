@@ -16,7 +16,7 @@
 script = ExtResource("1_mode")
 blobs_node = NodePath("Blobs")
 hud = NodePath("Hud")
-hint = "WASD move   ·   SPACE push   ·   lasers fire on the beat   ·   R restart"
+hint = "WASD move   ·   SPACE push   ·   SHIFT dash   ·   lasers fire on the beat   ·   R restart"
 arena = NodePath("RingArena")
 food_spawner = NodePath("FoodSpawner")
 laser_director = NodePath("LaserDirector")

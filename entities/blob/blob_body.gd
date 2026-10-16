@@ -46,6 +46,9 @@ func _process(delta: float) -> void:
 
 	draw_radius = lerpf(draw_radius, blob.radius, 1.0 - exp(-10.0 * delta))
 	flash = maxf(flash - delta * 5.0, 0.0)
+	# A ghost dash turns the blob see-through (fast out, a bit slower back).
+	var want_alpha := 0.3 if blob.is_ghost() else 1.0
+	modulate.a = lerpf(modulate.a, want_alpha, 1.0 - exp(-(30.0 if blob.is_ghost() else 12.0) * delta))
 
 	var want_look := look
 	if blob.move_dir.length() > 0.1:
@@ -102,6 +105,8 @@ func _draw() -> void:
 	st.body(self, pts, blob.color, flash, 1.0, 1.5, 3.0, true)
 	if blob.windup > 0.0:
 		st.outline(self, pts, st.color(Color.WHITE, 2.0), 3.5)
+	elif blob.is_dashing() and not blob.is_ghost():
+		st.outline(self, pts, st.color(blob.color.lerp(Color.WHITE, 0.6), 2.2), 4.0)
 	if st.highlights:
 		draw_circle(xf(Vector2(-0.38, -0.4)) * r, r * 0.22, Color(1, 1, 1, 0.3))
 	_draw_eyes(st, r)
@@ -124,7 +129,7 @@ func _draw_eyes(st: ThemeStyle, r: float) -> void:
 		else:
 			draw_circle(c, er, st.color(Color.WHITE, 2.2))
 			draw_circle(c + look * er * 0.4, er * 0.5, st.ink)
-		if blob.windup > 0.0 or (blob.push_cooldown > blob.stats.push_cooldown - 0.15):
+		if blob.windup > 0.0 or (blob.push_cooldown > blob.push_cooldown_full - 0.15):
 			# angry brows while pushing
 			var brow_in := c + look * er * 0.9 - side * (er * 0.5 * s)
 			var brow_out := c + look * er * 1.5 + side * (er * 0.9 * s)
@@ -137,7 +142,7 @@ func _draw_status(st: ThemeStyle, r: float) -> void:
 	if blob.is_human():
 		var ring_r := r + 8.0
 		if blob.push_cooldown > 0.0:
-			var frac := 1.0 - blob.push_cooldown / blob.stats.push_cooldown
+			var frac := 1.0 - blob.push_cooldown / blob.push_cooldown_full
 			if frac > 0.01:
 				st.ring(self, Vector2.ZERO, ring_r, Color.WHITE, 3.0, 1.2, 0.3, -PI / 2.0, -PI / 2.0 + TAU * frac)
 		else:

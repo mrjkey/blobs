@@ -8,6 +8,7 @@ extends Control
 @export_file("*.tscn") var treadmill_menu_path: String
 @export_file("*.tscn") var ring_path: String
 @export_file("*.tscn") var sandbox_path: String
+@export_file("*.tscn") var settings_path: String
 
 @onready var treadmill_button: Button = $Center/Column/Buttons/TreadmillButton
 @onready var glow_button: Button = %GlowButton
@@ -28,6 +29,10 @@ func _on_ring_button_pressed() -> void:
 
 func _on_sandbox_button_pressed() -> void:
 	get_tree().change_scene_to_file(sandbox_path)
+
+
+func _on_settings_button_pressed() -> void:
+	get_tree().change_scene_to_file(settings_path)
 
 
 ## Next theme in Session.THEMES (saved). Every scene draws in it from then on.

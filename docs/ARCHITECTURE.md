@@ -11,14 +11,14 @@ in `themes/` (see Themes below).
 
 | Folder | What goes there |
 |---|---|
-| `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings, the chosen theme), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres`, `Sfx` (synthesised sound kit) |
-| `core/` | Machinery every mode composes: `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock) |
-| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `BlobStats` + `stats/`), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
+| `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings and gameplay settings, the chosen theme), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres`, `Sfx` (synthesised sound kit) |
+| `core/` | Machinery every mode composes: `settings/` (`GameSettings`: the player's gameplay options), `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock) |
+| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
 | `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`: the floors and walls a mode plays on, with their own rules like ring-out or the kill lasers), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`) |
 | `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style and backdrop |
 | `modes/` | One folder per game mode: the scene that composes components, plus the round rules (`GameMode` subclasses) |
-| `ui/` | `menus/`, `hud/`, `themes/menu_theme.tres` |
-| `sandbox/` | Test bench scene for trying components |
+| `ui/` | `menus/` (+ `options/`: `OptionList`, `OptionRow`, shared by the settings screen and the lab), `hud/` (`Hud`, `EnergyHud`), `themes/menu_theme.tres` |
+| `sandbox/` | Test bench scene for trying components, its props, and `lab/` (the Tab menu) |
 | `docs/` | This file |
 | `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md) |
 
@@ -56,7 +56,7 @@ finds what it needs:
   - `lasers`: every `LaserEmitter`; the `LaserDirector` schedules them.
   - `grid`: the neon backdrop's `NeonGrid`; call `impulse(world_pos, strength, radius)` on the group to ripple it, `follow_y(y)` to scroll it.
   - `kill_lasers`: at most one `KillLasers`; `kill_top()` / `kill_bottom()` for treadmill bots.
-- **Signals** for reporting upward: `Blob.pushed`, `Blob.ate_food`, `Blob.died`,
+- **Signals** for reporting upward: `Blob.pushed`, `Blob.dashed`, `Blob.ate_food`, `Blob.died`,
   `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Juice.impact`. The
   mode script connects to them. Anything that knocks a blob out calls
   `blob.die()`; the mode only listens to `Blob.died`.
@@ -68,11 +68,34 @@ finds what it needs:
 
 ### Who steers a blob
 
-`Blob` only moves where `move_dir` says and pushes when `request_push()` is
-called. A controller child sets those: `PlayerInput` (keys from an
+`Blob` only moves where `move_dir` says, pushes when `request_push()` is
+called and dashes on `request_dash()`. A controller child sets those: `PlayerInput` (keys from an
 `InputProfile` resource, plus one gamepad) or a `BotBrain` subclass. The
 controller registers itself as `blob.controller`, so `blob.is_human()` works.
 `blob.active = false` makes controllers leave the blob alone (countdowns).
+
+### Moves and energy
+
+Which moves a blob has comes from `blob.rules`, a `MoveRules`: the dash
+(`NONE`, `BUMP`: solid, stuns what it hits; `GHOST`: passes through blobs,
+pushes and lasers, and with `ghost_obstacles` walls and bumpers too) and
+whether moves cost energy (`OFF`: cooldowns, `DASH`, `ALL`). Every blob
+shares `GameSettings.rules()`, built from the player's settings, so a change
+in a menu applies at once. The numbers
+(dash speed and time, bar size, regen, costs) are in `BlobStats`. Anything
+that hits blobs skips `blob.is_ghost()`; obstacles skip
+`blob.phases_obstacles()`; the arena's own walls never do. The bar is drawn
+by the blob's `EnergyMeter` child (above, below, ring) or the `EnergyHud` in
+the HUD, whichever the "meter" setting picks.
+
+### Settings
+
+`GameSettings.OPTIONS` lists the gameplay options (key, label, choices with
+help text, default). `Session.settings` saves the picks; read them with
+`GameSettings.choice("key")`, change them with `set_choice()`. The main menu's
+SETTINGS screen lists them; the sandbox lab lists them plus the
+`sandbox = true` ones. New option: add an entry, then read it where it's used
+(or in `GameSettings._sync()` for a `MoveRules` field).
 
 ### Update order
 
@@ -82,7 +105,7 @@ Set with `process_physics_priority` in each script's `_ready()`:
    - `-8` the treadmill mode scrolls the camera, `-7` `TrackGenerator` builds ahead
    - `-6` `LaserDirector`, `-5` `LaserEmitter`s (dodging overrides the bots' `move_dir`)
 2. `0` `BlobPhysics`: substeps of motion, blob-vs-blob, then every `blob_colliders` node
-3. `10` `Blob`: push cooldown, windup and release
+3. `10` `Blob`: cooldowns, energy, push windup and release, starting a dash
 4. `20` rules that look at where blobs ended up: `RingArena` ring-out, `KillLasers`, `Food` eating
 
 Drawing runs in `_process` / `_draw`, painted in the theme's style.
@@ -168,6 +191,11 @@ Every component scene works when dropped into `sandbox/sandbox.tscn` (a room,
 `BlobPhysics`, a player and two bots), without a mode script. If it needs
 something, it finds it through a group and copes when it isn't there. This is
 what makes a gallery of objects possible.
+
+**The lab** (`sandbox/lab/`, Tab in the sandbox) is a pause menu with every
+setting plus the sandbox-only ones (props), changed live. `sandbox.gd`
+`_apply_lab()` handles the sandbox-only ones. To try a new idea: add a
+`sandbox = true` option to `GameSettings.OPTIONS` and read it there.
 
 ## Recipes
 

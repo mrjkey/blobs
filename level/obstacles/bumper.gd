@@ -21,6 +21,8 @@ func _enter_tree() -> void:
 
 
 func collide(b: Blob, _feel: PhysicsFeel) -> void:
+	if b.phases_obstacles():
+		return
 	var d := b.global_position - global_position
 	var dist := d.length()
 	if dist >= b.radius + radius:

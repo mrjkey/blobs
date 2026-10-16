@@ -50,6 +50,8 @@ func _collide_blobs(blobs: Array[Blob]) -> void:
 		var a := blobs[i]
 		for j in range(i + 1, blobs.size()):
 			var b := blobs[j]
+			if a.is_ghost() or b.is_ghost():
+				continue # mid ghost dash: pass straight through
 			var d := b.global_position - a.global_position
 			var rsum := a.radius + b.radius
 			var dist2 := d.length_squared()
@@ -71,6 +73,11 @@ func _collide_blobs(blobs: Array[Blob]) -> void:
 				var jimp := (1.0 + feel.blob_restitution) * impact / isum
 				if impact > feel.bump_pop_min_impact:
 					jimp += feel.bump_pop / isum
+				# A solid dash knocks whoever it hits out of control for a moment.
+				if a.is_dashing():
+					b.stun = maxf(b.stun, a.stats.dash_hit_stun)
+				if b.is_dashing():
+					a.stun = maxf(a.stun, b.stats.dash_hit_stun)
 				a.vel -= n * jimp * ia
 				b.vel += n * jimp * ib
 				_contact_feedback(a, b, n, impact)

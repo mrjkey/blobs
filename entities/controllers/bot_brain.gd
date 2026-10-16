@@ -84,17 +84,43 @@ func _push_queued() -> bool:
 	return _push_timer > 0.0
 
 
-## Counter-push anyone who is winding up a push right next to us.
+## Dodge-dash away from, or counter-push, anyone winding up a push right next to us.
 func _react_to_threats() -> void:
-	if not me.push_ready() or _push_queued():
+	var can_push := me.push_ready() and not _push_queued()
+	var can_dash := _dash_ok()
+	if not can_push and not can_dash:
 		return
 	for o: Blob in get_tree().get_nodes_in_group("blobs"):
 		if o == me or not o.alive or not o.is_winding_up():
 			continue
 		var dist := o.global_position.distance_to(me.global_position) - me.radius
-		if dist < o.push_reach() + 20.0 and randf() < skill * 0.5:
+		if dist >= o.push_reach() + 20.0:
+			continue
+		if can_dash and randf() < skill * 0.6:
+			me.request_dash(_dodge_dir(o))
+			return
+		if can_push and randf() < skill * 0.5:
 			_push_timer = 0.01
 			return
+
+
+## The rules let bots dash and the dash is ready. When pushes cost energy too,
+## bots keep enough back for a push.
+func _dash_ok() -> bool:
+	if not me.rules.bots_dash or not me.dash_ready():
+		return false
+	if me.rules.push_costs_energy():
+		return me.energy >= me.stats.dash_cost + me.stats.push_cost
+	return true
+
+
+## Override: which way to dash to get out of `threat`'s push. Default: away and to the side.
+func _dodge_dir(threat: Blob) -> Vector2:
+	var away := (me.global_position - threat.global_position).normalized()
+	var side := Vector2(-away.y, away.x)
+	if side.dot(me.vel) < 0.0:
+		side = -side
+	return (away + side).normalized()
 
 
 func _pick_target() -> void:

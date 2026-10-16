@@ -1,0 +1,83 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://sandbox/lab/lab_menu.gd" id="1_menu"]
+[ext_resource type="PackedScene" path="res://ui/menus/options/option_row.tscn" id="2_row"]
+[ext_resource type="Script" path="res://ui/menus/options/option_list.gd" id="4_list"]
+[ext_resource type="Theme" path="res://ui/themes/menu_theme.tres" id="3_theme"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 40.0
+content_margin_top = 28.0
+content_margin_right = 40.0
+content_margin_bottom = 28.0
+bg_color = Color(0.03, 0.02, 0.08, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.3, 1, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="LabMenu" type="CanvasLayer"]
+process_mode = 3
+layer = 20
+visible = false
+script = ExtResource("1_menu")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("3_theme")
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Column" type="VBoxContainer" parent="Center/Panel"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Center/Panel/Column"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 48
+text = "SANDBOX LAB"
+horizontal_alignment = 1
+
+[node name="Options" type="VBoxContainer" parent="Center/Panel/Column" node_paths=PackedStringArray("help")]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 2
+script = ExtResource("4_list")
+row_scene = ExtResource("2_row")
+include_sandbox = true
+help = NodePath("../Help")
+
+[node name="Help" type="Label" parent="Center/Panel/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(620, 60)
+layout_mode = 2
+theme_type_variation = &"SubtitleLabel"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Hint" type="Label" parent="Center/Panel/Column"]
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "W/S choose     A/D, arrows or click to change     Tab / Esc close     (paused)"
+horizontal_alignment = 1

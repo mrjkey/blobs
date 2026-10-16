@@ -22,6 +22,8 @@ func _ready() -> void:
 	_sounds["zap"] = _tone(0.4, 1600.0, 90.0, 0.0, 0.3, 3.5)
 	_sounds["charge"] = _tone(0.9, 180.0, 700.0, 0.05, 0.0, 0.8)
 	_sounds["bumper"] = _tone(0.22, 700.0, 1400.0, 0.0, 0.0, 5.0)
+	_sounds["dash"] = _tone(0.18, 260.0, 900.0, 0.0, 0.6, 5.0)
+	_sounds["deny"] = _tone(0.12, 150.0, 110.0, 0.0, 0.15, 6.0)
 	for i in VOICES:
 		var p := AudioStreamPlayer.new()
 		add_child(p)

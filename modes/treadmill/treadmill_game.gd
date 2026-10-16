@@ -75,9 +75,9 @@ func _spawn_blobs() -> void:
 	if _humans == 0:
 		hud.set_hint("Watching the bots  ·  R restart  ·  Esc menu")
 	elif _humans == 1:
-		hud.set_hint("WASD move  ·  SPACE push  ·  stay ahead of the laser  ·  R restart  ·  Esc menu")
+		hud.set_hint("WASD move  ·  SPACE push  ·  SHIFT dash  ·  stay ahead of the laser  ·  R restart  ·  Esc menu")
 	else:
-		hud.set_hint("P1: WASD + Space    P2: Arrows + Enter    ·    R restart  ·  Esc menu")
+		hud.set_hint("P1: WASD + Space + Shift    P2: Arrows + Enter + .    ·    R restart  ·  Esc menu")
 
 
 func _make_input(profile: InputProfile, pad_slot: int) -> PlayerInput:

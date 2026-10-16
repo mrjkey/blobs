@@ -146,6 +146,8 @@ func _fire(pos: Vector2) -> void:
 	Juice.shake(5.0)
 	var hit_any := false
 	for b in _living_blobs():
+		if b.is_ghost():
+			continue
 		var rel := b.global_position - pos
 		var off := rel - d * clampf(rel.dot(d), 0.0, length)
 		if off.length() > b.radius + s.width * 0.5:

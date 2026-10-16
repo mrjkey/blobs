@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/menus/settings_menu.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://clopy5laifscb" path="res://ui/themes/menu_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://ui/menus/options/option_list.gd" id="3_list"]
+[ext_resource type="PackedScene" path="res://ui/menus/options/option_row.tscn" id="4_row"]
+
+[node name="SettingsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+main_menu_path = "res://ui/menus/main_menu.tscn"
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.06, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Column" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Center/Column"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "SETTINGS"
+horizontal_alignment = 1
+
+[node name="Options" type="VBoxContainer" parent="Center/Column" node_paths=PackedStringArray("help")]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 2
+script = ExtResource("3_list")
+row_scene = ExtResource("4_row")
+help = NodePath("../Help")
+
+[node name="Help" type="Label" parent="Center/Column"]
+custom_minimum_size = Vector2(620, 60)
+layout_mode = 2
+theme_type_variation = &"SubtitleLabel"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="BackButton" type="Button" parent="Center/Column"]
+layout_mode = 2
+text = "BACK"
+
+[node name="Hint" type="Label" parent="Center/Column"]
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "W/S choose     A/D, arrows or click to change     Esc to go back"
+horizontal_alignment = 1
+
+[connection signal="pressed" from="Center/Column/BackButton" to="." method="_on_back_button_pressed"]

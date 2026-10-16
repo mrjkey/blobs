@@ -1,0 +1,9 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/menus/options/option_row.gd" id="1_row"]
+
+[node name="OptionRow" type="Button"]
+custom_minimum_size = Vector2(620, 0)
+theme_override_font_sizes/font_size = 28
+text = "OPTION:   <  VALUE  >"
+script = ExtResource("1_row")

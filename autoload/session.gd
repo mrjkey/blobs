@@ -36,14 +36,25 @@ var theme: Resource:
 			_theme = load(THEMES[theme_name])
 		return _theme
 
+## Gameplay settings the player picked: option key -> choice id. Read them
+## through GameSettings (core/settings/game_settings.gd), which has the
+## defaults. Saved between runs.
+var settings := {}
+
 var _theme: Resource # held, so the theme loads once (and live .tres edits reach this copy)
 
 
 func _ready() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(SETTINGS_PATH) == OK:
+		settings = cfg.get_value("gameplay", "settings", {}) # first: the setters below save
 		glow = cfg.get_value("video", "glow", false)
 		theme_name = cfg.get_value("video", "theme", "neon")
+
+
+func set_setting(key: String, id: String) -> void:
+	settings[key] = id
+	_save()
 
 
 func _save() -> void:
@@ -51,4 +62,5 @@ func _save() -> void:
 	cfg.load(SETTINGS_PATH)  # keep anything else already saved
 	cfg.set_value("video", "glow", glow)
 	cfg.set_value("video", "theme", theme_name)
+	cfg.set_value("gameplay", "settings", settings)
 	cfg.save(SETTINGS_PATH)

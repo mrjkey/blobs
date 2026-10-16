@@ -8,7 +8,7 @@ extends Node
 ## Which connected gamepad to use: 0 = the first, 1 = the second, -1 = none.
 @export var pad_slot := 0
 
-var _push_was_down := false
+var _was_down := {} # button name -> held last frame
 
 @onready var blob: Blob = get_parent()
 
@@ -21,13 +21,17 @@ func _ready() -> void:
 func _physics_process(_delta: float) -> void:
 	if not blob.alive:
 		return
-	var pushed := _push_pressed() # poll every frame, so a press during the countdown doesn't fire after it
+	# Poll every frame, so a press during the countdown doesn't fire after it.
+	var pushed := _just_pressed("push", profile.push, profile.pad_push)
+	var dashed := _just_pressed("dash", profile.dash, profile.pad_dash)
 	if not blob.active:
 		blob.move_dir = Vector2.ZERO
 		return
 	blob.move_dir = _move()
 	if pushed:
 		blob.request_push()
+	if dashed:
+		blob.request_dash()
 
 
 func _pad() -> int:
@@ -48,15 +52,15 @@ func _move() -> Vector2:
 	return v.limit_length(1.0)
 
 
-## True only on the frame the push button goes down.
-func _push_pressed() -> bool:
-	var is_down := _held(profile.push) > 0.0
+## True only on the frame one of `keys` / `buttons` goes down.
+func _just_pressed(action: String, keys: Array[Key], buttons: Array[JoyButton]) -> bool:
+	var is_down := _held(keys) > 0.0
 	var pad := _pad()
 	if pad >= 0:
-		for b in profile.pad_push:
+		for b in buttons:
 			is_down = is_down or Input.is_joy_button_pressed(pad, b)
-	var pressed := is_down and not _push_was_down
-	_push_was_down = is_down
+	var pressed: bool = is_down and not _was_down.get(action, false)
+	_was_down[action] = is_down
 	return pressed
 
 
