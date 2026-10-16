@@ -13,8 +13,7 @@ grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_8gy84")
 treadmill_menu_path = "res://ui/menus/treadmill_menu.tscn"
-classic_path = "res://modes/ring/ring.tscn"
-neon_path = "res://modes/ring/neon.tscn"
+ring_path = "res://modes/ring/ring.tscn"
 sandbox_path = "res://sandbox/sandbox.tscn"
 
 [node name="Background" type="ColorRect" parent="." unique_id=263078907]
@@ -57,17 +56,18 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "TREADMILL"
 
-[node name="ClassicButton" type="Button" parent="Center/Column/Buttons" unique_id=2128550065]
+[node name="RingButton" type="Button" parent="Center/Column/Buttons" unique_id=2128550065]
 layout_mode = 2
-text = "CLASSIC  RING"
-
-[node name="NeonButton" type="Button" parent="Center/Column/Buttons" unique_id=1317264583]
-layout_mode = 2
-text = "NEON"
+text = "RING"
 
 [node name="SandboxButton" type="Button" parent="Center/Column/Buttons"]
 layout_mode = 2
 text = "SANDBOX"
+
+[node name="ThemeButton" type="Button" parent="Center/Column/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "THEME:  NEON"
 
 [node name="GlowButton" type="Button" parent="Center/Column/Buttons"]
 unique_name_in_owner = true
@@ -85,8 +85,8 @@ text = "W/S, arrows or D-pad to choose     Space, Enter or A to start"
 horizontal_alignment = 1
 
 [connection signal="pressed" from="Center/Column/Buttons/TreadmillButton" to="." method="_on_treadmill_button_pressed"]
-[connection signal="pressed" from="Center/Column/Buttons/ClassicButton" to="." method="_on_classic_button_pressed"]
-[connection signal="pressed" from="Center/Column/Buttons/NeonButton" to="." method="_on_neon_button_pressed"]
+[connection signal="pressed" from="Center/Column/Buttons/RingButton" to="." method="_on_ring_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/SandboxButton" to="." method="_on_sandbox_button_pressed"]
+[connection signal="pressed" from="Center/Column/Buttons/ThemeButton" to="." method="_on_theme_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/GlowButton" to="." method="_on_glow_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/QuitButton" to="." method="_on_quit_button_pressed"]

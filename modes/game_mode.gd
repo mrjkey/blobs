@@ -16,14 +16,10 @@ enum State { COUNTDOWN, PLAYING, OVER }
 @export var hint := "" # controls line shown at the bottom
 @export_file("*.tscn") var menu_path := "res://ui/menus/main_menu.tscn"
 
-@export_group("Looks")
-@export var player_color := Color(0.3, 0.85, 1.0)
+@export_group("Names")
 @export var player_name := "You"
-@export var bot_names := PackedStringArray(["Bonk", "Wobbles", "Mochi", "Gummy", "Blorb", "Squish"])
-@export var bot_colors := PackedColorArray([
-	Color(1.0, 0.36, 0.36), Color(0.45, 0.9, 0.4), Color(1.0, 0.7, 0.25),
-	Color(0.75, 0.45, 1.0), Color(1.0, 0.5, 0.8), Color(0.95, 0.95, 0.4),
-])
+## The `i`th bot gets the `i`th name and the theme's `i`th bot colour.
+@export var bot_names := PackedStringArray(["Bonk", "Wobbles", "Gummy", "Blorb", "Mochi", "Squish"])
 
 var state := State.COUNTDOWN
 
@@ -78,12 +74,13 @@ func spawn_blob(pos: Vector2, color: Color, display_name: String, controller: No
 
 
 func spawn_player(pos: Vector2) -> Blob:
-	return spawn_blob(pos, player_color, player_name, PlayerInput.new())
+	return spawn_blob(pos, GameTheme.current().player_color, player_name, PlayerInput.new())
 
 
-## The `index`th bot (0-based) gets the `index`th name and colour.
+## The `index`th bot (0-based) gets the `index`th name and theme colour.
 func spawn_bot(pos: Vector2, index: int, brain: BotBrain) -> Blob:
-	return spawn_blob(pos, bot_colors[index % bot_colors.size()], bot_names[index % bot_names.size()], brain)
+	var colors := GameTheme.current().bot_colors
+	return spawn_blob(pos, colors[index % colors.size()], bot_names[index % bot_names.size()], brain)
 
 
 func living_blobs() -> Array[Blob]:

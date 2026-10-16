@@ -38,14 +38,8 @@ func beam_length(from: Vector2, dir: Vector2) -> float:
 	return -b + sqrt(disc)
 
 
-func _draw_body(kick: float, charge: float) -> void:
-	var s := settings
-	var side := Vector2(-aim.y, aim.x)
-	var tip := aim * 16.0
-	var body := PackedVector2Array([tip, -aim * 10.0 + side * 12.0, -aim * 4.0, -aim * 10.0 - side * 12.0, tip])
-	draw_polyline(body, NeonLook.hdr(s.body_color, 1.5 + 1.5 * kick + 3.0 * charge), 2.5, true)
-	if charge > 0.0:
-		draw_circle(tip, 2.0 + 6.0 * charge, NeonLook.hdr(s.beam_color, 2.0 + 2.0 * charge, 0.9))
+func _draw_body(skin: LaserSkin, kick: float, charge: float) -> void:
+	skin.draw_turret(self, kick, charge)
 
 
 func _center() -> Vector2:

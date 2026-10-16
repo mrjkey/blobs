@@ -1,7 +1,7 @@
 class_name Hud
 extends CanvasLayer
 ## On-screen text for a round: a status line (top left), a hint (bottom) and a
-## big banner in the middle. Looks come from the theme on the Frame node.
+## big banner in the middle. The text style is the current theme's `hud`.
 
 signal countdown_finished
 
@@ -16,6 +16,10 @@ var _go_text := ""
 @onready var status: Label = %Status
 @onready var hint: Label = %Hint
 @onready var banner: Label = %Banner
+
+
+func _ready() -> void:
+	$Frame.theme = GameTheme.current().hud
 
 
 func set_status(text: String) -> void:

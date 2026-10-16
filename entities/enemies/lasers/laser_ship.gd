@@ -55,16 +55,8 @@ func beam_length(from: Vector2, dir: Vector2) -> float:
 	return clampf((far_x - from.x) / dir.x, 0.0, 2400.0)
 
 
-func _draw_body(kick: float, charge: float) -> void:
-	var s := settings
-	var side_v := Vector2(-aim.y, aim.x)
-	var tip := aim * 18.0
-	var body := PackedVector2Array([tip, -aim * 12.0 + side_v * 14.0, -aim * 5.0, -aim * 12.0 - side_v * 14.0, tip])
-	draw_polyline(body, NeonLook.hdr(s.body_color, 1.5 + 1.0 * kick + 3.0 * charge), 2.5, true)
-	for e: float in [-1.0, 1.0]:
-		draw_circle(-aim * 13.0 + side_v * (8.0 * e), 2.5, NeonLook.hdr(s.body_color, 2.0 + 1.5 * kick))
-	if charge > 0.0:
-		draw_circle(tip, 2.0 + 6.0 * charge, NeonLook.hdr(s.beam_color, 2.0 + 2.0 * charge, 0.9))
+func _draw_body(skin: LaserSkin, kick: float, charge: float) -> void:
+	skin.draw_ship(self, kick, charge)
 
 
 func _x() -> float:

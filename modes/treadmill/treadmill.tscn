@@ -8,36 +8,29 @@
 [ext_resource type="PackedScene" path="res://level/arenas/track/kill_lasers.tscn" id="6_kill"]
 [ext_resource type="PackedScene" path="res://entities/enemies/lasers/laser_ship.tscn" id="7_ship"]
 [ext_resource type="Script" path="res://entities/enemies/lasers/laser_director.gd" id="8_director"]
-[ext_resource type="PackedScene" path="res://themes/neon/neon_fx_layer.tscn" id="9_fx"]
-[ext_resource type="PackedScene" path="res://themes/neon/neon_hud.tscn" id="10_hud"]
-[ext_resource type="PackedScene" path="res://themes/neon/neon_blob.tscn" id="11_blob"]
-[ext_resource type="PackedScene" path="res://themes/neon/neon_glow.tscn" id="12_glow"]
-[ext_resource type="PackedScene" path="res://themes/neon/neon_grid.tscn" id="13_grid"]
+[ext_resource type="PackedScene" path="res://core/fx/fx_layer.tscn" id="9_fx"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="10_hud"]
+[ext_resource type="Script" path="res://themes/theme_backdrop.gd" id="12_backdrop"]
 [ext_resource type="PackedScene" path="res://core/audio/techno.tscn" id="14_music"]
 
-[node name="Treadmill" type="Node2D" node_paths=PackedStringArray("blobs_node", "hud", "camera", "kill_lasers", "laser_director", "grid")]
+[node name="Treadmill" type="Node2D" node_paths=PackedStringArray("blobs_node", "hud", "camera", "kill_lasers", "laser_director")]
 script = ExtResource("1_mode")
-blob_scene = ExtResource("11_blob")
 blobs_node = NodePath("Blobs")
 hud = NodePath("Hud")
 menu_path = "res://ui/menus/treadmill_menu.tscn"
 bot_names = PackedStringArray("Bonk", "Wobbles", "Gummy", "Blorb")
-bot_colors = PackedColorArray(1, 0.2, 0.25, 1, 0.2, 1, 0.5, 1, 0.65, 0.3, 1, 1, 1, 0.35, 0.85, 1)
 camera = NodePath("GameCamera")
 kill_lasers = NodePath("KillLasers")
 laser_director = NodePath("LaserDirector")
-grid = NodePath("NeonGrid")
 
-[node name="NeonGlow" parent="." instance=ExtResource("12_glow")]
+[node name="ThemeBackdrop" type="Node2D" parent="."]
+script = ExtResource("12_backdrop")
 
 [node name="Techno" parent="." instance=ExtResource("14_music")]
 
 [node name="GameCamera" type="Camera2D" parent="."]
 script = ExtResource("2_camera")
 view_size = Vector2(1000, 820)
-beat_pulse = 0.008
-
-[node name="NeonGrid" parent="." instance=ExtResource("13_grid")]
 
 [node name="SideWalls" parent="." instance=ExtResource("5_walls")]
 

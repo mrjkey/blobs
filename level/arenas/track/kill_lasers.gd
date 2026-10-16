@@ -4,7 +4,8 @@ extends Node2D
 ## they follow the camera, and a blob that ends up past either one is out
 ## (`blob.die()`). With `lethal` off they hold blobs on screen instead (the
 ## round's over: keep the winner in view). Group "kill_lasers"; bots read
-## kill_top() / kill_bottom() to keep clear. Draw above the blobs (z_index 5).
+## kill_top() / kill_bottom() to keep clear. Drawn by the theme's KillLasersSkin,
+## above the blobs (z_index 5).
 
 signal blob_lasered(blob: Blob)
 
@@ -12,7 +13,7 @@ signal blob_lasered(blob: Blob)
 @export var enabled := true # off = do nothing (e.g. during the countdown)
 @export var lethal := true
 
-var _clock := 0.0
+var clock := 0.0 # seconds, for the flicker
 
 
 func _enter_tree() -> void:
@@ -44,7 +45,7 @@ func _physics_process(_delta: float) -> void:
 			continue
 		if lethal:
 			var edge_y := bottom if y > bottom else top
-			Juice.burst(Vector2(b.global_position.x, edge_y), settings.edge_laser_color, 24, 500.0)
+			Juice.burst(Vector2(b.global_position.x, edge_y), GameTheme.current().kill_lasers.color, 24, 500.0)
 			Sfx.play("zap", randf_range(0.9, 1.1), 0.0, 0.0)
 			b.die()
 			blob_lasered.emit(b)
@@ -53,19 +54,9 @@ func _physics_process(_delta: float) -> void:
 
 
 func _process(delta: float) -> void:
-	_clock += delta
+	clock += delta
 	queue_redraw()
 
 
 func _draw() -> void:
-	var k := NeonLook.kick(get_tree())
-	var half := settings.track_width * 0.5
-	var col := settings.edge_laser_color
-	for y: float in [kill_top(), kill_bottom()]:
-		var flicker := 0.85 + 0.15 * sin(_clock * 40.0 + y * 0.1)
-		var a := to_local(Vector2(-half, y))
-		var b := to_local(Vector2(half, y))
-		draw_line(a, b, NeonLook.hdr(col, 0.9, 0.25), 14.0, true)
-		draw_line(a, b, NeonLook.hdr(col, (2.2 + 0.5 * k) * flicker), 3.0, true)
-		for end: Vector2 in [a, b]:
-			draw_circle(end, 6.0, NeonLook.hdr(col, 2.5))
+	GameTheme.current().kill_lasers.draw(self)

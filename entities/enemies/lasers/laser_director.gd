@@ -19,7 +19,7 @@ func _physics_process(delta: float) -> void:
 	if delta <= 0.0 or not enabled:
 		return
 	_play_time += delta
-	var bar := int(floorf(NeonLook.beat(get_tree()) / 4.0))
+	var bar := int(floorf(Techno.current_beat(get_tree()) / 4.0))
 	if bar == _last_bar:
 		return
 	_last_bar = bar

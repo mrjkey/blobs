@@ -9,15 +9,20 @@
 [ext_resource type="Script" path="res://entities/controllers/ring_bot_brain.gd" id="7_bot"]
 [ext_resource type="Resource" path="res://entities/blob/stats/heavy.tres" id="8_heavy"]
 [ext_resource type="PackedScene" path="res://core/fx/fx_layer.tscn" id="9_fx"]
+[ext_resource type="Script" path="res://themes/theme_backdrop.gd" id="10_backdrop"]
 
 [node name="Sandbox" type="Node2D"]
 script = ExtResource("1_sandbox")
+
+[node name="ThemeBackdrop" type="Node2D" parent="."]
+script = ExtResource("10_backdrop")
 
 [node name="GameCamera" type="Camera2D" parent="."]
 script = ExtResource("2_camera")
 view_size = Vector2(1080, 720)
 
 [node name="Room" type="Node2D" parent="."]
+z_index = -1
 script = ExtResource("3_room")
 
 [node name="BlobPhysics" type="Node" parent="."]

@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bpgucmebuegol" path="res://entities/blob/blob.gd" id="1_5kxo4"]
 [ext_resource type="Resource" uid="uid://cwr2e1kmjv8gw" path="res://entities/blob/stats/default.tres" id="2_ao01h"]
 [ext_resource type="Script" uid="uid://c2546gae4phyx" path="res://entities/blob/blob_body.gd" id="3_fw1af"]
+[ext_resource type="Script" path="res://entities/blob/blob_trail.gd" id="4_trail"]
 
 [node name="Blob" type="Node2D" unique_id=1350047165]
 script = ExtResource("1_5kxo4")
@@ -10,3 +11,7 @@ stats = ExtResource("2_ao01h")
 
 [node name="Body" type="Node2D" parent="." unique_id=69353074]
 script = ExtResource("3_fw1af")
+
+[node name="Trail" type="Node2D" parent="."]
+z_index = -1
+script = ExtResource("4_trail")

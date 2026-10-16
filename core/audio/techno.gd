@@ -3,7 +3,7 @@ extends Node
 ## A 4-bar techno loop synthesised in code (no audio files): four-on-the-floor
 ## kick, claps, hats, a rolling bass line and a low pad. It renders on a worker
 ## thread at startup, then loops. Also the beat clock: anything that pulses to
-## the music finds this node in group "music" and calls beat() / kick_env().
+## the music finds this node in group "music" (current_beat() / current_kick()).
 
 const RATE := 22050
 const BARS := 4
@@ -73,6 +73,24 @@ func beat() -> float:
 func kick_env() -> float:
 	var b := beat()
 	return exp(-(b - floorf(b)) * 5.0) if b >= 0.0 else 0.0
+
+
+## The scene's music (the node in group "music"), or null.
+static func find(tree: SceneTree) -> Techno:
+	return tree.get_first_node_in_group("music") as Techno
+
+
+## The music's beat clock. Without music, a steady 128 BPM clock so beat-driven
+## things (lasers) still work in a test scene.
+static func current_beat(tree: SceneTree) -> float:
+	var m := find(tree)
+	return m.beat() if m != null else Time.get_ticks_usec() / 1000000.0 * 128.0 / 60.0
+
+
+## The music's kick_env(), or 0 without music.
+static func current_kick(tree: SceneTree) -> float:
+	var m := find(tree)
+	return m.kick_env() if m != null else 0.0
 
 
 # --- Synthesis (runs on the worker thread) -----------------------------------

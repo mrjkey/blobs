@@ -3,6 +3,7 @@ class_name WallBlock
 extends Node2D
 ## A rectangular wall centred on this node. Solid and slightly bouncy, or, as a
 ## pink `kicker`, a pinball wall that flings blobs away at `settings.kicker_speed`.
+## Drawn by the theme's WallSkin.
 
 @export var size := Vector2(200.0, 24.0):
 	set(v):
@@ -62,7 +63,7 @@ func collide(b: Blob, feel: PhysicsFeel) -> void:
 	else:
 		var impact := BlobPhysics.bounce(b, n, depth, feel.wall_restitution)
 		if impact > 0.0:
-			BlobPhysics.wall_feedback(b.global_position - n * b.radius, impact, settings.wall_color)
+			BlobPhysics.wall_feedback(b.global_position - n * b.radius, impact, GameTheme.current().wall.wall_color)
 
 
 func _physics_process(delta: float) -> void:
@@ -75,9 +76,4 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	var r := Rect2(-size * 0.5, size)
-	var col := settings.kicker_color if kicker else settings.wall_color
-	draw_rect(r, Color(col.r * 0.1, col.g * 0.1, col.b * 0.15, 0.9))
-	draw_rect(r, NeonLook.hdr(col, 1.6 + 2.5 * flash), false, 3.0, true)
-	if kicker and size.x > 14.0 and size.y > 14.0:
-		draw_rect(r.grow(-6.0), NeonLook.hdr(col, 0.9 + flash, 0.6), false, 1.5, true)
+	GameTheme.current().wall.draw(self)

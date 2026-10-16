@@ -1,10 +1,8 @@
 class_name BlobBody
 extends Node2D
-## Draws the parent Blob: the jelly spring, the outline, eyes and status rings.
-## Only reads the Blob's state; the Blob never needs to know how it is drawn.
-
-const SEGMENTS := 40
-const INK := Color(0.08, 0.08, 0.12)
+## The parent Blob's look: runs the jelly spring (squash, stretch, swell), the
+## blinking and where the eyes look, and has the current theme's BlobSkin draw
+## it. Only reads the Blob's state; the Blob never needs to know how it is drawn.
 
 @onready var blob: Blob = get_parent()
 
@@ -16,7 +14,7 @@ var swell_vel := 0.0
 var draw_radius := 22.0
 var look := Vector2.RIGHT
 var flash := 0.0
-var _blink := 0.0
+var blink := 0.0 # > 0 while the eyes are shut
 var _blink_timer := randf_range(1.0, 4.0)
 var _breath_phase := randf() * TAU
 
@@ -54,10 +52,10 @@ func _process(delta: float) -> void:
 		want_look = blob.vel / speed
 	look = look.slerp(want_look, 1.0 - exp(-8.0 * delta)).normalized()
 
-	_blink = maxf(_blink - delta, 0.0)
+	blink = maxf(blink - delta, 0.0)
 	_blink_timer -= delta
 	if _blink_timer <= 0.0:
-		_blink = 0.12
+		blink = 0.12
 		_blink_timer = randf_range(1.5, 4.5)
 
 	queue_redraw()
@@ -83,72 +81,11 @@ func _tensor(n: Vector2, amount: float) -> Vector3:
 
 
 ## Apply the current deformation to a point on the unit circle.
-func _xf(p: Vector2) -> Vector2:
+func xf(p: Vector2) -> Vector2:
 	return Vector2(
 		p.x - (deform.x * p.x + deform.z * p.y),
 		p.y - (deform.z * p.x + deform.y * p.y))
 
 
 func _draw() -> void:
-	var r := draw_radius * (1.0 + swell)
-	var pts := PackedVector2Array()
-	var shadow := PackedVector2Array()
-	for i in SEGMENTS:
-		var a := TAU * i / SEGMENTS
-		var p := _xf(Vector2(cos(a), sin(a))) * r
-		pts.append(p)
-		shadow.append(p + Vector2(3.0, 6.0))
-
-	draw_colored_polygon(shadow, Color(0, 0, 0, 0.28))
-	draw_colored_polygon(pts, blob.color.lerp(Color.WHITE, flash * 0.7))
-	var rim := pts.duplicate()
-	rim.append(pts[0])
-	var rim_col := blob.color.darkened(0.45)
-	if blob.windup > 0.0:
-		rim_col = Color.WHITE
-	draw_polyline(rim, rim_col, 3.0, true)
-	draw_circle(_xf(Vector2(-0.38, -0.4)) * r, r * 0.22, Color(1, 1, 1, 0.3))
-
-	_draw_eyes(r)
-	_draw_status(r)
-
-
-func _draw_eyes(r: float) -> void:
-	var side := Vector2(-look.y, look.x)
-	var dizzy := blob.stun > 0.0 or not blob.alive
-	for s: float in [-1.0, 1.0]:
-		var c := _xf(look * 0.38 + side * (0.3 * s)) * r
-		var er := r * 0.2
-		if dizzy:
-			var e := er * 0.7
-			draw_line(c + Vector2(-e, -e), c + Vector2(e, e), INK, 2.5, true)
-			draw_line(c + Vector2(-e, e), c + Vector2(e, -e), INK, 2.5, true)
-		elif _blink > 0.0:
-			draw_line(c - side * er, c + side * er, INK, 2.5, true)
-		else:
-			draw_circle(c, er, Color.WHITE)
-			draw_circle(c + look * er * 0.4, er * 0.5, INK)
-		if blob.windup > 0.0 or (blob.push_cooldown > blob.stats.push_cooldown - 0.15):
-			# angry brows while pushing
-			var brow_in := c + look * er * 0.9 - side * (er * 0.5 * s)
-			var brow_out := c + look * er * 1.5 + side * (er * 0.9 * s)
-			draw_line(brow_in, brow_out, INK, 3.0, true)
-
-
-func _draw_status(r: float) -> void:
-	if not blob.alive:
-		return
-	if blob.is_human():
-		var ring_r := r + 8.0
-		if blob.push_cooldown > 0.0:
-			var frac := 1.0 - blob.push_cooldown / blob.stats.push_cooldown
-			if frac > 0.01:
-				draw_arc(Vector2.ZERO, ring_r, -PI / 2.0, -PI / 2.0 + TAU * frac, 48, Color(1, 1, 1, 0.3), 3.0, true)
-		else:
-			draw_arc(Vector2.ZERO, ring_r, 0.0, TAU, 48, Color(1, 1, 1, 0.6), 2.0, true)
-		var tip := Vector2(0.0, -r - 14.0)
-		draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(-7, -10), tip + Vector2(7, -10)]), Color.WHITE)
-	if blob.ring_danger > 0.0:
-		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.03)
-		draw_arc(Vector2.ZERO, r + 4.0, -PI / 2.0, -PI / 2.0 + TAU * blob.ring_danger, 48,
-			Color(1.0, 0.25, 0.2, 0.6 + 0.4 * pulse), 4.0, true)
+	GameTheme.current().blob.draw(self)

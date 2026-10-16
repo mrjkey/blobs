@@ -8,7 +8,7 @@ extends Node2D
 @export var settings: TrackSettings = preload("res://level/arenas/track/track_settings.tres")
 @export var wall_scene: PackedScene = preload("res://level/obstacles/wall_block.tscn")
 @export var bumper_scene: PackedScene = preload("res://level/obstacles/bumper.tscn")
-@export var food_scene: PackedScene = preload("res://themes/neon/neon_food.tscn")
+@export var food_scene: PackedScene = preload("res://level/pickups/food/food.tscn")
 
 var _next_chunk_y := 0.0
 var _prev_rects: Array[Rect2] = []

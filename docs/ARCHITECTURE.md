@@ -5,28 +5,27 @@ hot-reloadable while the game runs. Read this before adding a component or a mod
 
 ## Folders
 
-Group by feature, not by file type: a feature's scenes, scripts and resources
-sit together.
+Folders are grouped by concept, then by feature: a feature's scenes, scripts
+and resources sit together in its folder. How things *look* lives separately,
+in `themes/` (see Themes below).
 
 | Folder | What goes there |
 |---|---|
-| `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres` |
-| `audio/` | `Sfx` autoload (synthesised sound kit); `Techno` music + beat clock |
-| `blob/` | `blob.tscn` and its script, `BlobStats` + `stats/*.tres` |
-| `blob/body/` | How a blob is drawn (jelly spring, eyes, status rings); other looks subclass `BlobBody` |
-| `blob/control/` | Controllers that steer a blob: `PlayerInput` + `InputProfile`s, `BotBrain` and its subclasses |
-| `physics/` | `BlobPhysics` (moves and collides blobs) and `PhysicsFeel` |
-| `arena/` | Floors and walls blobs play on (`BoxRoom`, `RingArena`) |
-| `food/` | `Food` pellets and the `FoodSpawner` |
-| `track/` | Treadmill pieces: `WallBlock`, `Bumper`, `SideWalls`, `KillLasers`, `TrackGenerator`, `TrackSettings` |
-| `fx/` | Visual-only nodes: `FxLayer` (sparks, shockwaves), `GameCamera` |
-| `neon/` | The neon look: `NeonLook.hdr()`, `NeonPalette`, `NeonGrid`, the optional glow |
-| `lasers/` | Beat-timed lasers: `LaserEmitter` and its subclasses, `LaserDirector`, `LaserSettings` |
-| `ui/` | `menus/`, `hud/`, `themes/` |
-| `modes/` | One folder per game mode: the scene that composes components plus the round rules |
+| `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings, the chosen theme), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres`, `Sfx` (synthesised sound kit) |
+| `core/` | Machinery every mode composes: `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock) |
+| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `BlobStats` + `stats/`), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
+| `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`: the floors and walls a mode plays on, with their own rules like ring-out or the kill lasers), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`) |
+| `themes/` | `GameTheme`, `ThemeSkin`, `ThemeBackdrop`; one folder per theme (`classic/`, `neon/`) with its skins, `.tres`, HUD style and backdrop |
+| `modes/` | One folder per game mode: the scene that composes components, plus the round rules (`GameMode` subclasses) |
+| `ui/` | `menus/`, `hud/`, `themes/menu_theme.tres` |
 | `sandbox/` | Test bench scene for trying components |
 | `docs/` | This file |
 | `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md) |
+
+Where a new thing goes: something that acts on its own (an enemy, a new kind of
+blob) under `entities/`; something placed in a level under `level/`: a solid
+or trap blobs bump into in `obstacles/`, something they collect in `pickups/`,
+a whole new floor in `arenas/`. Its look goes in each theme folder.
 
 ## Scenes, scripts, resources
 
@@ -36,7 +35,8 @@ sit together.
 - **Scripts** (`.gd`) hold behaviour. Spawning instances of scenes at runtime is
   fine; building a node tree by hand in `_ready()` is not (put it in a scene).
 - **Resources** (`.tres`) hold numbers you tune: `BlobStats`, `PhysicsFeel`,
-  `JuiceSettings`, `InputProfile`, the glow `Environment`. Many nodes can share one.
+  `JuiceSettings`, `InputProfile`, `TrackSettings`, `LaserSettings`, and every
+  colour (in the theme `.tres` files). Many nodes can share one.
 - Structural one-offs (a room's size, a spawn position) are `@export`s on the
   node in the scene.
 
@@ -52,9 +52,9 @@ finds what it needs:
   - `arena`: at most one. Optional `is_in_mud(pos) -> bool`, and `ring_radius` for ring bots and the food spawner.
   - `food`: pellets bots look for.
   - `fx`: the `FxLayer` that `Juice.burst()` / `Juice.shockwave()` draw on.
-  - `music`: at most one `Techno`. `NeonLook.beat()` / `NeonLook.kick()` read it (a steady 128 BPM / no kick without it).
+  - `music`: at most one `Techno`. `Techno.current_beat()` / `Techno.current_kick()` read it (a steady 128 BPM / no kick without it).
   - `lasers`: every `LaserEmitter`; the `LaserDirector` schedules them.
-  - `grid`: `NeonGrid`s; call `impulse(world_pos, strength, radius)` on the group to ripple them.
+  - `grid`: the neon backdrop's `NeonGrid`; call `impulse(world_pos, strength, radius)` on the group to ripple it, `follow_y(y)` to scroll it.
   - `kill_lasers`: at most one `KillLasers`; `kill_top()` / `kill_bottom()` for treadmill bots.
 - **Signals** for reporting upward: `Blob.pushed`, `Blob.ate_food`, `Blob.died`,
   `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Juice.impact`. The
@@ -85,7 +85,7 @@ Set with `process_physics_priority` in each script's `_ready()`:
 3. `10` `Blob`: push cooldown, windup and release
 4. `20` rules that look at where blobs ended up: `RingArena` ring-out, `KillLasers`, `Food` eating
 
-Drawing (`BlobBody`, `FxLayer`) runs in `_process`.
+Drawing runs in `_process` / `_draw`, through the theme's skins.
 
 ### Hitstop
 
@@ -123,6 +123,40 @@ So:
 7. **Don't make edits apply by restarting the scene for the user.** Game state
    should survive changes.
 
+## Themes
+
+The player picks a theme in the main menu (THEME: NEON / CLASSIC; neon by
+default). `Session.theme_name` saves it; `GameTheme.current()` returns its
+`GameTheme` resource (`themes/<name>/<name>.tres`), and in the editor the
+default one, so `@tool` previews draw too. Switching never changes a scene.
+
+- **Components own state and gameplay; skins only draw.** Every component's
+  `_draw()` is one line, e.g. `GameTheme.current().ring.draw(self)`. The skin
+  reads the node (`arena.wall_hits`, `body.look`, `wall.flash`...) and draws
+  with `node.draw_*()`. Skins hold no state.
+- **Every colour lives in a skin**, including the effect colours components
+  use for sparks and bursts (`GameTheme.current().ring.spark_color`,
+  `.food.color`, `.laser.beam_color`). Components and settings resources have
+  no colours.
+- **A skin slot's class is the classic look** (`themes/classic/ring_skin.gd`,
+  `class_name RingSkin`); other themes extend it and override `draw()`
+  (`themes/neon/neon_ring_skin.gd`). All extend `ThemeSkin`, which has `kick()` and
+  `beat()` helpers that read the music (0 in the editor).
+- **The `GameTheme` resource** lists one skin per slot (`blob`, `trail`, `fx`,
+  `room`, `ring`, `track_bed`, `kill_lasers`, `wall`, `bumper`, `food`, `laser`),
+  embedded with their colours, plus `hud` (the HUD's UI theme), `backdrop` (a
+  scene drawn behind everything, e.g. the neon grid), `glow` (a bloom scene,
+  used when `Session.glow` is on), `clear_color`, `beat_zoom` (camera thump on
+  the kick), `brightness` (master dimmer for `NeonLook.hdr()`), and the player,
+  P2 and bot colours. An empty `trail` slot means no trails.
+- **`ThemeBackdrop`**, near the top of every game scene, adds the backdrop and
+  glow and sets the clear colour. `Hud` takes `hud`, `GameCamera` `beat_zoom`,
+  `GameMode` the blob colours.
+
+Draw order in a game scene: backdrop z -10, arena z -1, then trails (z -1,
+later in the tree), obstacles, food and blobs at 0, lasers and kill lasers z 5,
+`FxLayer` z 10.
+
 ## The standalone rule
 
 Every component scene works when dropped into `sandbox/sandbox.tscn` (a room,
@@ -132,19 +166,28 @@ what makes a gallery of objects possible.
 
 ## Recipes
 
-**New obstacle** (bumper, wall, spikes...): a scene whose root script joins
-`blob_colliders` in `_enter_tree()` and implements `collide(blob, feel)`. Use
-`BlobPhysics.bounce()` for solid surfaces and `BlobPhysics.wall_feedback()` for
-the hit effects. Draw it in `_draw()`. Put tunables in exports or a resource.
-Try it in the sandbox.
+**New obstacle or trap** (bumper, wall, spikes...): a scene in `level/obstacles/`
+whose root script joins `blob_colliders` in `_enter_tree()` and implements
+`collide(blob, feel)`. Use `BlobPhysics.bounce()` for solid surfaces and
+`BlobPhysics.wall_feedback()` for the hit effects. Put tunables in exports or a
+resource. Give it a look (next recipe). Try it in the sandbox.
 
-**New look for blobs:** a script that `extends BlobBody` and overrides `_draw()`;
-an inherited scene of `blob.tscn` with that script on `Body`.
+**A look for a new kind of thing:** a skin class in `themes/classic/`
+(`class_name SpikesSkin extends ThemeSkin`, colours as exports, `draw(node)`),
+a neon one in `themes/neon/` that extends it, a slot in `GameTheme`
+(`@export var spikes: SpikesSkin`), an entry in each theme's `.tres`, and
+`GameTheme.current().spikes.draw(self)` in the node's `_draw()`.
 
-**Neon version of a component:** subclass it and override `_draw()` with
-`NeonLook.hdr()` colours (`NeonRingArena`, `NeonFood`, `NeonFxLayer`). Draw order
-in a neon scene: `NeonGrid` z -10, arena z -1, then trails (z -1, later in the
-tree), blobs, lasers z 5, `FxLayer` z 10.
+**New pickup or power-up:** like `Food` in `level/pickups/`: join a group bots
+can look for, check overlap with living blobs in `_physics_process`, apply the
+effect to the blob, `queue_free()`.
+
+**New enemy:** under `entities/enemies/`. Beat-driven ones can extend
+`LaserEmitter` (see `LaserTurret`, `LaserShip`).
+
+**New theme:** a folder under `themes/` with a `<name>.tres` (a `GameTheme`)
+and skins that extend the classic ones where the look differs (reuse a classic
+or neon skin as-is otherwise), plus an entry in `Session.THEMES`.
 
 **New controller:** a node script that sets `blob.controller = self` in
 `_ready()`, runs at physics priority -10, and writes `move_dir` /
@@ -155,7 +198,7 @@ override `_decide()`, `_target_score()`, `_food_ok()`.
 (`BlobStats`, `PhysicsFeel`, `JuiceSettings`...), read it where it's used.
 
 **New mode:** a folder under `modes/` with a scene that places the components
-(camera, arena, `BlobPhysics`, `FxLayer`, `Hud`, a `Blobs` node) and a script
+(`ThemeBackdrop`, camera, arena, `BlobPhysics`, `FxLayer`, `Hud`, a `Blobs` node) and a script
 that extends `GameMode`: spawn in `_spawn_blobs()` with `spawn_player()` /
 `spawn_bot()`, switch hazards on in `_on_play_started()` and off in
 `_on_round_over()`, override `_check_round_over()` for other win rules. See
@@ -193,3 +236,9 @@ W=$(wslpath -w .)
   compiles them before `Juice` exists, and every script that depends on them
   fails. Use untyped variables and duck typing (`"kicker" in node`), and reach
   autoloads with `root.get_node("Juice")`.
+- A test copy should get its own `config/name` in `project.godot`, so its
+  `user://settings.cfg` (theme, glow) isn't the real game's.
+- Screenshots: the same `--script` approach without `--headless` opens a window
+  and can save `root.get_viewport().get_texture().get_image()` as PNG.
+- Check new `class_name`s against Godot's built-in classes (`Skin` is one):
+  shadowing a native class is a compile error.

@@ -11,7 +11,6 @@ enum Mode { VS_CPU, VERSUS, VERSUS_PLUS_CPU, WATCH } # same numbers as the menu'
 @export var camera: GameCamera
 @export var kill_lasers: KillLasers
 @export var laser_director: LaserDirector
-@export var grid: NeonGrid # optional, kept centred on the camera
 
 @export_group("Controls")
 @export var solo_profile: InputProfile = preload("res://entities/controllers/profiles/solo.tres")
@@ -65,7 +64,8 @@ func _spawn_blobs() -> void:
 		var pos := Vector2(x, cam_y + 150.0)
 		var b: Blob
 		if i < _humans:
-			b = spawn_blob(pos, settings.p1_color if i == 0 else settings.p2_color, "Player %d" % (i + 1), inputs[i])
+			var theme := GameTheme.current()
+			b = spawn_blob(pos, theme.player_color if i == 0 else theme.p2_color, "Player %d" % (i + 1), inputs[i])
 			if _humans > 1:
 				b.tag = "P%d" % (i + 1)
 		else:
@@ -110,8 +110,7 @@ func _physics_process(delta: float) -> void:
 
 func _follow_camera() -> void:
 	camera.global_position = Vector2(0.0, cam_y)
-	if grid != null:
-		grid.follow_y(cam_y)
+	get_tree().call_group("grid", "follow_y", cam_y) # a theme backdrop that scrolls with the world
 
 
 func _process(_delta: float) -> void:

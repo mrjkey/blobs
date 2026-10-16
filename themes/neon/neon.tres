@@ -1,0 +1,89 @@
+[gd_resource type="Resource" script_class="GameTheme" format=3]
+
+[ext_resource type="Script" path="res://themes/game_theme.gd" id="1"]
+[ext_resource type="Script" path="res://themes/neon/neon_blob_skin.gd" id="2"]
+[ext_resource type="Script" path="res://themes/neon/neon_trail_skin.gd" id="3"]
+[ext_resource type="Script" path="res://themes/neon/neon_fx_skin.gd" id="4"]
+[ext_resource type="Script" path="res://themes/neon/neon_room_skin.gd" id="5"]
+[ext_resource type="Script" path="res://themes/neon/neon_ring_skin.gd" id="6"]
+[ext_resource type="Script" path="res://themes/neon/neon_track_bed_skin.gd" id="7"]
+[ext_resource type="Script" path="res://themes/neon/neon_kill_lasers_skin.gd" id="8"]
+[ext_resource type="Script" path="res://themes/neon/neon_wall_skin.gd" id="9"]
+[ext_resource type="Script" path="res://themes/neon/neon_bumper_skin.gd" id="10"]
+[ext_resource type="Script" path="res://themes/neon/neon_food_skin.gd" id="11"]
+[ext_resource type="Script" path="res://themes/neon/neon_laser_skin.gd" id="12"]
+[ext_resource type="Theme" path="res://themes/neon/hud_theme.tres" id="13"]
+[ext_resource type="PackedScene" path="res://themes/neon/neon_grid.tscn" id="14"]
+[ext_resource type="PackedScene" path="res://themes/neon/neon_glow.tscn" id="15"]
+
+[sub_resource type="Resource" id="blob"]
+script = ExtResource("2")
+
+[sub_resource type="Resource" id="trail"]
+script = ExtResource("3")
+
+[sub_resource type="Resource" id="fx"]
+script = ExtResource("4")
+
+[sub_resource type="Resource" id="room"]
+script = ExtResource("5")
+floor_color = Color(0.03, 0, 0.09, 0.6)
+wall_color = Color(0.5, 0.3, 1, 1)
+
+[sub_resource type="Resource" id="ring"]
+script = ExtResource("6")
+floor_color = Color(0.03, 0, 0.09, 0.6)
+moat_color = Color(0.1, 0, 0.04, 0.55)
+edge_color = Color(1, 0.6, 0.15, 1)
+wall_color = Color(0.5, 0.3, 1, 1)
+
+[sub_resource type="Resource" id="track_bed"]
+script = ExtResource("7")
+shade_color = Color(0.03, 0, 0.06, 0.75)
+belt_color = Color(0.35, 0.3, 1, 1)
+side_wall_color = Color(0.5, 0.3, 1, 1)
+spark_color = Color(0.45, 0.35, 1, 1)
+
+[sub_resource type="Resource" id="kill_lasers"]
+script = ExtResource("8")
+color = Color(1, 0.12, 0.15, 1)
+
+[sub_resource type="Resource" id="wall"]
+script = ExtResource("9")
+wall_color = Color(0.45, 0.35, 1, 1)
+kicker_color = Color(1, 0.3, 0.75, 1)
+
+[sub_resource type="Resource" id="bumper"]
+script = ExtResource("10")
+color = Color(1, 0.8, 0.2, 1)
+
+[sub_resource type="Resource" id="food"]
+script = ExtResource("11")
+color = Color(0.9, 1, 0.3, 1)
+
+[sub_resource type="Resource" id="laser"]
+script = ExtResource("12")
+beam_color = Color(1, 0.15, 0.6, 1)
+body_color = Color(1, 0.3, 0.7, 1)
+
+[resource]
+script = ExtResource("1")
+blob = SubResource("blob")
+trail = SubResource("trail")
+fx = SubResource("fx")
+room = SubResource("room")
+ring = SubResource("ring")
+track_bed = SubResource("track_bed")
+kill_lasers = SubResource("kill_lasers")
+wall = SubResource("wall")
+bumper = SubResource("bumper")
+food = SubResource("food")
+laser = SubResource("laser")
+display_name = "Neon"
+brightness = 0.75
+hud = ExtResource("13")
+backdrop = ExtResource("14")
+glow = ExtResource("15")
+clear_color = Color(0.008, 0, 0.025, 1)
+beat_zoom = 0.008
+bot_colors = PackedColorArray(1, 0.2, 0.25, 1, 0.2, 1, 0.5, 1, 0.65, 0.3, 1, 1, 1, 0.35, 0.85, 1, 1, 0.5, 0.1, 1, 0.3, 0.5, 1, 1)

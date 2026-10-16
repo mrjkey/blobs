@@ -5,6 +5,7 @@ extends Node2D
 ## that into ripples. Lines brighten where the grid is stretched and flash on
 ## the music's kick. Ripples come from Juice.impact, and from anything calling
 ## impulse() on group "grid" (lasers do). Draw it behind everything (z_index -10).
+## The neon theme's backdrop; scrolling modes call follow_y() on group "grid".
 
 @export var spacing := 40.0 # set before the scene runs
 @export var half_size := Vector2(760, 460) # the grid covers ±this around the node
@@ -101,7 +102,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
-	pulse = NeonLook.kick(get_tree())
+	pulse = Techno.current_kick(get_tree())
 	queue_redraw()
 
 
@@ -131,5 +132,5 @@ func _draw() -> void:
 
 func _line_color(dim: float, stretch: float) -> Color:
 	# Stretched parts of the grid light up past the glow threshold.
-	var k := (dim + minf(stretch / 18.0, 2.2)) * NeonLook.palette.brightness
+	var k := (dim + minf(stretch / 18.0, 2.2)) * GameTheme.current().brightness
 	return Color(color.r * k, color.g * k, color.b * k, clampf(0.35 + stretch / 20.0, 0.35, 1.0))

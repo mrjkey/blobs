@@ -4,8 +4,8 @@ extends Node2D
 ## it charges (tracking a random blob, with a thin telegraph line), locks its
 ## aim (bots that notice try to sidestep), fires (knockback, sparks, a grid
 ## ripple along the beam) and goes back to idle. Subclasses say where the beam
-## ends (beam_length) and how they move and look (_idle, _draw_body).
-## Joins group "lasers"; draws above the blobs (z_index 5 in its scene).
+## ends (beam_length), how they move (_idle) and which LaserSkin body they draw
+## (_draw_body). Joins group "lasers"; draws above the blobs (z_index 5 in its scene).
 
 @export var settings: LaserSettings = preload("res://entities/enemies/lasers/turret_laser.tres")
 
@@ -61,7 +61,7 @@ func _physics_process(delta: float) -> void:
 		return
 	var s := settings
 	var pos := global_position
-	var to_fire := fire_beat - NeonLook.beat(get_tree())
+	var to_fire := fire_beat - Techno.current_beat(get_tree())
 
 	if fire_beat < 0.0 or to_fire > s.charge_beats:
 		_idle(delta)
@@ -148,14 +148,14 @@ func _fire(pos: Vector2) -> void:
 			continue
 		var dv := s.impulse / pow(b.mass, b.stats.push_resist_exp)
 		b.take_hit(d, dv, b.stats.push_stun, false)
-		Juice.burst(b.global_position, s.beam_color, 18, 500.0)
+		Juice.burst(b.global_position, GameTheme.current().laser.beam_color, 18, 500.0)
 		hit_any = true
 	if hit_any:
 		Juice.hitstop(Juice.settings.hitstop_push)
 		Juice.shake(6.0)
 	for i in int(length / 70.0) + 1:
 		get_tree().call_group("grid", "impulse", pos + d * (i * 70.0), 260.0, 90.0)
-	Juice.burst(pos + d * length, s.beam_color, 12, 350.0)
+	Juice.burst(pos + d * length, GameTheme.current().laser.beam_color, 12, 350.0)
 
 
 func _process(_delta: float) -> void:
@@ -164,32 +164,16 @@ func _process(_delta: float) -> void:
 
 func _draw() -> void:
 	var s := settings
-	var beat := NeonLook.beat(get_tree())
-	var k := NeonLook.kick(get_tree())
+	var skin := GameTheme.current().laser
+	var beat := ThemeSkin.beat(self)
 	var to_fire := fire_beat - beat if fire_beat >= 0.0 else 99.0
 	var charge := 0.0
 	if to_fire > 0.0 and to_fire <= s.charge_beats:
 		charge = 1.0 - to_fire / s.charge_beats
-
-	# Telegraph: a thin tracking line that blinks once the aim locks.
-	if charge > 0.0:
-		var alpha := 0.15 + 0.5 * charge
-		var width := 1.5
-		if to_fire <= s.lock_beats:
-			alpha = 0.9 if int(beat * 16.0) % 2 == 0 else 0.3
-			width = 2.5
-		draw_line(Vector2.ZERO, aim * length, NeonLook.hdr(s.beam_color, 1.0 + 2.0 * charge, alpha), width, true)
-
-	# The beam itself.
-	if fire_beat >= 0.0 and beat >= fire_beat and beat < fire_beat + s.fire_beats:
-		var q := (beat - fire_beat) / s.fire_beats
-		var end := aim * length
-		draw_line(Vector2.ZERO, end, NeonLook.hdr(s.beam_color, 3.0, 1.0 - q), s.width * 1.4 * (1.0 - q) + 1.0, true)
-		draw_line(Vector2.ZERO, end, NeonLook.hdr(Color.WHITE, 3.0, 1.0 - q), s.width * 0.35 * (1.0 - q) + 1.0, true)
-
-	_draw_body(k, charge)
+	skin.draw_beam(self, beat, to_fire, charge)
+	_draw_body(skin, ThemeSkin.kick(self), charge)
 
 
-## Override: draw the emitter at the origin, pointing along `aim`.
-func _draw_body(_kick: float, _charge: float) -> void:
+## Override: draw the emitter at the origin, pointing along `aim`, with the skin.
+func _draw_body(_skin: LaserSkin, _kick: float, _charge: float) -> void:
 	pass

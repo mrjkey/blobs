@@ -2,7 +2,7 @@
 class_name Bumper
 extends Node2D
 ## A round pinball bumper: flings any blob that touches it away at
-## `settings.bumper_kick`, and pops bigger for a moment.
+## `settings.bumper_kick`, and pops bigger for a moment. Drawn by the theme's BumperSkin.
 
 @export var radius := 27.0:
 	set(v):
@@ -39,7 +39,7 @@ static func kick(b: Blob, n: Vector2, depth: float, speed: float, ts: TrackSetti
 	b.body.flash = 0.8
 	b.bump(n, speed)
 	var contact := b.global_position - n * b.radius
-	Juice.burst(contact, ts.bumper_color, 12, 420.0)
+	Juice.burst(contact, GameTheme.current().bumper.color, 12, 420.0)
 	Juice.impact_at(contact, speed)
 	Sfx.play("bumper", randf_range(0.95, 1.1), -2.0)
 	Juice.shake(4.0)
@@ -55,10 +55,4 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	var col := settings.bumper_color
-	var k := 0.0 if Engine.is_editor_hint() else NeonLook.kick(get_tree())
-	var rr := radius * (1.0 + 0.25 * flash)
-	draw_circle(Vector2.ZERO, rr, Color(0.08, 0.06, 0.0, 0.9))
-	draw_arc(Vector2.ZERO, rr, 0.0, TAU, 40, NeonLook.hdr(col, 1.8 + 3.0 * flash + 0.4 * k), 4.0, true)
-	draw_arc(Vector2.ZERO, rr * 0.6, 0.0, TAU, 32, NeonLook.hdr(col, 1.2 + 2.0 * flash, 0.7), 2.0, true)
-	draw_circle(Vector2.ZERO, rr * 0.22, NeonLook.hdr(col, 1.5 + 3.0 * flash))
+	GameTheme.current().bumper.draw(self)
