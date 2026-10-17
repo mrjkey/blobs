@@ -1,30 +1,44 @@
 class_name GameMode
 extends Node2D
-## Round rules shared by the modes: spawning blobs, the countdown, reacting to
-## eliminations, the win check and its banners, R to restart, Esc to quit.
-## A mode script extends this, spawns its blobs in _spawn_blobs(), starts its
-## hazards in _on_play_started() and stops them in _on_round_over(). Whatever
-## knocks a blob out (an arena, a laser) just calls `blob.die()`; the mode
-## hears it through `Blob.died`.
+## Round rules shared by the modes: the lineup, spawning blobs, the countdown,
+## reacting to eliminations, the win check and its banners, R to restart, Esc
+## to leave. A mode script extends this, places one blob per slot in
+## _spawn_blobs() with spawn_slot(), says which bot brain its CPUs use in
+## _new_brain(), starts its hazards in _on_play_started() and stops them in
+## _on_round_over(). Whatever knocks a blob out (an arena, a laser) just calls
+## `blob.die()`; the mode hears it through `Blob.died`.
+##
+## Who plays comes from the lobby (Session.lineup). Started on its own (F6),
+## a mode makes the default lineup from `info`: P1 on the keyboard, a
+## connected gamepad as P2, computers in the other seats.
 
 enum State { COUNTDOWN, PLAYING, OVER }
 
+@export var info: ModeInfo # name and player counts (also what the lobby shows)
 @export var blob_scene: PackedScene = preload("res://entities/blob/blob.tscn")
 @export var blobs_node: Node2D # spawned blobs go here
 @export var hud: Hud
 @export var countdown_time := 2.4
 @export var hint := "" # controls line shown at the bottom
-@export_file("*.tscn") var menu_path := "res://ui/menus/main_menu.tscn"
+@export_file("*.tscn") var menu_path := "res://ui/menus/main_menu.tscn" # Esc, when started on its own
+@export_file("*.tscn") var lobby_path := "res://ui/menus/lobby/lobby.tscn" # Esc, when started from the lobby
 
 @export_group("Names")
-@export var player_name := "You"
-## The `i`th bot gets the `i`th name and the theme's `i`th bot colour.
+@export var player_name := "You" # the human's name when there's only one
+## The `i`th computer gets the `i`th name.
 @export var bot_names := PackedStringArray(["Bonk", "Wobbles", "Gummy", "Blorb", "Mochi", "Squish"])
 
 var state := State.COUNTDOWN
+var slots: Array[PlayerSlot] = [] # who plays, one blob each
+var humans := 0 # how many of the slots are human
 
 
 func _ready() -> void:
+	slots = lineup()
+	humans = 0
+	for s in slots:
+		if s.human:
+			humans += 1
 	hud.set_hint(hint)
 	_spawn_blobs()
 	await hud.play_countdown(countdown_time)
@@ -40,12 +54,35 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
 		get_tree().reload_current_scene()
 	elif event.is_action_pressed("quit"):
-		get_tree().change_scene_to_file(menu_path)
+		if from_lobby():
+			Session.next_mode = info
+			get_tree().change_scene_to_file(lobby_path)
+		else:
+			get_tree().change_scene_to_file(menu_path)
 
 
-## Override: place the blobs with spawn_player() / spawn_bot().
+## The lobby's lineup if it was made for this mode, else the default one.
+func lineup() -> Array[PlayerSlot]:
+	var out: Array[PlayerSlot] = []
+	if from_lobby():
+		out.assign(Session.lineup)
+	else:
+		out = PlayerSlot.default_lineup(info)
+	return out
+
+
+func from_lobby() -> bool:
+	return info != null and not Session.lineup.is_empty() and Session.lineup_mode == info.resource_path
+
+
+## Override: place one blob per entry of `slots` with spawn_slot().
 func _spawn_blobs() -> void:
 	pass
+
+
+## Override: a new brain for a computer player in this mode.
+func _new_brain() -> BotBrain:
+	return RingBotBrain.new()
 
 
 ## Override: turn on hazards, food and the like once the countdown is over.
@@ -73,14 +110,29 @@ func spawn_blob(pos: Vector2, color: Color, display_name: String, controller: No
 	return b
 
 
-func spawn_player(pos: Vector2) -> Blob:
-	return spawn_blob(pos, GameTheme.current().player_color, player_name, PlayerInput.new())
-
-
-## The `index`th bot (0-based) gets the `index`th name and theme colour.
-func spawn_bot(pos: Vector2, index: int, brain: BotBrain) -> Blob:
-	var colors := GameTheme.current().bot_colors
-	return spawn_blob(pos, colors[index % colors.size()], bot_names[index % bot_names.size()], brain)
+## The blob for `slots[i]` at `pos`: a human with their keys and gamepad
+## (tagged P1..P4 when there's more than one human), or a computer with this
+## mode's brain at the slot's level.
+func spawn_slot(i: int, pos: Vector2) -> Blob:
+	var slot := slots[i]
+	var color := GameTheme.current().palette_color(slot.color_index)
+	if slot.human:
+		var input := PlayerInput.new()
+		input.profile = slot.profile
+		input.pad_device = slot.pad_device
+		input.pad_slot = 0 if slot.any_pad else -1
+		var who := player_name if humans == 1 else "Player %d" % slot.number
+		var b := spawn_blob(pos, color, who, input)
+		if humans > 1:
+			b.tag = "P%d" % slot.number
+		return b
+	var bot_index := 0
+	for j in i:
+		if not slots[j].human:
+			bot_index += 1
+	var brain := _new_brain()
+	brain.level = slot.bot_level
+	return spawn_blob(pos, color, bot_names[bot_index % bot_names.size()], brain)
 
 
 func living_blobs() -> Array[Blob]:
@@ -100,7 +152,7 @@ func human_alive() -> Blob:
 
 func _on_blob_died(b: Blob) -> void:
 	if b.is_human():
-		hud.show_banner("BUMPED OUT!", Color(1.0, 0.45, 0.4), 2.0)
+		hud.show_banner("BUMPED OUT!" if b.tag == "" else "%s IS OUT!" % b.tag, b.color if b.tag != "" else Color(1.0, 0.45, 0.4), 2.0)
 	_check_round_over()
 
 
@@ -116,7 +168,7 @@ func _check_round_over() -> void:
 	if left.is_empty():
 		hud.show_banner("DRAW!", Color.WHITE)
 	elif left[0].is_human():
-		hud.show_banner("YOU WIN!", Color(1.0, 0.9, 0.35))
+		hud.show_banner("YOU WIN!" if left[0].tag == "" else "%s WINS!" % left[0].tag, Color(1.0, 0.9, 0.35) if left[0].tag == "" else left[0].color)
 	else:
 		hud.show_banner("%s WINS" % left[0].display_name.to_upper(), left[0].color)
 	hud.set_hint("Press R to play again")

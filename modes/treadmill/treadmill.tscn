@@ -12,12 +12,13 @@
 [ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="10_hud"]
 [ext_resource type="Script" path="res://themes/theme_backdrop.gd" id="12_backdrop"]
 [ext_resource type="PackedScene" path="res://core/audio/techno.tscn" id="14_music"]
+[ext_resource type="Resource" path="res://modes/treadmill/treadmill_mode.tres" id="15_info"]
 
 [node name="Treadmill" type="Node2D" node_paths=PackedStringArray("blobs_node", "hud", "camera", "kill_lasers", "laser_director")]
 script = ExtResource("1_mode")
+info = ExtResource("15_info")
 blobs_node = NodePath("Blobs")
 hud = NodePath("Hud")
-menu_path = "res://ui/menus/treadmill_menu.tscn"
 bot_names = PackedStringArray("Bonk", "Wobbles", "Gummy", "Blorb")
 camera = NodePath("GameCamera")
 kill_lasers = NodePath("KillLasers")

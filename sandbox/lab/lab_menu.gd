@@ -1,7 +1,7 @@
 class_name LabMenu
 extends CanvasLayer
-## The sandbox's lab: every GameSettings option, plus the sandbox-only ones
-## (props), as a pause menu. Tab (or pad Y) opens and closes it. Changes are
+## The sandbox's lab: the GameSettings gameplay options, plus the sandbox-only
+## ones (props), as a pause menu. Tab (or pad Y) opens and closes it. Changes are
 ## saved and apply at once; `changed` tells the sandbox to redo its own part.
 
 signal changed

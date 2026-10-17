@@ -92,7 +92,7 @@ func _physics_process(delta: float) -> void:
 			_dodgers.clear()
 			for b in _living_blobs():
 				var bot := b.controller as BotBrain
-				if bot != null and randf() < 0.35 + 0.5 * bot.skill:
+				if bot != null and bot.level.moves and randf() < 0.35 + 0.5 * bot.skill:
 					_dodgers.append(b)
 		_dodge(pos)
 		return

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="BotLevel" format=3]
+
+[ext_resource type="Script" path="res://entities/controllers/bot_level.gd" id="1_level"]
+
+[resource]
+script = ExtResource("1_level")
+display_name = "AGGRESSIVE"
+aggression = Vector2(0.9, 1)
+caution = Vector2(0.3, 0.7)
+greed = Vector2(0.1, 0.4)
+skill = Vector2(0.75, 1)
+reaction_scale = 0.6

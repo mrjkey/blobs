@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/menus/lobby/lobby.gd" id="1_lobby"]
+[ext_resource type="Theme" uid="uid://clopy5laifscb" path="res://ui/themes/menu_theme.tres" id="2_theme"]
+[ext_resource type="PackedScene" path="res://ui/menus/lobby/lobby_card.tscn" id="3_card"]
+[ext_resource type="Resource" path="res://modes/ring/ring_mode.tres" id="4_ring"]
+[ext_resource type="Resource" path="res://entities/controllers/levels/idle.tres" id="5_idle"]
+[ext_resource type="Resource" path="res://entities/controllers/levels/passive.tres" id="6_passive"]
+[ext_resource type="Resource" path="res://entities/controllers/levels/easy.tres" id="7_easy"]
+[ext_resource type="Resource" path="res://entities/controllers/levels/normal.tres" id="8_normal"]
+[ext_resource type="Resource" path="res://entities/controllers/levels/aggressive.tres" id="9_aggressive"]
+
+[node name="Lobby" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_lobby")
+fallback_mode = ExtResource("4_ring")
+bot_levels = Array[Resource]([ExtResource("5_idle"), ExtResource("6_passive"), ExtResource("7_easy"), ExtResource("8_normal"), ExtResource("9_aggressive")])
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.06, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Column" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+text = "MODE"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SubtitleLabel"
+horizontal_alignment = 1
+
+[node name="Cards" type="HBoxContainer" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 28
+alignment = 1
+
+[node name="Card1" parent="Center/Column/Cards" instance=ExtResource("3_card")]
+layout_mode = 2
+
+[node name="Card2" parent="Center/Column/Cards" instance=ExtResource("3_card")]
+layout_mode = 2
+
+[node name="Card3" parent="Center/Column/Cards" instance=ExtResource("3_card")]
+layout_mode = 2
+
+[node name="Card4" parent="Center/Column/Cards" instance=ExtResource("3_card")]
+layout_mode = 2
+
+[node name="HandRoom" type="Control" parent="Center/Column"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Status" type="Label" parent="Center/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1

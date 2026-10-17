@@ -1,7 +1,7 @@
 class_name TrackSettings
 extends Resource
-## Treadmill knobs: the track, its obstacles, the scrolling, the ships and the
-## bots per mode. Blob physics comes from BlobStats / PhysicsFeel as usual, and
+## Treadmill knobs: the track, its obstacles, the scrolling and the ships
+## (who plays comes from the lineup). Blob physics comes from BlobStats / PhysicsFeel as usual, and
 ## every colour from the theme (see each piece's script for its colour names).
 ## Shared by every track piece through level/arenas/track/track_settings.tres.
 
@@ -27,6 +27,3 @@ extends Resource
 @export_group("Ships")
 @export var ship_speed := 0.6 # how fast they cruise up and down
 
-@export_group("Players and bots")
-@export var bots_vs_cpu := 3
-@export var bots_with_two_players := 2

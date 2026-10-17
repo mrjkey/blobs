@@ -1,18 +1,19 @@
 class_name OptionList
 extends VBoxContainer
-## One OptionRow per entry of GameSettings.OPTIONS. Changing a row saves and
-## applies it right away. Used by the settings menu and the sandbox lab.
+## One OptionRow per entry of GameSettings.OPTIONS shown in `context`.
+## Changing a row saves and applies it right away. Used by the settings menu
+## ("menu") and the sandbox lab ("lab").
 
 signal changed
 
 @export var row_scene: PackedScene
-@export var include_sandbox := false # also list the sandbox-only options
+@export_enum("menu", "lab") var context := "menu" # options marked `only` for the other one are left out
 @export var help: Label # describes the focused row's current choice
 
 
 func _ready() -> void:
 	for o: Dictionary in GameSettings.OPTIONS:
-		if o.get("sandbox", false) and not include_sandbox:
+		if o.get("only", context) != context:
 			continue
 		var row: OptionRow = row_scene.instantiate()
 		row.setup(o, GameSettings.choice(o.key))

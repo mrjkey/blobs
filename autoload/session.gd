@@ -3,16 +3,21 @@ extends Node
 ## Menus write here, game scenes read here in _ready().
 
 const SETTINGS_PATH := "user://settings.cfg"
-## Theme name -> its GameTheme resource. The main menu cycles through these in order.
+## Theme name -> its GameTheme resource (the THEME setting's choices).
 const THEMES := {
 	"neon": "res://themes/neon/neon.tres",
 	"classic": "res://themes/classic/classic.tres",
 }
 
-## Treadmill mode picked in ui/menus/treadmill_menu.tscn (0 = 1P vs computer,
-## 1 = 2P versus, 2 = 2P + computer, 3 = watch). -1 = not picked yet, e.g. when
-## treadmill.tscn is run on its own with F6.
-var treadmill_mode := -1
+## The mode picked in the main menu, for the lobby (a ModeInfo).
+var next_mode: Resource
+
+## Who plays the next game: PlayerSlots, built by the lobby, and the path of
+## the ModeInfo they were picked for. A mode only uses a lineup made for it;
+## started on its own (F6) it makes a default one (PlayerSlot.default_lineup).
+## (Untyped on purpose, like `theme`: this autoload loads before those classes.)
+var lineup: Array = []
+var lineup_mode := ""
 
 ## Neon bloom (HDR 2D + glow). Off by default: the first scene that uses it
 ## loads slowly while the GPU compiles shaders. Saved between runs.
@@ -21,7 +26,7 @@ var glow := false:
 		glow = value
 		_save()
 
-## The visual theme picked in the main menu (a key of THEMES). Saved between runs.
+## The visual theme picked in SETTINGS (a key of THEMES). Saved between runs.
 var theme_name := "neon":
 	set(value):
 		theme_name = value if THEMES.has(value) else "neon"

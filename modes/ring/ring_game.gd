@@ -1,12 +1,11 @@
 extends GameMode
-## Classic sumo ring: you and the bots start on a circle facing the centre.
+## Classic sumo ring: everyone in the lineup starts on a circle facing the centre.
 ## Push everyone out of the ring; food makes you bigger. Neon uses the same
 ## script with a LaserDirector set.
 
 @export var arena: RingArena
 @export var food_spawner: FoodSpawner
 @export var laser_director: LaserDirector # optional
-@export var bot_count := 1
 
 
 func _ready() -> void:
@@ -18,12 +17,16 @@ func _ready() -> void:
 
 
 func _spawn_blobs() -> void:
-	var count := bot_count + 1
+	var count := slots.size()
 	var start_angle := randf() * TAU
 	for i in count:
 		var pos := arena.global_position + Vector2.from_angle(start_angle + TAU * i / count) * arena.ring_radius * 0.6
-		var b: Blob = spawn_player(pos) if i == 0 else spawn_bot(pos, i - 1, RingBotBrain.new())
+		var b := spawn_slot(i, pos)
 		b.body.look = (arena.global_position - pos).normalized()
+
+
+func _new_brain() -> BotBrain:
+	return RingBotBrain.new()
 
 
 func _on_play_started() -> void:

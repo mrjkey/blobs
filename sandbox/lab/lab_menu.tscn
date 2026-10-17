@@ -64,7 +64,7 @@ layout_mode = 2
 theme_override_constants/separation = 2
 script = ExtResource("4_list")
 row_scene = ExtResource("2_row")
-include_sandbox = true
+context = "lab"
 help = NodePath("../Help")
 
 [node name="Help" type="Label" parent="Center/Panel/Column"]

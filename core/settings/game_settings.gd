@@ -1,15 +1,24 @@
 class_name GameSettings
 extends RefCounted
-## The gameplay options players can change: the dash, energy, the energy bar.
-## The main menu's SETTINGS screen lists them; the sandbox lab (Tab) lists
-## them plus the sandbox-only ones. Picks are saved in Session.settings, and
-## everything reads them through here, so a change applies at once, mid-game too.
+## The options players can change: the look (theme, glow) and the gameplay
+## (the dash, energy, the energy bar). The main menu's SETTINGS screen and the
+## sandbox lab (Tab) list them. Gameplay picks are saved in Session.settings,
+## the look in Session.theme_name / Session.glow; everything reads them
+## through here, so a change applies at once, mid-game too.
 ##
-## To add an option: an entry in OPTIONS (`sandbox = true` to show it only in
-## the lab), then read it with choice("key") where it's used, or in _sync()
-## if it's a MoveRules field.
+## To add an option: an entry in OPTIONS, then read it with choice("key")
+## where it's used, or in _sync() if it's a MoveRules field. `only = "lab"`
+## shows it only in the sandbox lab, `only = "menu"` only on the SETTINGS screen.
 
 const OPTIONS := [
+	{key = "theme", label = "THEME", default_id = "neon", only = "menu", choices = [
+		["neon", "NEON", "Glowing colours on a dark grid that pulses with the music."],
+		["classic", "CLASSIC", "Plain, solid colours with drop shadows."],
+	]},
+	{key = "glow", label = "GLOW", default_id = "off", only = "menu", choices = [
+		["off", "OFF", "No bloom. Scenes load quickly."],
+		["on", "ON", "Bloom on glowing themes (neon). The first game with it loads slowly while shaders compile."],
+	]},
 	{key = "dash", label = "DASH", default_id = "ghost", choices = [
 		["ghost", "GHOST", "A quick ethereal burst. Passes through blobs, pushes and lasers."],
 		["bump", "BUMP", "A quick solid burst. Rams whatever is in the way and stuns the blob it hits."],
@@ -40,7 +49,7 @@ const OPTIONS := [
 		["yes", "YES", "Bots dodge-dash out of pushes, ram with a bump dash, phase through with a ghost dash."],
 		["no", "NO", "Bots never dash."],
 	]},
-	{key = "props", label = "PROPS", default_id = "walls", sandbox = true, choices = [
+	{key = "props", label = "PROPS", default_id = "walls", only = "lab", choices = [
 		["walls", "WALLS + BUMPERS", "A wall, a kicker wall and two bumpers to dash into (or through)."],
 		["none", "EMPTY ROOM", "Just the room."],
 	]},
@@ -51,6 +60,11 @@ static var _rules: MoveRules
 
 ## The chosen id for option `key` (its default until the player picks one).
 static func choice(key: String) -> String:
+	match key:
+		"theme":
+			return Session.theme_name
+		"glow":
+			return "on" if Session.glow else "off"
 	var o := option(key)
 	if o.is_empty():
 		return ""
@@ -75,6 +89,13 @@ static func option(key: String) -> Dictionary:
 
 ## Pick `id` for option `key`, save it, and apply it.
 static func set_choice(key: String, id: String) -> void:
+	match key:
+		"theme":
+			Session.theme_name = id
+			return
+		"glow":
+			Session.glow = id == "on"
+			return
 	Session.set_setting(key, id)
 	if _rules != null:
 		_sync()

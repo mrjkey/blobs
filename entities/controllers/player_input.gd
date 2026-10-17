@@ -7,6 +7,8 @@ extends Node
 @export var profile: InputProfile = preload("res://entities/controllers/profiles/solo.tres")
 ## Which connected gamepad to use: 0 = the first, 1 = the second, -1 = none.
 @export var pad_slot := 0
+## A specific gamepad (its device id, from the lobby). Overrides pad_slot; -1 = not set.
+@export var pad_device := -1
 
 var _was_down := {} # button name -> held last frame
 
@@ -36,6 +38,8 @@ func _physics_process(_delta: float) -> void:
 
 func _pad() -> int:
 	var pads := Input.get_connected_joypads()
+	if pad_device >= 0:
+		return pad_device if pads.has(pad_device) else -1
 	return pads[pad_slot] if pad_slot >= 0 and pad_slot < pads.size() else -1
 
 

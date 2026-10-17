@@ -11,12 +11,14 @@
 [ext_resource type="PackedScene" path="res://core/audio/techno.tscn" id="9_music"]
 [ext_resource type="PackedScene" path="res://entities/enemies/lasers/laser_turret.tscn" id="10_turret"]
 [ext_resource type="Script" path="res://entities/enemies/lasers/laser_director.gd" id="11_director"]
+[ext_resource type="Resource" path="res://modes/ring/ring_mode.tres" id="12_info"]
 
 [node name="Ring" type="Node2D" node_paths=PackedStringArray("blobs_node", "hud", "arena", "food_spawner", "laser_director")]
 script = ExtResource("1_mode")
+info = ExtResource("12_info")
 blobs_node = NodePath("Blobs")
 hud = NodePath("Hud")
-hint = "WASD move   ·   SPACE push   ·   SHIFT dash   ·   lasers fire on the beat   ·   R restart"
+hint = "Move   ·   push   ·   dash   ·   lasers fire on the beat   ·   R restart   ·   Esc back"
 arena = NodePath("RingArena")
 food_spawner = NodePath("FoodSpawner")
 laser_director = NodePath("LaserDirector")

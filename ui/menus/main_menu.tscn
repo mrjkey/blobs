@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://1b62tslqpkw8" path="res://ui/menus/main_menu.gd" id="1_8gy84"]
 [ext_resource type="Theme" uid="uid://clopy5laifscb" path="res://ui/themes/menu_theme.tres" id="2_theme"]
+[ext_resource type="Resource" path="res://modes/treadmill/treadmill_mode.tres" id="3_treadmill"]
+[ext_resource type="Resource" path="res://modes/ring/ring_mode.tres" id="4_ring"]
 
 [node name="MainMenu" type="Control" unique_id=126013004]
 layout_mode = 3
@@ -12,8 +14,9 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_8gy84")
-treadmill_menu_path = "res://ui/menus/treadmill_menu.tscn"
-ring_path = "res://modes/ring/ring.tscn"
+treadmill = ExtResource("3_treadmill")
+ring = ExtResource("4_ring")
+lobby_path = "res://ui/menus/lobby/lobby.tscn"
 sandbox_path = "res://sandbox/sandbox.tscn"
 settings_path = "res://ui/menus/settings_menu.tscn"
 
@@ -61,23 +64,13 @@ text = "TREADMILL"
 layout_mode = 2
 text = "RING"
 
-[node name="SandboxButton" type="Button" parent="Center/Column/Buttons"]
+[node name="SandboxButton" type="Button" parent="Center/Column/Buttons" unique_id=1557065408]
 layout_mode = 2
 text = "SANDBOX"
 
-[node name="SettingsButton" type="Button" parent="Center/Column/Buttons"]
+[node name="SettingsButton" type="Button" parent="Center/Column/Buttons" unique_id=1741678049]
 layout_mode = 2
 text = "SETTINGS"
-
-[node name="ThemeButton" type="Button" parent="Center/Column/Buttons"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "THEME:  NEON"
-
-[node name="GlowButton" type="Button" parent="Center/Column/Buttons"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "GLOW:  OFF"
 
 [node name="QuitButton" type="Button" parent="Center/Column/Buttons" unique_id=1584698103]
 layout_mode = 2
@@ -93,6 +86,4 @@ horizontal_alignment = 1
 [connection signal="pressed" from="Center/Column/Buttons/RingButton" to="." method="_on_ring_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/SandboxButton" to="." method="_on_sandbox_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/SettingsButton" to="." method="_on_settings_button_pressed"]
-[connection signal="pressed" from="Center/Column/Buttons/ThemeButton" to="." method="_on_theme_button_pressed"]
-[connection signal="pressed" from="Center/Column/Buttons/GlowButton" to="." method="_on_glow_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/QuitButton" to="." method="_on_quit_button_pressed"]

@@ -3,9 +3,11 @@ extends Node
 ## Shared bot plumbing: a decision every `think_time`, smooth wobbly steering,
 ## delayed pushes, counter-pushes and target picking. Subclasses say where to
 ## go in _decide() and what makes a good target in _target_score().
-## Personality numbers make each bot play a little differently.
+## Personality numbers make each bot play a little differently; `level` says
+## what it may do and the ranges they're rolled from.
 
-@export var randomize_personality := true # re-roll the four numbers below on spawn
+@export var level: BotLevel = preload("res://entities/controllers/levels/normal.tres")
+@export var randomize_personality := true # re-roll the four numbers below on spawn, inside the level's ranges
 
 @export_group("Personality")
 @export_range(0, 1) var aggression := 0.7 # fighting vs. eating
@@ -35,15 +37,18 @@ func _ready() -> void:
 	process_physics_priority = -10 # before BlobPhysics moves the blob
 	me.controller = self
 	if randomize_personality:
-		aggression = randf_range(0.4, 1.0)
-		caution = randf_range(0.2, 0.9)
-		greed = randf_range(0.2, 0.9)
-		skill = randf_range(0.3, 1.0)
+		aggression = randf_range(level.aggression.x, level.aggression.y)
+		caution = randf_range(level.caution.x, level.caution.y)
+		greed = randf_range(level.greed.x, level.greed.y)
+		skill = randf_range(level.skill.x, level.skill.y)
 	_think_timer = randf() * think_time
 
 
 func _physics_process(delta: float) -> void:
 	if not me.alive or not me.active:
+		return
+	if not level.moves:
+		me.move_dir = Vector2.ZERO
 		return
 	_think_timer -= delta
 	if _think_timer <= 0.0:
@@ -51,7 +56,7 @@ func _physics_process(delta: float) -> void:
 		_decide()
 	if _push_timer > 0.0:
 		_push_timer -= delta
-		if _push_timer <= 0.0:
+		if _push_timer <= 0.0 and level.pushes:
 			me.request_push()
 	# Smooth, slightly wobbly steering so they look alive rather than robotic.
 	_wander += randf_range(-3.0, 3.0) * delta
@@ -77,7 +82,7 @@ func _food_ok(_pos: Vector2) -> bool:
 
 ## Push after a short, skill-dependent reaction delay.
 func _queue_push() -> void:
-	_push_timer = reaction * randf_range(0.6, 1.4) * lerpf(1.6, 0.6, skill)
+	_push_timer = reaction * level.reaction_scale * randf_range(0.6, 1.4) * lerpf(1.6, 0.6, skill)
 
 
 func _push_queued() -> bool:
@@ -107,7 +112,7 @@ func _react_to_threats() -> void:
 ## The rules let bots dash and the dash is ready. When pushes cost energy too,
 ## bots keep enough back for a push.
 func _dash_ok() -> bool:
-	if not me.rules.bots_dash or not me.dash_ready():
+	if not me.rules.bots_dash or not level.dashes or not me.dash_ready():
 		return false
 	if me.rules.push_costs_energy():
 		return me.energy >= me.stats.dash_cost + me.stats.push_cost

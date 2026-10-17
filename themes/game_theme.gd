@@ -49,6 +49,21 @@ func value(key: String, default: Variant) -> Variant:
 	return values.get(key, default)
 
 
+## Every colour a blob can be: the players' and the bots' colours, without
+## repeats. Lineups pick from it by index (PlayerSlot.color_index).
+func palette() -> PackedColorArray:
+	var out := PackedColorArray([player_color, p2_color])
+	for c in bot_colors:
+		if not out.has(c):
+			out.append(c)
+	return out
+
+
+func palette_color(index: int) -> Color:
+	var p := palette()
+	return p[posmod(index, p.size())]
+
+
 ## Draws `node` with this theme's override for `element`, if it has one.
 ## Elements start their _draw() with: if theme.draw_override("bumper", self): return
 func draw_override(element: String, node: CanvasItem) -> bool:
