@@ -47,6 +47,8 @@ values = {
 "pitch.wall": Color(0.5, 0.3, 1, 1),
 "team.0": Color(0.2, 0.55, 1, 1),
 "team.1": Color(1, 0.25, 0.35, 1),
+"team.0.second": Color(0.7, 0.3, 1, 1),
+"team.1.second": Color(1, 0.55, 0.1, 1),
 "track.floor": Color(0, 0, 0, 0),
 "track.shade": Color(0.03, 0, 0.06, 0.75),
 "track.belt": Color(0.35, 0.3, 1, 0.2),

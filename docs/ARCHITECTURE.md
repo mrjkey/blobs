@@ -101,10 +101,12 @@ a colour index into `GameTheme.palette()`.
   tagged P1..P4 when there's more than one.
 - **Teams.** A `ModeInfo` with `teams` (e.g. `["BLUE", "RED"]`) is a team
   mode: seats alternate between the teams (`team_of()`: P1 and P3 against P2
-  and P4). `spawn_slot()` sets `blob.team`, and colours CPUs in shades of
-  their team's colour (`GameTheme.team_color()` / `team_shade()`, theme values
-  `team.0`, `team.1`). `BlobBody` draws a team-coloured spot under a blob
-  with a team.
+  and P4). `spawn_slot()` sets `blob.team`. Each seat plays in its team's
+  colours, the first seat in the team colour, the second in its partner colour
+  (blue + purple, red + orange: `GameTheme.team_member_color()`, theme values
+  `team.0`, `team.1`, `team.0.second`, `team.1.second`), unless the player
+  picked their own (`PlayerSlot.color_in()`). `BlobBody` draws a
+  team-coloured spot under a blob with a team.
 - **Mode options.** `ModeInfo.options` lists `GameSettings` options (marked
   `only = "lobby"`) that the lobby shows under the game's name, like
   football's TIME and GOALS. The mode reads them with `GameSettings.choice()`.

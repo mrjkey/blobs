@@ -46,8 +46,8 @@ extends Resource
 @export var dash_hit_stun := 0.3   # a solid dash knocks the blob it hits out of control this long
 
 @export_group("Energy")
-@export var energy_segments := 3   # size of the bar
-@export var energy_regen := 0.45   # segments refilled per second
+@export var energy_segments := 4   # size of the bar
+@export var energy_regen := 0.85   # segments refilled per second
 @export var energy_regen_delay := 0.35 # refilling pauses this long after spending
 @export var dash_cost := 1.0
 @export var push_cost := 1.0

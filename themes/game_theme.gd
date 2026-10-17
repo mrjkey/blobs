@@ -10,7 +10,11 @@ extends Resource
 
 const DEFAULT := "res://themes/neon/neon.tres"
 ## Team colours (team 0, team 1) for team modes, unless a theme sets "team.0" / "team.1".
-const TEAM_COLORS: Array[Color] = [Color(0.25, 0.55, 1.0), Color(1.0, 0.35, 0.25)]
+## The team's first seat plays in it too.
+const TEAM_COLORS: Array[Color] = [Color(0.2, 0.5, 1.0), Color(1.0, 0.25, 0.2)]
+## The colour of each team's second seat, unless a theme sets "team.0.second" / "team.1.second":
+## blue team purple, red team orange.
+const TEAM_SECOND_COLORS: Array[Color] = [Color(0.65, 0.3, 1.0), Color(1.0, 0.6, 0.1)]
 
 @export var display_name := "Neon"
 @export var style: ThemeStyle
@@ -71,10 +75,13 @@ func team_color(team: int) -> Color:
 	return value("team.%d" % team, TEAM_COLORS[posmod(team, TEAM_COLORS.size())])
 
 
-## A computer's colour in a team mode: its team's colour, lighter for the
-## team's second seat (k = 1), so teammates can be told apart.
-func team_shade(team: int, k: int) -> Color:
-	return team_color(team).lerp(Color.WHITE, 0.35 * k)
+## The colour of a team's first seat (`second` false: the team's colour) or
+## its second seat (blue team: purple, red team: orange), so teammates can be
+## told apart.
+func team_member_color(team: int, second: bool) -> Color:
+	if not second:
+		return team_color(team)
+	return value("team.%d.second" % team, TEAM_SECOND_COLORS[posmod(team, TEAM_SECOND_COLORS.size())])
 
 
 ## Draws `node` with this theme's override for `element`, if it has one.

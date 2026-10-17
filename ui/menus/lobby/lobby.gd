@@ -356,7 +356,12 @@ func _color_taken(index: int, seat: int) -> bool:
 
 
 func _step_color(seat: int, step: int) -> void:
-	_step_color_of(seats[seat], seat, step)
+	var slot: PlayerSlot = seats[seat]
+	if slot.team_color and info.team_of(seat) >= 0:
+		slot.team_color = false # first press in a team mode: leave the team colour
+		if not _color_taken(slot.color_index, seat):
+			return
+	_step_color_of(slot, seat, step)
 
 
 func _step_color_of(slot: PlayerSlot, seat: int, step: int) -> void:
@@ -403,13 +408,12 @@ func _refresh_cards() -> void:
 		card.team_name = info.teams[team] if team >= 0 else ""
 		card.team_color = theme.team_color(team) if team >= 0 else Color.WHITE
 		if seats[i] != null:
-			var cpu_shade: bool = team >= 0 and not seats[i].human # as GameMode.slot_color()
-			card.color = theme.team_shade(team, 1 if i >= 2 else 0) if cpu_shade else theme.palette_color(seats[i].color_index)
+			card.color = seats[i].color_in(info)
 	for d: String in players:
 		var p: Dictionary = players[d]
 		var own: PlayerSlot = seats[p.seat]
 		var card: LobbyCard = cards[p.hand]
-		card.hands.append(["P%d" % own.number, theme.palette_color(own.color_index)])
+		card.hands.append(["P%d" % own.number, own.color_in(info)])
 		if card.hint == "":
 			card.hint = _hint_for(d, p)
 		cards[p.seat].player_ready = p.ready

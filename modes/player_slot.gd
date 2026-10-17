@@ -14,6 +14,9 @@ const NORMAL := preload("res://entities/controllers/levels/normal.tres")
 @export var number := 1 # the seat, 1..4: P1..P4
 @export var human := false
 @export var color_index := 0 # into GameTheme.palette()
+## In a team mode, play in the seat's team colour (GameTheme.team_member_color)
+## instead of color_index. Players turn it off by picking a colour in the lobby.
+@export var team_color := true
 
 @export_group("Human")
 @export var profile: InputProfile = KEYS_ALL # keys and gamepad buttons
@@ -80,6 +83,16 @@ static func recolor_bots(slots: Array) -> void:
 			next += 1
 		s.color_index = next % colors
 		taken[next] = true
+
+
+## The colour this slot plays in, in mode `info`: its seat's team colour in
+## a team mode (unless a player picked their own), else its palette colour.
+func color_in(info: ModeInfo) -> Color:
+	var theme := GameTheme.current()
+	var team := info.team_of(number - 1) if info != null else -1
+	if team >= 0 and (team_color or not human):
+		return theme.team_member_color(team, number > 2)
+	return theme.palette_color(color_index)
 
 
 ## Who this is in a menu: "KEYBOARD  WASD", "CONTROLLER 2", "CPU  NORMAL".
