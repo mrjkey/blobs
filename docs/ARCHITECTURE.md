@@ -13,11 +13,11 @@ in `themes/` (see Themes below).
 |---|---|
 | `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings and gameplay settings, the chosen theme), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres`, `Sfx` (synthesised sound kit) |
 | `core/` | Machinery every mode composes: `settings/` (`GameSettings`: the player's gameplay options), `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock) |
-| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
+| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
 | `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`: the floors and walls a mode plays on, with their own rules like ring-out or the kill lasers), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`) |
 | `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style and backdrop |
-| `modes/` | One folder per game mode: the scene that composes components, plus the round rules (`GameMode` subclasses) |
-| `ui/` | `menus/` (+ `options/`: `OptionList`, `OptionRow`, shared by the settings screen and the lab), `hud/` (`Hud`, `EnergyHud`), `themes/menu_theme.tres` |
+| `modes/` | One folder per game mode: the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
+| `ui/` | `menus/` (main menu, `lobby/` (player select), settings; `options/`: `OptionList`, `OptionRow`, shared by the settings screen and the lab), `hud/` (`Hud`, `EnergyHud`), `themes/menu_theme.tres` |
 | `sandbox/` | Test bench scene for trying components, its props, and `lab/` (the Tab menu) |
 | `docs/` | This file |
 | `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md) |
@@ -74,6 +74,29 @@ called and dashes on `request_dash()`. A controller child sets those: `PlayerInp
 controller registers itself as `blob.controller`, so `blob.is_human()` works.
 `blob.active = false` makes controllers leave the blob alone (countdowns).
 
+### Who plays: lineups
+
+A game's players are its lineup: up to 4 `PlayerSlot`s (`ModeInfo.MAX_SLOTS`).
+A slot is a human (an `InputProfile` for keys and pad buttons, plus a gamepad
+by device id) or a computer at a `BotLevel` (`entities/controllers/levels/`:
+idle, passive, easy, normal, aggressive), and has a seat number (P1..P4) and
+a colour index into `GameTheme.palette()`.
+
+- **Main menu → lobby → mode.** A mode button puts its `ModeInfo` (title,
+  scene path, min/max/default seats, max humans) in `Session.next_mode` and
+  opens the lobby (`ui/menus/lobby/`). Players join from any device, pick a
+  colour, set the CPUs' levels and open or close seats; the lobby writes
+  `Session.lineup` + `Session.lineup_mode` and starts the mode. Esc in the game
+  goes back to the lobby with the same seats.
+- **Started on its own (F6).** `GameMode.lineup()` makes
+  `PlayerSlot.default_lineup(info)`: P1 on the keyboard, each connected
+  gamepad takes the next seat, CPUs (normal) fill the rest. With one human
+  seat, P1 uses the keyboard and the first gamepad.
+- **In the mode.** `GameMode` resolves `slots` before `_spawn_blobs()`; the
+  mode places a blob per slot with `spawn_slot(i, pos)`, which makes the
+  `PlayerInput` or the mode's `_new_brain()` with the slot's level. Humans are
+  tagged P1..P4 when there's more than one.
+
 ### Moves and energy
 
 Which moves a blob has comes from `blob.rules`, a `MoveRules`: the dash
@@ -90,12 +113,14 @@ the HUD, whichever the "meter" setting picks.
 
 ### Settings
 
-`GameSettings.OPTIONS` lists the gameplay options (key, label, choices with
-help text, default). `Session.settings` saves the picks; read them with
-`GameSettings.choice("key")`, change them with `set_choice()`. The main menu's
-SETTINGS screen lists them; the sandbox lab lists them plus the
-`sandbox = true` ones. New option: add an entry, then read it where it's used
-(or in `GameSettings._sync()` for a `MoveRules` field).
+`GameSettings.OPTIONS` lists the options (key, label, choices with help
+text, default): the look (theme, glow) and the gameplay ones. Gameplay picks
+are saved in `Session.settings`, the look in `Session.theme_name` /
+`Session.glow`; read any of them with `GameSettings.choice("key")`, change
+them with `set_choice()`. The main menu's SETTINGS screen and the sandbox lab
+list them; `only = "menu"` / `only = "lab"` keeps an option to one of the two.
+New option: add an entry, then read it where it's used (or in
+`GameSettings._sync()` for a `MoveRules` field).
 
 ### Update order
 
@@ -148,7 +173,7 @@ So:
 
 ## Themes
 
-The player picks a theme in the main menu (THEME: NEON / CLASSIC; neon by
+The player picks a theme in SETTINGS (THEME: NEON / CLASSIC; neon by
 default). `Session.theme_name` saves it; `GameTheme.current()` returns its
 `GameTheme` resource (`themes/<name>/<name>.tres`; in the editor the default
 one, so `@tool` previews draw too). Switching never changes a scene.
@@ -195,7 +220,7 @@ what makes a gallery of objects possible.
 **The lab** (`sandbox/lab/`, Tab in the sandbox) is a pause menu with every
 setting plus the sandbox-only ones (props), changed live. `sandbox.gd`
 `_apply_lab()` handles the sandbox-only ones. To try a new idea: add a
-`sandbox = true` option to `GameSettings.OPTIONS` and read it there.
+`only = "lab"` option to `GameSettings.OPTIONS` and read it there.
 
 ## Recipes
 
@@ -232,10 +257,12 @@ override `_decide()`, `_target_score()`, `_food_ok()`.
 
 **New mode:** a folder under `modes/` with a scene that places the components
 (`ThemeBackdrop`, camera, arena, `BlobPhysics`, `FxLayer`, `Hud`, a `Blobs` node) and a script
-that extends `GameMode`: spawn in `_spawn_blobs()` with `spawn_player()` /
-`spawn_bot()`, switch hazards on in `_on_play_started()` and off in
-`_on_round_over()`, override `_check_round_over()` for other win rules. See
-`modes/ring/`. Add a menu button.
+that extends `GameMode`: place one blob per slot in `_spawn_blobs()` with
+`spawn_slot()`, return the mode's bot brain from `_new_brain()`, switch
+hazards on in `_on_play_started()` and off in `_on_round_over()`, override
+`_check_round_over()` for other win rules. Add a `ModeInfo` `.tres` (set it as
+the scene's `info`) and a main menu button that sends it to the lobby. See
+`modes/ring/`.
 
 ## Working with the editor open
 

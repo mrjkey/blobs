@@ -87,7 +87,8 @@ func describe() -> String:
 	if not human:
 		return "CPU  " + bot_level.display_name
 	if pad_device >= 0:
-		return "CONTROLLER %d" % (Input.get_connected_joypads().find(pad_device) + 1)
+		var n := Input.get_connected_joypads().find(pad_device) + 1
+		return "CONTROLLER %d" % n if n > 0 else "CONTROLLER"
 	match device:
 		"keys_left":
 			return "KEYBOARD  WASD"
