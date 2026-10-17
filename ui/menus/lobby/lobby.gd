@@ -1,13 +1,19 @@
 extends Control
-## The lobby (player select), between the main menu and a mode. It shows the
-## mode's seats as cards and builds the lineup (Session.lineup) for it.
+## The lobby (game and player select), between the main menu's PLAY and a
+## mode. At the top: the game (one of `modes`) and its options (ModeInfo.options,
+## e.g. football's time and goals). Below: the mode's seats as cards. It builds
+## the lineup (Session.lineup) and starts the mode.
+##
+## The top: before joining, left/right changes the game and up/down picks a
+## row (the game or one of its options) to change. Once joined, LB/RB on a
+## controller or Q/E on the keyboard change the picked row, Y or R picks the row.
 ##
 ## Anyone joins by pressing A on a controller, SPACE (WASD keys) or ENTER
 ## (arrow keys) on the keyboard, and takes the first seat that isn't a
 ## player's. Seats nobody joined are computers. Each player has a hand, a
 ## marker under one card, that they move with left/right:
 ##   own card:     up/down colour, A ready, B leave
-##   a CPU card:   up/down or A its level, B close the seat
+##   a CPU card:   up/down its level, A take its seat (to change team), B close the seat
 ##   empty seat:   A open it as a CPU
 ## Once every player is ready the game starts. START (or TAB) starts it right
 ## away; with nobody joined, the computers play on their own. B / ESC with
@@ -17,12 +23,13 @@ const READY_DELAY := 0.7 # seconds between everyone being ready and the game sta
 const STICK_ON := 0.6
 const STICK_OFF := 0.35
 
-@export var fallback_mode: ModeInfo # when the scene runs on its own (F6)
+@export var modes: Array[ModeInfo] = [] # the games, in the order they cycle; the first is the default
 @export var bot_levels: Array[BotLevel] = [] # the order a CPU's level cycles through
 @export var default_level := 3 # index into bot_levels for new CPUs
 @export_file("*.tscn") var main_menu_path := "res://ui/menus/main_menu.tscn"
 
 var info: ModeInfo
+var row := 0 # the top row being changed: 0 = the game, 1.. = info.options
 var seats: Array = [] # one per card: a PlayerSlot, or null for an empty seat
 var players := {} # device -> {seat: card index, hand: card index, ready: bool}
 var _keyboard_order: Array[String] = [] # keyboard devices in the order they joined (ESC leaves the last)
@@ -32,21 +39,18 @@ var _message := "" # a short note in the status line (e.g. "All seats are taken"
 
 @onready var cards: Array[Node] = %Cards.get_children()
 @onready var status: Label = %Status
+@onready var options_label: RichTextLabel = %Options
 
 
 func _ready() -> void:
-	info = Session.next_mode if Session.next_mode is ModeInfo else fallback_mode
-	%Title.text = info.title
-	var players_text := "%d players" % info.min_slots if info.min_slots == info.max_slots \
-		else "%d to %d players" % [info.min_slots, info.max_slots]
-	%Subtitle.text = "%s     %s" % [info.subtitle, players_text]
+	info = Session.next_mode if Session.next_mode is ModeInfo else modes[0]
 	seats.resize(cards.size())
 	for i in cards.size():
 		cards[i].seat = i + 1
-		cards[i].visible = i < info.max_slots
 	if not _restore():
 		for i in info.default_slots:
 			seats[i] = _new_bot(i)
+	_fix_teams()
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	_changed()
 
@@ -77,12 +81,18 @@ func _input(event: InputEvent) -> void:
 				device = _keyboard_order.back() if not _keyboard_order.is_empty() else "keys_left"
 				action = "back"
 			KEY_TAB: device = "keys_left"; action = "start"
+			KEY_Q: device = "keys"; action = "prev"
+			KEY_E: device = "keys"; action = "next"
+			KEY_R: device = "keys"; action = "row"
 	elif event is InputEventJoypadButton and event.pressed:
 		device = "pad:%d" % event.device
 		match event.button_index:
 			JOY_BUTTON_A: action = "confirm"
 			JOY_BUTTON_B: action = "back"
 			JOY_BUTTON_START: action = "start"
+			JOY_BUTTON_LEFT_SHOULDER: action = "prev"
+			JOY_BUTTON_RIGHT_SHOULDER: action = "next"
+			JOY_BUTTON_Y: action = "row"
 			JOY_BUTTON_DPAD_UP: action = "up"
 			JOY_BUTTON_DPAD_DOWN: action = "down"
 			JOY_BUTTON_DPAD_LEFT: action = "left"
@@ -118,6 +128,18 @@ func _act(device: String, action: String) -> void:
 		_start()
 		return
 	if not players.has(device):
+		# Not joined: the arrows change the game and its options.
+		action = {"left": "prev", "right": "next", "up": "row_up", "down": "row"}.get(action, action)
+	match action:
+		"prev", "next":
+			_change_row(-1 if action == "prev" else 1)
+			_changed()
+			return
+		"row", "row_up":
+			row = posmod(row + (-1 if action == "row_up" else 1), info.options.size() + 1)
+			_changed()
+			return
+	if not players.has(device):
 		if action == "confirm":
 			_join(device)
 		elif action == "back":
@@ -146,14 +168,14 @@ func _act(device: String, action: String) -> void:
 			elif at == null:
 				seats[p.hand] = _new_bot(p.hand)
 			elif on_cpu:
-				_step_level(p.hand, 1)
+				_swap(device, p.hand)
 		"back":
 			if p.hand == own:
 				if p.ready:
 					p.ready = false
 				else:
 					_leave(device)
-			elif on_cpu and _open_count() > info.min_slots:
+			elif on_cpu and _can_close(p.hand):
 				seats[p.hand] = null
 			else:
 				p.hand = own
@@ -190,6 +212,111 @@ func _join(device: String) -> void:
 	if device.begins_with("keys"):
 		_keyboard_order.append(device)
 	Sfx.play("pop", 1.1)
+
+
+## The player on `device` moves to the CPU's seat `seat`, the CPU to theirs.
+func _swap(device: String, seat: int) -> void:
+	var p: Dictionary = players[device]
+	var me: PlayerSlot = seats[p.seat]
+	var cpu: PlayerSlot = seats[seat]
+	seats[seat] = me
+	seats[p.seat] = cpu
+	cpu.number = p.seat + 1
+	me.number = seat + 1
+	p.seat = seat
+	p.ready = false
+	Sfx.play("pop", 1.0)
+
+
+## A seat can close if enough stay open and, in a team mode, its team keeps someone.
+func _can_close(seat: int) -> bool:
+	if _open_count() <= info.min_slots:
+		return false
+	var team := info.team_of(seat)
+	if team < 0:
+		return true
+	for i in info.max_slots:
+		if i != seat and seats[i] != null and info.team_of(i) == team:
+			return true
+	return false
+
+
+## In a team mode, a CPU for any team that has nobody.
+func _fix_teams() -> void:
+	for team in info.teams.size():
+		var free := -1
+		var has_one := false
+		for i in info.max_slots:
+			if info.team_of(i) != team:
+				continue
+			if seats[i] != null:
+				has_one = true
+			elif free < 0:
+				free = i
+		if not has_one and free >= 0:
+			seats[free] = _new_bot(free)
+
+
+## Change the picked top row: the game, or one of its options.
+func _change_row(step: int) -> void:
+	if row == 0:
+		if modes.size() > 1:
+			var i := modes.find(info)
+			_set_mode(modes[posmod(i + step, modes.size())])
+			Sfx.play("pop", 1.0)
+		return
+	var key := info.options[row - 1]
+	var choices: Array = GameSettings.option(key).get("choices", [])
+	var ids := choices.map(func(c: Array) -> String: return c[0])
+	var i := ids.find(GameSettings.choice(key))
+	GameSettings.set_choice(key, ids[posmod(i + step, ids.size())])
+	Sfx.play("pop", 1.2)
+
+
+## Switch to another game. Players keep their seats where the new one has
+## them (or move to a free one); CPUs fill seats up to its usual count.
+func _set_mode(next: ModeInfo) -> void:
+	info = next
+	Session.next_mode = info
+	row = 0
+	var old := seats.duplicate()
+	seats.fill(null)
+	# Players whose seat the new game has stay put; the others take free seats.
+	var movers: Array[String] = []
+	for d: String in players.keys():
+		var p: Dictionary = players[d]
+		if p.seat < info.max_slots:
+			seats[p.seat] = old[p.seat]
+		else:
+			movers.append(d)
+	for d in movers:
+		var p: Dictionary = players[d]
+		var target := _first_seat(func(x: PlayerSlot) -> bool: return x == null)
+		if target < 0:
+			players.erase(d)
+			_keyboard_order.erase(d)
+			continue
+		seats[target] = old[p.seat]
+		p.seat = target
+	# More players than the new game takes: the last ones to sit leave.
+	var humans: Array[String] = []
+	humans.assign(players.keys())
+	humans.sort_custom(func(a: String, b: String) -> bool: return players[a].seat < players[b].seat)
+	for j in range(info.max_humans, humans.size()):
+		seats[players[humans[j]].seat] = null
+		players.erase(humans[j])
+		_keyboard_order.erase(humans[j])
+	for d: String in players:
+		var p: Dictionary = players[d]
+		seats[p.seat].number = p.seat + 1
+		p.hand = p.seat
+		p.ready = false
+	var want := maxi(info.default_slots, info.min_slots)
+	for i in info.max_slots:
+		if seats[i] == null and _open_count() < want:
+			var cpu: PlayerSlot = old[i]
+			seats[i] = cpu if cpu != null and not cpu.human else _new_bot(i)
+	_fix_teams()
 
 
 func _first_seat(test: Callable) -> int:
@@ -258,6 +385,7 @@ func _changed() -> void:
 		_start_in = READY_DELAY
 	elif not all_ready:
 		_start_in = -1.0
+	_refresh_top()
 	_refresh_cards()
 	_refresh_status(all_ready)
 
@@ -266,10 +394,17 @@ func _refresh_cards() -> void:
 	var theme := GameTheme.current()
 	for i in cards.size():
 		var card: LobbyCard = cards[i]
+		card.visible = i < info.max_slots
 		card.slot = seats[i]
 		card.player_ready = false
 		card.hint = ""
 		card.hands = []
+		var team := info.team_of(i)
+		card.team_name = info.teams[team] if team >= 0 else ""
+		card.team_color = theme.team_color(team) if team >= 0 else Color.WHITE
+		if seats[i] != null:
+			var cpu_shade: bool = team >= 0 and not seats[i].human # as GameMode.slot_color()
+			card.color = theme.team_shade(team, 1 if i >= 2 else 0) if cpu_shade else theme.palette_color(seats[i].color_index)
 	for d: String in players:
 		var p: Dictionary = players[d]
 		var own: PlayerSlot = seats[p.seat]
@@ -291,8 +426,8 @@ func _hint_for(device: String, p: Dictionary) -> String:
 	if at == null:
 		return "%s: add a CPU" % k.ok
 	if not at.human:
-		var close := "\n%s: remove" % k.back if _open_count() > info.min_slots else ""
-		return "%s: level%s" % [k.ud, close]
+		var close := "   %s: remove" % k.back if _can_close(p.hand) else ""
+		return "%s: level\n%s: sit here%s" % [k.ud, k.ok, close]
 	return ""
 
 
@@ -305,17 +440,43 @@ func _key_names(device: String) -> Dictionary:
 	return {ok = "A", back = "B", ud = "UP/DOWN"}
 
 
+## The game's name, its line, and its options, with the picked row lit.
+func _refresh_top() -> void:
+	%Title.text = "<   %s   >" % info.title if modes.size() > 1 else info.title
+	%Title.modulate.a = 1.0 if row == 0 else 0.55
+	var players_text := "%d players" % info.min_slots if info.min_slots == info.max_slots \
+		else "%d to %d players" % [info.min_slots, info.max_slots]
+	%Subtitle.text = "%s     %s" % [info.subtitle, players_text]
+	var lines: Array[String] = []
+	for i in info.options.size():
+		var key := info.options[i]
+		var o := GameSettings.option(key)
+		var text := "%s    <  %s  >" % [o.get("label", key), GameSettings.choice_label(key)]
+		lines.append("[color=%s]%s[/color]" % ["#ffe066" if row == i + 1 else "#7c82a8", text])
+	if row > 0:
+		var key := info.options[row - 1]
+		for c: Array in GameSettings.option(key).get("choices", []):
+			if c[0] == GameSettings.choice(key):
+				lines.append("[font_size=17][color=#9aa0c8]%s[/color][/font_size]" % c[2])
+	options_label.text = "[center]%s[/center]" % "\n".join(lines)
+
+
 func _refresh_status(all_ready: bool) -> void:
 	var lines: Array[String] = []
+	var rows := "   ·   Options:  UP / DOWN" if not info.options.is_empty() else ""
 	if _message != "":
 		lines.append(_message)
 	if all_ready:
 		lines.append("READY!")
 	elif players.is_empty():
+		lines.append("Game:  LEFT / RIGHT%s" % rows)
 		lines.append("Join:  A on a controller   ·   SPACE  (WASD keys)   ·   ENTER  (arrow keys)")
 		lines.append("START / TAB:  let the computers play      B / ESC:  back")
 	else:
+		var top := "Game and options:  LB / RB  or  Q / E,   Y  or  R  next row" if not info.options.is_empty() \
+			else "Game:  LB / RB  or  Q / E"
 		lines.append("More players:  A   ·   SPACE   ·   ENTER        Move your hand:  left / right")
+		lines.append(top)
 		lines.append("Everyone ready on their own card to start      START / TAB:  start now")
 	status.text = "\n".join(lines)
 

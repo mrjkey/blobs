@@ -13,11 +13,11 @@ in `themes/` (see Themes below).
 |---|---|
 | `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings and gameplay settings, the chosen theme), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres`, `Sfx` (synthesised sound kit) |
 | `core/` | Machinery every mode composes: `settings/` (`GameSettings`: the player's gameplay options), `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock) |
-| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
-| `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`: the floors and walls a mode plays on, with their own rules like ring-out or the kill lasers), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`) |
+| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `ball/` (`Ball`, `BallBody`: the football, a Blob with no moves), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
+| `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`, `pitch/`: the floors and walls a mode plays on, with their own rules like ring-out, the kill lasers or goals), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`) |
 | `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style and backdrop |
-| `modes/` | One folder per game mode: the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
-| `ui/` | `menus/` (main menu, `lobby/` (player select), settings; `options/`: `OptionList`, `OptionRow`, shared by the settings screen and the lab), `hud/` (`Hud`, `EnergyHud`), `themes/menu_theme.tres` |
+| `modes/` | One folder per game mode (`treadmill/`, `ring/`, `football/`): the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
+| `ui/` | `menus/` (main menu, `lobby/` (game and player select), settings; `options/`: `OptionList`, `OptionRow`, shared by the settings screen and the lab), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`), `themes/menu_theme.tres` |
 | `sandbox/` | Test bench scene for trying components, its props, and `lab/` (the Tab menu) |
 | `docs/` | This file |
 | `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md) |
@@ -49,7 +49,8 @@ finds what it needs:
   `_enter_tree()`, so a node can't be placed without them:
   - `blobs`: every `Blob`. Dead blobs stay in the group with `alive == false` until they free themselves.
   - `blob_colliders`: anything blobs bounce off. Implements `collide(blob: Blob, feel: PhysicsFeel)`.
-  - `arena`: at most one. Optional `is_in_mud(pos) -> bool`, and `ring_radius` for ring bots and the food spawner.
+  - `arena`: at most one. Optional `is_in_mud(pos) -> bool`, and `ring_radius` for ring bots and the food spawner. The football `Pitch` is one too (`own_goal(team)`, `target_goal(team)`).
+  - `balls`: every `Ball` (also in `blobs`). The pitch watches it for goals; football bots chase it.
   - `food`: pellets bots look for.
   - `fx`: the `FxLayer` that `Juice.burst()` / `Juice.shockwave()` draw on.
   - `music`: at most one `Techno`. `Techno.current_beat()` / `Techno.current_kick()` read it (a steady 128 BPM / no kick without it).
@@ -57,7 +58,7 @@ finds what it needs:
   - `grid`: the neon backdrop's `NeonGrid`; call `impulse(world_pos, strength, radius)` on the group to ripple it, `follow_y(y)` to scroll it.
   - `kill_lasers`: at most one `KillLasers`; `kill_top()` / `kill_bottom()` for treadmill bots.
 - **Signals** for reporting upward: `Blob.pushed`, `Blob.dashed`, `Blob.ate_food`, `Blob.died`,
-  `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Juice.impact`. The
+  `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Pitch.goal_scored`, `Juice.impact`. The
   mode script connects to them. Anything that knocks a blob out calls
   `blob.die()`; the mode only listens to `Blob.died`.
 - **Autoloads** for feedback anything can trigger: `Juice.shake()`,
@@ -82,10 +83,12 @@ by device id) or a computer at a `BotLevel` (`entities/controllers/levels/`:
 idle, passive, easy, normal, aggressive), and has a seat number (P1..P4) and
 a colour index into `GameTheme.palette()`.
 
-- **Main menu → lobby → mode.** A mode button puts its `ModeInfo` (title,
-  scene path, min/max/default seats, max humans) in `Session.next_mode` and
-  opens the lobby (`ui/menus/lobby/`). Players join from any device, pick a
-  colour, set the CPUs' levels and open or close seats; the lobby writes
+- **Main menu → lobby → mode.** PLAY opens the lobby (`ui/menus/lobby/`).
+  Its top picks the game, one of the lobby's `modes` (each a `ModeInfo`:
+  title, scene path, min/max/default seats, max humans, teams, options), and
+  that game's options; the last game picked is kept in `Session.next_mode`.
+  Players join from any device, pick a colour, take a seat (which also picks
+  their team), set the CPUs' levels and open or close seats; the lobby writes
   `Session.lineup` + `Session.lineup_mode` and starts the mode. Esc in the game
   goes back to the lobby with the same seats.
 - **Started on its own (F6).** `GameMode.lineup()` makes
@@ -96,6 +99,15 @@ a colour index into `GameTheme.palette()`.
   mode places a blob per slot with `spawn_slot(i, pos)`, which makes the
   `PlayerInput` or the mode's `_new_brain()` with the slot's level. Humans are
   tagged P1..P4 when there's more than one.
+- **Teams.** A `ModeInfo` with `teams` (e.g. `["BLUE", "RED"]`) is a team
+  mode: seats alternate between the teams (`team_of()`: P1 and P3 against P2
+  and P4). `spawn_slot()` sets `blob.team`, and colours CPUs in shades of
+  their team's colour (`GameTheme.team_color()` / `team_shade()`, theme values
+  `team.0`, `team.1`). `BlobBody` draws a team-coloured spot under a blob
+  with a team.
+- **Mode options.** `ModeInfo.options` lists `GameSettings` options (marked
+  `only = "lobby"`) that the lobby shows under the game's name, like
+  football's TIME and GOALS. The mode reads them with `GameSettings.choice()`.
 
 ### Moves and energy
 
@@ -118,7 +130,8 @@ text, default): the look (theme, glow) and the gameplay ones. Gameplay picks
 are saved in `Session.settings`, the look in `Session.theme_name` /
 `Session.glow`; read any of them with `GameSettings.choice("key")`, change
 them with `set_choice()`. The main menu's SETTINGS screen and the sandbox lab
-list them; `only = "menu"` / `only = "lab"` keeps an option to one of the two.
+list them; `only = "menu"` / `only = "lab"` keeps an option to one of the two,
+and `only = "lobby"` marks a mode's match option (see Mode options above).
 New option: add an entry, then read it where it's used (or in
 `GameSettings._sync()` for a `MoveRules` field).
 
@@ -261,8 +274,9 @@ that extends `GameMode`: place one blob per slot in `_spawn_blobs()` with
 `spawn_slot()`, return the mode's bot brain from `_new_brain()`, switch
 hazards on in `_on_play_started()` and off in `_on_round_over()`, override
 `_check_round_over()` for other win rules. Add a `ModeInfo` `.tres` (set it as
-the scene's `info`) and a main menu button that sends it to the lobby. See
-`modes/ring/`.
+the scene's `info`) and add it to the lobby's `modes` (`ui/menus/lobby/lobby.tscn`).
+Team modes set `teams` in it; match rules go in `options`. See `modes/ring/`
+(every blob for itself) and `modes/football/` (teams, a ball, a clock).
 
 ## Working with the editor open
 

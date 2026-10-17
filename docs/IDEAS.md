@@ -59,7 +59,9 @@ The game already keeps a 128 BPM beat clock (`Techno`).
 
 - **King of the hill:** score by holding a zone that moves around.
 - **Sumo shrinking ring:** the ring gets smaller on the beat.
-- **Blob soccer:** push a ball blob into a goal, 2v2 with bots.
+- **Football** (built: `modes/football/`). Next for it: a kick-off where
+  one team starts with the ball, a charged shot, a goalkeeper role for bots,
+  other pitch shapes, and other balls (heavy, bouncy, more than one at a time).
 - **Infection / tag:** a pushed blob switches teams; the round ends when one
   colour is left.
 - **Paint:** the neon trails paint the floor; whoever covers the most wins.
@@ -71,5 +73,3 @@ The game already keeps a 128 BPM beat clock (`Techno`).
 - Character select: light, standard and heavy blobs (just different stats files).
 - A slow-motion zoom on the knockout that ends a round.
 - Hats, eye styles and colour unlocks.
-- 4-player local play with gamepads.
-- Theme and glow moved onto the SETTINGS screen.

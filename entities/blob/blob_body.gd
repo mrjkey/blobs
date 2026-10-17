@@ -98,6 +98,8 @@ func _draw() -> void:
 		return
 	var st := theme.style
 	var r := draw_radius * (1.0 + swell)
+	if blob.team >= 0:
+		_draw_team_spot(theme, st)
 	var pts := PackedVector2Array()
 	for i in SEGMENTS:
 		var a := TAU * i / SEGMENTS
@@ -111,6 +113,18 @@ func _draw() -> void:
 		draw_circle(xf(Vector2(-0.38, -0.4)) * r, r * 0.22, Color(1, 1, 1, 0.3))
 	_draw_eyes(st, r)
 	_draw_status(st, r)
+
+
+## A flat oval in the team's colour on the floor under the blob (team modes).
+func _draw_team_spot(theme: GameTheme, st: ThemeStyle) -> void:
+	var col := theme.team_color(blob.team)
+	var r := draw_radius
+	var pts := PackedVector2Array()
+	for i in 32:
+		var a := TAU * i / 32
+		pts.append(Vector2(cos(a) * r * 1.3, r * 0.55 + sin(a) * r * 0.6))
+	draw_colored_polygon(pts, st.color(col, 1.0, 0.45))
+	st.outline(self, pts, st.color(col.lightened(0.2), 1.8), 2.5)
 
 
 func _draw_eyes(st: ThemeStyle, r: float) -> void:

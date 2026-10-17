@@ -1,7 +1,7 @@
 class_name Hud
 extends CanvasLayer
-## On-screen text for a round: a status line (top left), a hint (bottom) and a
-## big banner in the middle. The text style is the current theme's `hud`.
+## On-screen text for a round: a status line (top left), a hint (bottom), a
+## big banner in the middle and a scoreboard (top centre, team modes). The text style is the current theme's `hud`.
 
 signal countdown_finished
 
@@ -16,6 +16,7 @@ var _go_text := ""
 @onready var status: Label = %Status
 @onready var hint: Label = %Hint
 @onready var banner: Label = %Banner
+@onready var score: ScoreBar = %Score
 
 
 func _ready() -> void:
@@ -28,6 +29,13 @@ func set_status(text: String) -> void:
 
 func set_hint(text: String) -> void:
 	hint.text = text
+
+
+## The scoreboard: pieces of text with their colours, [[text, colour], ...]. [] hides it.
+func set_score(pieces: Array) -> void:
+	if pieces != score.pieces:
+		score.pieces = pieces
+		score.queue_redraw()
 
 
 ## Show `text` in the middle. With `life` > 0 it fades out after that many

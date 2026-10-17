@@ -1,8 +1,9 @@
 class_name LobbyCard
 extends Control
 ## One seat in the lobby: who sits there (a player, a CPU or nobody), their
-## colour as a little blob, READY, a hint for the player pointing at it, and
-## the hand markers of everyone pointing at it (drawn just below the card).
+## colour as a little blob, READY, the seat's team in a team mode (a strip
+## along the top), a hint for the player pointing at it, and the hand markers
+## of everyone pointing at it (drawn just below the card).
 ## The lobby sets the fields; the card only draws them, in the theme's style.
 
 const CLOSED_COLOR := Color(0.45, 0.45, 0.55)
@@ -12,6 +13,9 @@ var slot: PlayerSlot # null = a closed seat
 var player_ready := false # their own card: they pressed ready
 var hint := "" # for whoever points at this card
 var hands: Array = [] # [label, colour] of each player pointing here
+var color := Color.WHITE # the colour the seat plays in
+var team_name := "" # in a team mode, the seat's team
+var team_color := Color.WHITE
 
 
 func _draw() -> void:
@@ -23,15 +27,19 @@ func _draw() -> void:
 	var w := size.x
 	var open := slot != null
 	var human := open and slot.human
-	var col := theme.palette_color(slot.color_index) if open else CLOSED_COLOR
+	var col := color if open else CLOSED_COLOR
 	var text_col := st.color(col.lerp(Color.WHITE, 0.35), 1.6)
 
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.05, 0.04, 0.1, 0.88))
 	draw_rect(Rect2(Vector2.ZERO, size), st.color(col, 1.8 if human else 0.7, 1.0 if open else 0.5), false,
 		3.0 if human else 1.5)
 
+	if team_name != "":
+		draw_rect(Rect2(0, 0, w, 20), st.color(team_color, 1.4, 0.85))
+		draw_string(font, Vector2(0, 16), team_name, HORIZONTAL_ALIGNMENT_CENTER, w, 15, st.color(Color.WHITE, 2.0))
+
 	var header := "P%d" % seat if human else ("CPU" if open else "EMPTY")
-	draw_string(font, Vector2(0, 46), header, HORIZONTAL_ALIGNMENT_CENTER, w, 32,
+	draw_string(font, Vector2(0, 52), header, HORIZONTAL_ALIGNMENT_CENTER, w, 32,
 		text_col if open else Color(CLOSED_COLOR, 0.7))
 
 	var centre := Vector2(w * 0.5, 130.0)

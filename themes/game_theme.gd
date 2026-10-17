@@ -9,6 +9,8 @@ extends Resource
 ## themes/neon/neon.tres.
 
 const DEFAULT := "res://themes/neon/neon.tres"
+## Team colours (team 0, team 1) for team modes, unless a theme sets "team.0" / "team.1".
+const TEAM_COLORS: Array[Color] = [Color(0.25, 0.55, 1.0), Color(1.0, 0.35, 0.25)]
 
 @export var display_name := "Neon"
 @export var style: ThemeStyle
@@ -62,6 +64,17 @@ func palette() -> PackedColorArray:
 func palette_color(index: int) -> Color:
 	var p := palette()
 	return p[posmod(index, p.size())]
+
+
+## The colour of team `team` (0 or 1) in team modes: goals, team rings, the score.
+func team_color(team: int) -> Color:
+	return value("team.%d" % team, TEAM_COLORS[posmod(team, TEAM_COLORS.size())])
+
+
+## A computer's colour in a team mode: its team's colour, lighter for the
+## team's second seat (k = 1), so teammates can be told apart.
+func team_shade(team: int, k: int) -> Color:
+	return team_color(team).lerp(Color.WHITE, 0.35 * k)
 
 
 ## Draws `node` with this theme's override for `element`, if it has one.

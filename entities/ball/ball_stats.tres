@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BlobStats" format=3]
+
+[ext_resource type="Script" path="res://entities/blob/blob_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+base_radius = 19.0
+base_speed = 5000.0
+base_accel = 0.0
+drag = 0.9
+knockback_drag = 0.9
+size_radius_exp = 0.0
+push_stun = 0.0
+jelly_stiffness = 520.0
+squash_kick = 0.06

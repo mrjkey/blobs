@@ -15,6 +15,7 @@ signal dashed(blob: Blob)
 @export var color := Color.WHITE
 @export var display_name := "Blob"
 @export var tag := "" # "P1"/"P2", shown over the head in multiplayer
+@export var team := -1 # in team modes (football): 0 or 1, shown as a coloured spot under it; -1 = no team
 
 var vel := Vector2.ZERO
 var mass := 1.0

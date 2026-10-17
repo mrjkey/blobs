@@ -3,6 +3,7 @@
 Godot 4.7.2 game. The editor runs on Windows; the project lives in WSL. The user usually has the editor and the game open while we work, so changes can be checked live.
 
 - Never make git commits. The user commits.
+- Say "football", never "soccer", in code, UI text and docs. American football is the other sport: call it that.
 - Folders, conventions, hot-reload rules and how to test headless: `docs/ARCHITECTURE.md`.
 
 ## Live reload

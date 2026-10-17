@@ -8,7 +8,9 @@ extends RefCounted
 ##
 ## To add an option: an entry in OPTIONS, then read it with choice("key")
 ## where it's used, or in _sync() if it's a MoveRules field. `only = "lab"`
-## shows it only in the sandbox lab, `only = "menu"` only on the SETTINGS screen.
+## shows it only in the sandbox lab, `only = "menu"` only on the SETTINGS screen,
+## `only = "lobby"` only in the lobby, for the modes that list it in
+## ModeInfo.options (match rules like football's time and goals).
 
 const OPTIONS := [
 	{key = "theme", label = "THEME", default_id = "neon", only = "menu", choices = [
@@ -48,6 +50,19 @@ const OPTIONS := [
 	{key = "bots_dash", label = "BOTS DASH", default_id = "yes", choices = [
 		["yes", "YES", "Bots dodge-dash out of pushes, ram with a bump dash, phase through with a ghost dash."],
 		["no", "NO", "Bots never dash."],
+	]},
+	{key = "football_time", label = "TIME", default_id = "5", only = "lobby", choices = [
+		["5", "5 MIN", "The team ahead after 5 minutes wins. A draw goes to a golden goal."],
+		["3", "3 MIN", "The team ahead after 3 minutes wins. A draw goes to a golden goal."],
+		["10", "10 MIN", "The team ahead after 10 minutes wins. A draw goes to a golden goal."],
+		["0", "NO LIMIT", "No clock: play to the goal count (or forever, if that's off too)."],
+	]},
+	{key = "football_goals", label = "GOALS", default_id = "5", only = "lobby", choices = [
+		["5", "FIRST TO 5", "The first team to score 5 wins, even before the time is up."],
+		["3", "FIRST TO 3", "The first team to score 3 wins, even before the time is up."],
+		["7", "FIRST TO 7", "The first team to score 7 wins, even before the time is up."],
+		["10", "FIRST TO 10", "The first team to score 10 wins, even before the time is up."],
+		["0", "NO LIMIT", "No goal count: the clock decides."],
 	]},
 	{key = "props", label = "PROPS", default_id = "walls", only = "lab", choices = [
 		["walls", "WALLS + BUMPERS", "A wall, a kicker wall and two bumpers to dash into (or through)."],

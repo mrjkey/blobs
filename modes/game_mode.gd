@@ -112,10 +112,33 @@ func spawn_blob(pos: Vector2, color: Color, display_name: String, controller: No
 
 ## The blob for `slots[i]` at `pos`: a human with their keys and gamepad
 ## (tagged P1..P4 when there's more than one human), or a computer with this
-## mode's brain at the slot's level.
+## mode's brain at the slot's level. In a team mode it gets its seat's team,
+## and a computer is coloured in a shade of the team's colour.
 func spawn_slot(i: int, pos: Vector2) -> Blob:
+	var b := _spawn_slot_blob(i, pos)
+	b.team = slot_team(i)
+	if b.team >= 0 and not slots[i].human:
+		b.color = slot_color(i)
+	return b
+
+
+## The team of `slots[i]`: from its seat (ModeInfo.team_of), -1 without teams.
+func slot_team(i: int) -> int:
+	return info.team_of(slots[i].number - 1) if info != null else -1
+
+
+## The colour `slots[i]` plays in.
+func slot_color(i: int) -> Color:
 	var slot := slots[i]
-	var color := GameTheme.current().palette_color(slot.color_index)
+	var team := slot_team(i)
+	if team >= 0 and not slot.human:
+		return GameTheme.current().team_shade(team, 1 if slot.number > 2 else 0)
+	return GameTheme.current().palette_color(slot.color_index)
+
+
+func _spawn_slot_blob(i: int, pos: Vector2) -> Blob:
+	var slot := slots[i]
+	var color := slot_color(i)
 	if slot.human:
 		var input := PlayerInput.new()
 		input.profile = slot.profile

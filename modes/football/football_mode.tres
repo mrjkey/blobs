@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ModeInfo" format=3]
+
+[ext_resource type="Script" path="res://modes/mode_info.gd" id="1_info"]
+
+[resource]
+script = ExtResource("1_info")
+title = "FOOTBALL"
+subtitle = "Push the ball into the other team's goal."
+scene = "res://modes/football/football.tscn"
+min_slots = 2
+max_slots = 4
+default_slots = 4
+teams = PackedStringArray("BLUE", "RED")
+options = PackedStringArray("football_time", "football_goals")

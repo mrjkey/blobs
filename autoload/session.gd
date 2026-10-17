@@ -9,7 +9,7 @@ const THEMES := {
 	"classic": "res://themes/classic/classic.tres",
 }
 
-## The mode picked in the main menu, for the lobby (a ModeInfo).
+## The game the lobby shows: the last one picked there (a ModeInfo).
 var next_mode: Resource
 
 ## Who plays the next game: PlayerSlots, built by the lobby, and the path of

@@ -4,6 +4,8 @@
 [ext_resource type="Theme" uid="uid://clopy5laifscb" path="res://ui/themes/menu_theme.tres" id="2_theme"]
 [ext_resource type="PackedScene" path="res://ui/menus/lobby/lobby_card.tscn" id="3_card"]
 [ext_resource type="Resource" path="res://modes/ring/ring_mode.tres" id="4_ring"]
+[ext_resource type="Resource" path="res://modes/treadmill/treadmill_mode.tres" id="10_treadmill"]
+[ext_resource type="Resource" path="res://modes/football/football_mode.tres" id="11_football"]
 [ext_resource type="Resource" path="res://entities/controllers/levels/idle.tres" id="5_idle"]
 [ext_resource type="Resource" path="res://entities/controllers/levels/passive.tres" id="6_passive"]
 [ext_resource type="Resource" path="res://entities/controllers/levels/easy.tres" id="7_easy"]
@@ -19,7 +21,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_lobby")
-fallback_mode = ExtResource("4_ring")
+modes = Array[Resource]([ExtResource("10_treadmill"), ExtResource("4_ring"), ExtResource("11_football")])
 bot_levels = Array[Resource]([ExtResource("5_idle"), ExtResource("6_passive"), ExtResource("7_easy"), ExtResource("8_normal"), ExtResource("9_aggressive")])
 
 [node name="Background" type="ColorRect" parent="."]
@@ -55,6 +57,16 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"SubtitleLabel"
 horizontal_alignment = 1
+
+[node name="Options" type="RichTextLabel" parent="Center/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+mouse_filter = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+theme_override_font_sizes/normal_font_size = 24
 
 [node name="Cards" type="HBoxContainer" parent="Center/Column"]
 unique_name_in_owner = true
