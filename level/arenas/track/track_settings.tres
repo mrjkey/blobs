@@ -5,5 +5,4 @@
 [resource]
 script = ExtResource("1_script")
 belt_height = 1400.0
-scroll_start = 100.0
-scroll_max = 150.0
+scroll_ramp_time = 0.1

@@ -24,9 +24,29 @@ func _ready() -> void:
 	color = GameTheme.current().value("ball.color", BallBody.COLOR)
 
 
-## Back to `pos`, still (kick-off).
+## Scored: it bursts and is gone until reset(). It stays in its groups, but
+## with `alive` off nothing moves it, hits it or counts it.
+func explode() -> void:
+	if not alive:
+		return
+	alive = false
+	visible = false
+	Juice.burst(global_position, color, 30, 620.0)
+	Juice.burst(global_position, Color.WHITE, 14, 380.0)
+	Juice.shockwave(global_position, radius, radius * 6.0, color.lightened(0.3), 0.35)
+	Sfx.play("burst", randf_range(0.8, 0.9))
+	halt()
+
+
+## Back to `pos`, still and in play again (kick-off).
 func reset(pos: Vector2) -> void:
+	alive = true
+	visible = true
 	global_position = pos
-	vel = Vector2.ZERO
-	stun = 0.0
+	halt()
 	body.swell = -0.6 # pops back in
+
+
+## A ball never dies like a blob (no spin and fade, never freed): explode() hides it.
+func _process(_delta: float) -> void:
+	pass

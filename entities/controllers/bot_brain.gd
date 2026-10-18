@@ -49,6 +49,9 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if not me.alive or not me.active:
+		me.move_dir = Vector2.ZERO # frozen (a countdown, a kick-off): stand still
+		_steer = Vector2.ZERO
+		_attack_timer = 0.0
 		return
 	if not level.moves:
 		me.move_dir = Vector2.ZERO

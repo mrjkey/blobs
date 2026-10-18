@@ -21,6 +21,9 @@ func _decide() -> void:
 	if pitch == null or ball == null or me.team < 0:
 		_desired = Vector2.ZERO
 		return
+	if not ball.alive: # scored and gone until the kick-off: drift back toward our half
+		_desired = _arrive(pitch.own_goal(me.team).lerp(pitch.global_position, 0.6), 60.0)
+		return
 	_react_to_threats()
 	if randf() < 0.1:
 		_aim_error = randf_range(-1.0, 1.0) * lerpf(0.35, 0.03, skill)

@@ -497,6 +497,23 @@ func take_hit(n: Vector2, speed: float, stun_time: float, clean_hit := true) -> 
 	body.bump(n, speed)
 
 
+## Stop dead and drop anything under way (a windup, a dash, the shield, a
+## stun, slime, buffered presses), e.g. when a kick-off puts it back on its spot.
+func halt() -> void:
+	vel = Vector2.ZERO
+	move_dir = Vector2.ZERO
+	stun = 0.0
+	dash_t = 0.0
+	windup = 0.0
+	shield_t = 0.0
+	slime_t = 0.0
+	push_buffer = 0.0
+	dash_buffer = 0.0
+	slash_buffer = 0.0
+	spit_buffer = 0.0
+	shield_buffer = 0.0
+
+
 ## Hit by a spit of colour `col`: slippery for `stats.slime_time` (another hit
 ## starts it again), and it loses energy, but never below
 ## `stats.slime_drain_floor`, so it can still shield. The meters flash.

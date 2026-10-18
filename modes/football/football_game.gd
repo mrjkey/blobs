@@ -1,8 +1,8 @@
 extends GameMode
 ## Football: two teams push a ball into each other's goal. Seats alternate
 ## between the teams (ModeInfo.team_of: P1 and P3 against P2 and P4); team 0
-## defends the left goal. After a goal play stops, everyone goes back to
-## their half and the game kicks off again. The match ends when the clock
+## defends the left goal. After a goal the ball bursts, play stops, everyone
+## goes back to their half, frozen until GO, and the game kicks off again. The match ends when the clock
 ## runs out (the TIME option; level scores go to a golden goal) or when a
 ## team reaches the goal count (GOALS), whichever comes first.
 
@@ -100,6 +100,8 @@ func _on_goal_scored(team: int, scored: Blob) -> void:
 	if state != State.PLAYING:
 		return
 	score[team] += 1
+	if scored is Ball:
+		(scored as Ball).explode()
 	var col := GameTheme.current().team_color(team)
 	Juice.burst(scored.global_position, col.lightened(0.3), 40, 520.0)
 	Juice.shockwave(scored.global_position, 20.0, 260.0, col.lightened(0.4), 0.5)
@@ -122,9 +124,7 @@ func _kickoff() -> void:
 			continue
 		b.active = false
 		b.global_position = _kickoff_spots[b]
-		b.vel = Vector2.ZERO
-		b.stun = 0.0
-		b.dash_t = 0.0
+		b.halt()
 		b.body.look = (pitch.global_position - b.global_position).normalized()
 
 

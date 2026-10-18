@@ -110,6 +110,8 @@ func _physics_process(_delta: float) -> void:
 	if Engine.is_editor_hint() or not counting:
 		return
 	for ball: Blob in get_tree().get_nodes_in_group("balls"):
+		if not ball.alive:
+			continue
 		var x := ball.global_position.x - global_position.x
 		if absf(x) > size.x * 0.5 + ball.radius:
 			counting = false
