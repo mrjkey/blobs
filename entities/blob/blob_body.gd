@@ -1,10 +1,12 @@
 class_name BlobBody
 extends Node2D
 ## Draws the parent Blob: the jelly spring (squash, stretch, swell), the body,
-## eyes and status rings and the shield, painted in the theme's style. Only reads the Blob's
+## eyes and status rings, the shield and the too-small warning, painted in
+## the theme's style. Only reads the Blob's
 ## state; the Blob never needs to know how it is drawn.
 
 const SEGMENTS := 40
+const DANGER_COLOR := Color(1.0, 0.2, 0.25)
 
 @onready var blob: Blob = get_parent()
 
@@ -19,6 +21,7 @@ var flash := 0.0
 var blink := 0.0 # > 0 while the eyes are shut
 var _blink_timer := randf_range(1.0, 4.0)
 var _breath_phase := randf() * TAU
+var _danger_phase := 0.0
 
 
 func _ready() -> void:
@@ -39,6 +42,7 @@ func _process(delta: float) -> void:
 	deform = deform.limit_length(stats.squash_max)
 
 	_breath_phase += delta * 3.0
+	_danger_phase += delta * lerpf(7.0, 22.0, blob.shrink_danger())
 	var swell_rest := -0.12 if blob.windup > 0.0 else 0.02 * sin(_breath_phase)
 	var sacc := (swell_rest - swell) * stats.swell_stiffness - swell_vel * stats.swell_damping
 	swell_vel += sacc * delta
@@ -106,7 +110,11 @@ func _draw() -> void:
 	for i in SEGMENTS:
 		var a := TAU * i / SEGMENTS
 		pts.append(xf(Vector2(cos(a), sin(a))) * r)
-	st.body(self, pts, blob.color, flash, 1.0, 1.5, 3.0, true)
+	var danger := blob.shrink_danger()
+	var body_col := blob.color
+	if danger > 0.0:
+		body_col = blob.color.lerp(DANGER_COLOR, (0.35 + 0.6 * danger) * _danger_pulse())
+	st.body(self, pts, body_col, maxf(flash, 0.5 * danger * _danger_pulse()), 1.0, 1.5, 3.0, true)
 	if blob.windup > 0.0:
 		st.outline(self, pts, st.color(Color.WHITE, 2.0), 3.5)
 	elif blob.is_dashing() and not blob.is_ghost():
@@ -117,6 +125,31 @@ func _draw() -> void:
 	_draw_status(st, r)
 	if blob.is_shielding():
 		_draw_shield(st, r)
+	if danger > 0.0 and blob.alive:
+		_draw_danger(st, r, danger)
+
+
+## 0..1, beating faster the closer the blob is to popping.
+func _danger_pulse() -> float:
+	return 0.5 + 0.5 * sin(_danger_phase)
+
+
+## About to pop from being too small: a thick dashed red ring closing in on
+## the body and a warning sign beside it, both beating with _danger_pulse().
+func _draw_danger(st: ThemeStyle, r: float, danger: float) -> void:
+	var pulse := _danger_pulse()
+	var ring_r := r + lerpf(22.0, 8.0, danger) + 3.0 * pulse
+	var dashes := 8
+	for i in dashes:
+		var a := _danger_phase * 0.15 + TAU * i / dashes
+		st.ring(self, Vector2.ZERO, ring_r, DANGER_COLOR, 5.0, 2.0 + pulse, 0.6 + 0.4 * pulse, a, a + TAU / dashes * 0.6)
+	# A red triangle with a "!" in it, up and to the right of the body.
+	var c := Vector2(ring_r + 14.0, -ring_r * 0.6) * (1.0 + 0.08 * pulse)
+	var s := 13.0 + 2.0 * pulse
+	var tri := PackedVector2Array([c + Vector2(0.0, -s), c + Vector2(s * 0.95, s * 0.7), c + Vector2(-s * 0.95, s * 0.7)])
+	draw_colored_polygon(tri, st.color(DANGER_COLOR, 2.0 + pulse, 0.75 + 0.25 * pulse))
+	draw_line(c + Vector2(0.0, -s * 0.45), c + Vector2(0.0, s * 0.15), st.ink, 3.0, true)
+	draw_circle(c + Vector2(0.0, s * 0.42), 1.8, st.ink)
 
 
 ## The shield: a hexagonal bubble that pops out with an overshoot, glows

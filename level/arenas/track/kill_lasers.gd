@@ -1,11 +1,11 @@
 class_name KillLasers
 extends Node2D
-## Two lasers across the track, just inside the top and bottom of the screen:
-## they follow the camera, and a blob that ends up past either one is out
-## (`blob.die()`). With `lethal` off they hold blobs on screen instead (the
-## round's over: keep the winner in view). Group "kill_lasers"; bots read
-## kill_top() / kill_bottom() to keep clear. Draws above the blobs (z_index 5);
-## colour from the theme: kill_lasers.color.
+## Two lasers across the track, `settings.belt_height` apart and centred on
+## this node: the mode moves it up the track as it scrolls. A blob that ends
+## up past either one is out (`blob.die()`). With `lethal` off they hold blobs
+## between them instead (the round's over: keep the winner in view). Group "kill_lasers"; bots read kill_top() /
+## kill_bottom() to keep clear. Draws above the blobs (z_index 5); colour from
+## the theme: kill_lasers.color.
 
 signal blob_lasered(blob: Blob)
 
@@ -27,11 +27,11 @@ func _ready() -> void:
 
 
 func kill_top() -> float:
-	return GameCamera.view_of(self).position.y + settings.edge_inset
+	return global_position.y - settings.belt_height * 0.5
 
 
 func kill_bottom() -> float:
-	return GameCamera.view_of(self).end.y - settings.edge_inset
+	return global_position.y + settings.belt_height * 0.5
 
 
 func _physics_process(_delta: float) -> void:
@@ -76,3 +76,4 @@ func _draw() -> void:
 		st.line(self, a, b, col, 4.0, (2.2 + 0.5 * k) * flicker, flicker)
 		for end: Vector2 in [a, b]:
 			st.dot(self, end, 7.0, col, 2.5)
+

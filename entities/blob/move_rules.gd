@@ -1,8 +1,10 @@
 class_name MoveRules
 extends Resource
-## Which special moves blobs have and what limits them. Blobs share the one
-## GameSettings.rules() builds from the player's settings; a mode could give
-## its blobs another. The numbers for each move are in BlobStats.
+## Which special moves blobs have and what limits them, and how fast blobs
+## lose mass where they can (Blob.loses_mass: the modes that turn it on in
+## their ModeInfo). Blobs share the one GameSettings.rules() builds from the
+## player's settings; a mode could give its blobs another. The numbers for
+## each move are in BlobStats.
 
 enum Dash {
 	NONE,
@@ -23,6 +25,11 @@ enum Energy {
 @export var slash := false # a quick blade swing the way the blob faces
 @export var spit := false # a glob fired the way the blob faces
 @export var shield := false # a short bubble that blocks pushes and slashes and sends spit back
+
+@export_group("Mass loss")
+@export var mass_decay := 0.0 # mass lost per second, all the time
+@export var spit_mass := 0.0 # mass lost per spit
+@export var laser_mass := 0.0 # mass burnt off by a laser hit
 
 
 func dash_costs_energy() -> bool:

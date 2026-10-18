@@ -8,4 +8,4 @@ extends Resource
 @export var lock_beats := 0.75 # aim freezes this many beats before firing
 @export var fire_beats := 0.5 # how long the beam stays visible
 @export var width := 20.0 # hit width
-@export var impulse := 700.0 # knockback on a mass-1 blob
+@export var stun := 0.6 # a blob it hits loses control this long (and mass, where mass loss is on: MoveRules.laser_mass)

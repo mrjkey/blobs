@@ -3,7 +3,9 @@ class_name WallBlock
 extends Node2D
 ## A rectangular wall centred on this node. Solid and slightly bouncy, or, as a
 ## pink `kicker`, a pinball wall that flings blobs away at `settings.kicker_speed`.
-## Colours from the theme: wall.color, wall.kicker.
+## A `ghost_proof` wall stops ghost dashes too, like the arena's own walls,
+## and is drawn hatched so players can tell. Colours from the theme:
+## wall.color, wall.kicker.
 
 const COLOR := Color(0.55, 0.6, 0.8)
 const KICKER_COLOR := Color(1.0, 0.45, 0.7)
@@ -15,6 +17,10 @@ const KICKER_COLOR := Color(1.0, 0.45, 0.7)
 @export var kicker := false:
 	set(v):
 		kicker = v
+		queue_redraw()
+@export var ghost_proof := false: # even a ghost dash can't pass
+	set(v):
+		ghost_proof = v
 		queue_redraw()
 @export var settings: TrackSettings = preload("res://level/arenas/track/track_settings.tres")
 
@@ -31,7 +37,7 @@ func rect() -> Rect2:
 
 
 func collide(b: Blob, feel: PhysicsFeel) -> void:
-	if b.phases_obstacles():
+	if b.phases_obstacles() and not ghost_proof:
 		return
 	var r := rect()
 	var pos := b.global_position
@@ -88,5 +94,17 @@ func _draw() -> void:
 	var r := Rect2(-size * 0.5, size)
 	var col: Color = theme.value("wall.kicker", KICKER_COLOR) if kicker else theme.value("wall.color", COLOR)
 	st.box(self, r, col, flash, 0.8)
+	if ghost_proof:
+		# Hatching across the long side.
+		var along := Vector2.RIGHT if size.x >= size.y else Vector2.DOWN
+		var across := Vector2(along.y, along.x)
+		var length := maxf(size.x, size.y)
+		var thick := minf(size.x, size.y)
+		var t := -length * 0.5 + 10.0
+		while t < length * 0.5 - 10.0:
+			var c := along * t
+			st.line(self, c - across * thick * 0.3 - along * 4.0, c + across * thick * 0.3 + along * 4.0,
+				col.lightened(0.45), 2.0, 1.4, 0.7)
+			t += 16.0
 	if kicker and size.x > 14.0 and size.y > 14.0:
 		st.outline(self, ThemeStyle.rect_points(r.grow(-6.0)), st.color(col.lightened(0.35), 0.9 + flash, 0.6), 2.0)

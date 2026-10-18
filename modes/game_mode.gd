@@ -104,6 +104,7 @@ func spawn_blob(pos: Vector2, color: Color, display_name: String, controller: No
 	if stats != null:
 		b.stats = stats
 	b.active = false
+	b.loses_mass = info != null and info.mass_loss
 	b.add_child(controller)
 	blobs_node.add_child(b)
 	b.died.connect(_on_blob_died)

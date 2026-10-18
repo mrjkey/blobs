@@ -1,15 +1,18 @@
 extends GameMode
-## Treadmill: the world stands still and the camera scrolls up through it, so
-## the floor seems to slide down the screen. Fall behind the bottom laser (or
-## fly past the top one) and you're out. Who plays comes from the lineup:
-## any mix of humans and computers, or only computers to watch them.
+## Treadmill: the world stands still and the belt, the stretch between the
+## two kill lasers, scrolls up through it. Fall behind the bottom laser (or
+## fly past the top one) and you're out. The camera rides with the belt and
+## always shows all of it, so nobody is ever off screen. Blobs shrink as they go (this
+## mode's ModeInfo turns mass loss on): eat, but don't get too big for the
+## gaps. Who plays comes from the lineup: any mix of humans and computers, or
+## only computers to watch them.
 
 @export var settings: TrackSettings = preload("res://level/arenas/track/track_settings.tres")
 @export var camera: GameCamera
 @export var kill_lasers: KillLasers
 @export var laser_director: LaserDirector
 
-var cam_y := 0.0 # world y at the centre of the screen
+var belt_y := 0.0 # world y of the belt's centre, between the kill lasers
 var scroll_speed := 0.0
 var distance := 0.0
 var _play_time := 0.0
@@ -19,7 +22,10 @@ func _ready() -> void:
 	process_physics_priority = -8 # scroll before the generator (-7) and lasers look at the view
 	kill_lasers.enabled = false
 	laser_director.enabled = false
-	_follow_camera()
+	# The whole belt and the ships' lanes beside it, whatever the window's shape.
+	camera.view_size = Vector2(settings.track_width + settings.side_zone * 2.0,
+		settings.belt_height + settings.camera_margin * 2.0)
+	_follow_belt()
 	super._ready()
 
 
@@ -27,13 +33,13 @@ func _spawn_blobs() -> void:
 	var total := slots.size()
 	for i in total:
 		var x := lerpf(-settings.track_width * 0.35, settings.track_width * 0.35, (i + 0.5) / total)
-		var b := spawn_slot(i, Vector2(x, cam_y + 150.0))
+		var b := spawn_slot(i, Vector2(x, belt_y + settings.spawn_y))
 		b.body.look = Vector2.UP
 
 	if humans == 0:
 		hud.set_hint("Watching the bots  ·  R restart  ·  Esc back")
 	else:
-		hud.set_hint("Move  ·  push  ·  dash  ·  stay ahead of the laser  ·  R restart  ·  Esc back")
+		hud.set_hint("Stay ahead of the laser  ·  eat to keep your size, but big blobs get stuck  ·  R restart  ·  Esc back")
 
 
 func _new_brain() -> BotBrain:
@@ -48,6 +54,8 @@ func _on_play_started() -> void:
 func _on_round_over() -> void:
 	kill_lasers.lethal = false # keep the winner on screen
 	laser_director.enabled = false
+	for b in living_blobs():
+		b.loses_mass = false # nobody pops behind the banner
 
 
 func _physics_process(delta: float) -> void:
@@ -56,14 +64,15 @@ func _physics_process(delta: float) -> void:
 	if state == State.PLAYING:
 		_play_time += delta
 		scroll_speed = lerpf(settings.scroll_start, settings.scroll_max, clampf(_play_time / settings.scroll_ramp_time, 0.0, 1.0))
-		cam_y -= scroll_speed * delta
+		belt_y -= scroll_speed * delta
 		distance += scroll_speed * delta
-	_follow_camera()
+	_follow_belt()
 
 
-func _follow_camera() -> void:
-	camera.global_position = Vector2(0.0, cam_y)
-	get_tree().call_group("grid", "follow_y", cam_y) # a theme backdrop that scrolls with the world
+func _follow_belt() -> void:
+	kill_lasers.global_position.y = belt_y
+	camera.global_position = Vector2(0.0, belt_y)
+	get_tree().call_group("grid", "follow_y", belt_y) # a theme backdrop that scrolls with the world
 
 
 func _process(_delta: float) -> void:

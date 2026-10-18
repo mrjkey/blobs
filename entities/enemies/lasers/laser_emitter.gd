@@ -2,7 +2,8 @@ class_name LaserEmitter
 extends Node2D
 ## A laser that fires on the beat. Once a LaserDirector gives it a `fire_beat`,
 ## it charges (tracking a random blob, with a thin telegraph line), locks its
-## aim (bots that notice try to sidestep), fires (knockback, sparks, a grid
+## aim (bots that notice try to sidestep), fires (a stun that stops blobs in
+## their tracks and burns off mass where mass loss is on, sparks, a grid
 ## ripple along the beam) and goes back to idle. Subclasses say where the beam
 ## ends (beam_length), how they move (_idle) and their shape (_body_points,
 ## _draw_extras). Joins group "lasers"; draws above the blobs (z_index 5 in its
@@ -152,9 +153,13 @@ func _fire(pos: Vector2) -> void:
 		var off := rel - d * clampf(rel.dot(d), 0.0, length)
 		if off.length() > b.radius + s.width * 0.5:
 			continue
-		var dv := s.impulse / pow(b.mass, b.stats.push_resist_exp)
-		b.take_hit(d, dv, b.stats.push_stun, false)
+		# No knockback: the blob is frozen in place for a moment and burnt.
+		b.vel *= 0.25
+		b.take_hit(d, 0.0, s.stun, false)
+		b.bump(d, 600.0)
+		b.lose_mass(b.rules.laser_mass)
 		Juice.burst(b.global_position, GameTheme.current().value("laser.beam", BEAM_COLOR), 18, 500.0)
+		Juice.burst(b.global_position, Color.WHITE, 8, 260.0)
 		hit_any = true
 	if hit_any:
 		Juice.hitstop(Juice.settings.hitstop_push)

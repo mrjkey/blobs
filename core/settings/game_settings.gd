@@ -1,7 +1,7 @@
 class_name GameSettings
 extends RefCounted
 ## The options players can change: the look (theme, glow) and the gameplay
-## (the dash, the slash, spit and shield, energy, the energy bar). The main menu's SETTINGS screen and the
+## (the dash, the slash, spit and shield, energy, the energy bar, mass loss and food). The main menu's SETTINGS screen and the
 ## sandbox lab (Tab) list them. Gameplay picks are saved in Session.settings,
 ## the look in Session.theme_name / Session.glow; everything reads them
 ## through here, so a change applies at once, mid-game too.
@@ -31,7 +31,7 @@ const OPTIONS := [
 		["blobs", "BLOBS", "A ghost dash passes through blobs, pushes and lasers, but not walls or bumpers."],
 	]},
 	{key = "energy", label = "ENERGY", default_id = "all", choices = [
-		["all", "ALL MOVES", "Every move costs energy: a segment for the dash, push, spit and shield, half one for a slash. Only short cooldowns."],
+		["all", "ALL MOVES", "Every move costs energy: two segments for a push, one for the dash, spit and shield, half one for a slash. Only short cooldowns."],
 		["dash", "DASH ONLY", "The dash costs a segment, the other moves keep their normal cooldowns."],
 		["off", "OFF", "No bar: every move has its own cooldown."],
 	]},
@@ -46,6 +46,29 @@ const OPTIONS := [
 	{key = "shield", label = "SHIELD", default_id = "on", choices = [
 		["on", "ON", "A short bubble that slows you down. Blocks pushes and slashes; spit that touches it flies back at whoever fired it."],
 		["off", "OFF", "No shield."],
+	]},
+	{key = "shrink", label = "SHRINKING", default_id = "normal", choices = [
+		["normal", "NORMAL", "In the treadmill, blobs slowly lose mass all the time: keep eating. Too small and they pop."],
+		["slow", "SLOW", "Blobs lose mass slowly. Food is a nice extra."],
+		["fast", "FAST", "Blobs lose mass fast. Always be hunting food."],
+		["off", "OFF", "Blobs only lose mass by spitting and getting lasered."],
+	]},
+	{key = "spit_mass", label = "SPIT COST", default_id = "normal", choices = [
+		["normal", "NORMAL", "In the treadmill, each spit costs a little mass: a way to slim down and squeeze through gaps."],
+		["small", "SMALL", "Each spit costs a tiny bit of mass."],
+		["big", "BIG", "Each spit costs a lot of mass."],
+		["off", "OFF", "Spitting is free."],
+	]},
+	{key = "laser_mass", label = "LASER BURN", default_id = "normal", choices = [
+		["normal", "NORMAL", "In the treadmill, a laser hit stuns you and burns off some mass."],
+		["small", "SMALL", "A laser hit stuns you and burns off a little mass."],
+		["big", "BIG", "A laser hit stuns you and burns off a lot of mass."],
+		["off", "OFF", "A laser hit only stuns you."],
+	]},
+	{key = "food", label = "FOOD", default_id = "normal", choices = [
+		["normal", "NORMAL", "How much food the treadmill lays out: enough to keep up if you go looking."],
+		["less", "LESS", "Scarce food: blobs fight over every pellet."],
+		["more", "MORE", "Plenty of food: easy to grow big (and get stuck)."],
 	]},
 	{key = "meter", label = "BAR", default_id = "above", choices = [
 		["above", "ABOVE BLOB", "Pips over the blob's head."],
@@ -145,3 +168,11 @@ static func _sync() -> void:
 	_rules.slash = choice("slash") == "on"
 	_rules.spit = choice("spit") == "on"
 	_rules.shield = choice("shield") == "on"
+	_rules.mass_decay = {"slow": 0.01, "normal": 0.02, "fast": 0.04}.get(choice("shrink"), 0.0)
+	_rules.spit_mass = {"small": 0.04, "normal": 0.08, "big": 0.16}.get(choice("spit_mass"), 0.0)
+	_rules.laser_mass = {"small": 0.1, "normal": 0.2, "big": 0.35}.get(choice("laser_mass"), 0.0)
+
+
+## How much food levels lay out, as a multiplier (the FOOD setting).
+static func food_amount() -> float:
+	return {"less": 0.6, "more": 1.7}.get(choice("food"), 1.0)

@@ -7,7 +7,10 @@ extends Node2D
 ## comes from `rules`. BlobPhysics moves and collides it, and the Body child
 ## draws it. A slash is a Slash scene spawned on the blob; spit is a Shot,
 ## spawned next to it. The shield blocks pushes and slashes and sends shots
-## back. Works in any scene that has a BlobPhysics node.
+## back. With `loses_mass` (set by modes whose ModeInfo asks for it) it
+## shrinks over time and pays mass for spit and laser hits, as `rules` say;
+## below `stats.low_mass` it flashes a warning, below `stats.min_mass` it pops.
+## Works in any scene that has a BlobPhysics node.
 
 signal pushed(blob: Blob, hits: int)
 signal ate_food(blob: Blob)
@@ -23,6 +26,7 @@ signal reflected(blob: Blob, shot: Shot) # its shield sent a shot back
 @export var display_name := "Blob"
 @export var tag := "" # "P1"/"P2", shown over the head in multiplayer
 @export var team := -1 # in team modes (football): 0 or 1, shown as a coloured spot under it; -1 = no team
+@export var loses_mass := false # shrinks over time, pays mass for spit and lasers, pops when too small
 @export_file("*.tscn") var slash_scene := "res://entities/slash/slash.tscn"
 @export_file("*.tscn") var spit_scene := "res://entities/shots/spit.tscn"
 
@@ -61,6 +65,8 @@ var radius: float:
 		return stats.base_radius * pow(mass, stats.size_radius_exp)
 
 var _death_t := 0.0
+var _popped := false # died by shrinking away: a quick pop instead of the spin
+var _warn_t := 0.0 # counts down to the next low-mass beep
 var _dash_aim := Vector2.ZERO
 var _slash_aim := Vector2.ZERO
 var _slash_side := 1.0 # flips every swing, so a combo goes back and forth
@@ -80,7 +86,22 @@ func _ready() -> void:
 
 
 func set_mass(m: float) -> void:
-	mass = clampf(m, 0.5, stats.max_mass)
+	mass = clampf(m, 0.1, stats.max_mass)
+
+
+## Lose `amount` of mass, if this blob loses mass at all. Popping happens
+## in _physics_process, once it's below `stats.min_mass`.
+func lose_mass(amount: float) -> void:
+	if loses_mass and amount > 0.0:
+		set_mass(mass - amount)
+
+
+## 0 while the blob is a safe size, rising to 1 as it shrinks from
+## `stats.low_mass` toward `stats.min_mass`, where it pops.
+func shrink_danger() -> float:
+	if not loses_mass or mass >= stats.low_mass:
+		return 0.0
+	return clampf((stats.low_mass - mass) / maxf(stats.low_mass - stats.min_mass, 0.001), 0.0, 1.0)
 
 
 func max_speed() -> float:
@@ -257,6 +278,12 @@ func _physics_process(delta: float) -> void:
 	shield_flash = maxf(shield_flash - delta * 6.0, 0.0)
 	if energy_delay <= 0.0:
 		energy = minf(energy + stats.energy_regen * delta, stats.energy_segments)
+	if active:
+		lose_mass(rules.mass_decay * delta)
+	if loses_mass and mass < stats.min_mass:
+		die(true)
+		return
+	_warn(delta)
 	if dash_t > 0.0:
 		dash_t -= delta
 		if dash_t <= 0.0:
@@ -392,7 +419,7 @@ func _release_spit() -> void:
 	var spit: Shot = _spawn(spit_scene)
 	spit.launch(self, global_position + d * (radius + stats.spit_radius), d, push_power())
 	vel -= d * stats.spit_recoil
-	set_mass(mass - stats.spit_mass)
+	lose_mass(rules.spit_mass)
 	body.swell_kick(-4.0)
 	body.bump(d, 300.0)
 	Juice.burst(global_position + d * radius, color.lightened(0.4), 5, 180.0)
@@ -472,17 +499,37 @@ func eat() -> void:
 	ate_food.emit(self)
 
 
-## Out of the round: burst, then spin, shrink and fade away.
-func die() -> void:
+## Too small: beep, faster and faster as it nears popping (players only).
+func _warn(delta: float) -> void:
+	var danger := shrink_danger()
+	if danger <= 0.0 or not is_human():
+		_warn_t = 0.0
+		return
+	_warn_t -= delta
+	if _warn_t <= 0.0:
+		_warn_t = lerpf(0.7, 0.18, danger)
+		Sfx.play("warn", lerpf(1.0, 1.4, danger), lerpf(-8.0, -2.0, danger), 0.0)
+
+
+## Out of the round: burst, then spin, shrink and fade away. `popped`: it
+## shrank too small, so it swells and bursts like a bubble instead.
+func die(popped := false) -> void:
 	if not alive:
 		return
 	alive = false
 	_death_t = 0.0
+	_popped = popped
 	var js := Juice.settings
 	Juice.impact_at(global_position, 1500.0)
-	Juice.burst(global_position, color, 28, 380.0)
-	Juice.shockwave(global_position, radius, radius * 4.0, color, 0.45)
-	Sfx.play("out", randf_range(0.9, 1.1))
+	if popped:
+		Juice.burst(global_position, color.lightened(0.3), 34, 520.0)
+		Juice.burst(global_position, Color.WHITE, 12, 300.0)
+		Juice.shockwave(global_position, radius, radius * 5.0, Color.WHITE, 0.3)
+		Sfx.play("burst", randf_range(0.95, 1.1))
+	else:
+		Juice.burst(global_position, color, 28, 380.0)
+		Juice.shockwave(global_position, radius, radius * 4.0, color, 0.45)
+		Sfx.play("out", randf_range(0.9, 1.1))
 	Juice.shake(js.shake_elimination)
 	Juice.hitstop(js.hitstop_elimination)
 	died.emit(self)
@@ -492,6 +539,15 @@ func _process(delta: float) -> void:
 	if alive:
 		return
 	_death_t += delta
+	if _popped:
+		# Swell for an instant, then gone.
+		var p := _death_t / 0.12
+		if p >= 1.0:
+			queue_free()
+			return
+		scale = Vector2.ONE * (1.0 + 0.6 * p)
+		modulate.a = 1.0 - p * p
+		return
 	var k := _death_t / 0.45
 	if k >= 1.0:
 		queue_free()

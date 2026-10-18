@@ -21,6 +21,7 @@ const MAX_SLOTS := 4
 @export_range(1, 4) var max_humans := 4 # 1 = a one-player mode: P1 plays with the keyboard and a gamepad
 @export var teams := PackedStringArray() # e.g. ["BLUE", "RED"]; empty = no teams
 @export var options := PackedStringArray() # GameSettings option keys, set in the lobby
+@export var mass_loss := false # blobs shrink over time, pay mass for spit and lasers, and pop when too small (Blob.loses_mass)
 
 
 ## The team of the seat with index `seat` (0..3), or -1 in a mode without teams.

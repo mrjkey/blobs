@@ -17,15 +17,17 @@ extends Resource
 @export_range(0.0, 1.0) var outside_control := 0.5 # steering multiplier while in the mud
 
 @export_group("Size")
-@export var max_mass := 4.0
+@export var max_mass := 10.0
 @export var food_mass := 0.25       # mass gained per pellet
+@export var low_mass := 0.6         # where blobs lose mass: below this it flashes a warning...
+@export var min_mass := 0.35        # ...and below this it pops
 @export var size_radius_exp := 0.45 # radius = base_radius * mass^this
 @export var size_speed_exp := 0.35  # top speed = base_speed / mass^this
 @export var size_accel_exp := 0.45  # accel = base_accel / mass^this (big = sluggish)
 
 @export_group("Push")
-@export var push_impulse := 1050.0 # speed given to a mass-1 target by a mass-1 pusher, point blank
-@export var push_range := 70.0     # reach beyond your own edge
+@export var push_impulse := 1350.0 # speed given to a mass-1 target by a mass-1 pusher, point blank
+@export var push_range := 90.0     # reach beyond your own edge
 @export var push_range_mass_exp := 0.3 # bigger blobs reach a bit further
 @export var push_falloff := 0.45   # impulse multiplier at the very edge of the reach
 @export var push_mass_exp := 0.7   # pusher strength = mass^this
@@ -63,7 +65,6 @@ extends Resource
 @export var spit_range := 520.0    # distance it flies before it fizzles
 @export var spit_radius := 8.0
 @export var spit_recoil := 90.0    # the spitter is nudged back this much (px/s)
-@export var spit_mass := 0.0       # mass lost per spit (0 = free; > 0 makes you lighter and faster)
 @export var spit_cooldown := 0.6
 @export var spit_energy_cooldown := 0.25 # replaces spit_cooldown when it costs energy
 @export var spit_stun := 0.25
@@ -83,7 +84,7 @@ extends Resource
 @export var energy_regen := 0.85   # segments refilled per second
 @export var energy_regen_delay := 0.35 # refilling pauses this long after spending
 @export var dash_cost := 1.0
-@export var push_cost := 1.0
+@export var push_cost := 2.0
 @export var slash_cost := 0.5
 @export var spit_cost := 1.0
 @export var shield_cost := 1.0

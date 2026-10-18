@@ -10,3 +10,4 @@ scene = "res://modes/treadmill/treadmill.tscn"
 min_slots = 1
 max_slots = 4
 default_slots = 4
+mass_loss = true

@@ -31,7 +31,7 @@ script = ExtResource("12_backdrop")
 
 [node name="GameCamera" type="Camera2D" parent="."]
 script = ExtResource("2_camera")
-view_size = Vector2(1000, 820)
+view_size = Vector2(1000, 1780)
 
 [node name="SideWalls" parent="." instance=ExtResource("5_walls")]
 

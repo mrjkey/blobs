@@ -2,7 +2,9 @@ class_name TrackBotBrain
 extends BotBrain
 ## Bot for the treadmill. Keeps pace with the scrolling screen, steers round
 ## walls, keeps clear of bumpers and the kill lasers, and tries to get above
-## other blobs to shove them down into the bottom laser. Reads the kill lines
+## other blobs to shove them down into the bottom laser. Where blobs shrink,
+## it hunts food harder the smaller it gets, and skilled bots stop eating
+## before they're too big for the gaps in the wall rows. Reads the kill lines
 ## from the node in group "kill_lasers" (without one: ±`fallback_half_span`
 ## around its own start height) and obstacles from group "blob_colliders".
 
@@ -36,8 +38,9 @@ func _decide() -> void:
 		var target_gap := INF
 		if target != null:
 			target_gap = target.global_position.distance_to(pos) - target.radius
-		var tempting := 60.0 + 220.0 * greed * (1.0 - 0.5 * aggression)
-		if target == null or (fpos.distance_to(pos) < tempting and target_gap > 110.0):
+		var hunger := _hunger()
+		var tempting := (60.0 + 220.0 * greed * (1.0 - 0.5 * aggression)) * (1.0 + 3.0 * hunger)
+		if target == null or hunger > 0.4 or (fpos.distance_to(pos) < tempting and target_gap > 110.0):
 			dir = (fpos - pos).normalized()
 			going_for_food = true
 	if not going_for_food:
@@ -72,10 +75,21 @@ func _target_score(o: Blob) -> float:
 	return score
 
 
-## Off screen, or too close to the bottom laser to be worth it?
+## Off the belt, too close to the bottom laser, or would it make us too fat?
+## (Sloppier bots keep eating longer, and get stuck.)
 func _food_ok(pos: Vector2) -> bool:
+	if me.loses_mass and _hunger() <= 0.0 and me.mass > lerpf(8.0, 4.5, skill):
+		return false
 	var lines := _kill_lines()
 	return pos.y >= lines.x + 60.0 and pos.y <= lines.y - 180.0
+
+
+## 0 at a comfortable size, up to 1 as it shrinks toward popping.
+func _hunger() -> float:
+	if not me.loses_mass:
+		return 0.0
+	var comfy := me.stats.low_mass * 1.6
+	return clampf((comfy - me.mass) / maxf(comfy - me.stats.min_mass, 0.001), 0.0, 1.0)
 
 
 func _attack_dir(top: float, bottom: float) -> Vector2:
@@ -133,7 +147,7 @@ func _avoid_obstacles(pos: Vector2, dir: Vector2) -> Vector2:
 		for w in walls:
 			var rect := w.rect()
 			if rect.grow(pad).has_point(p):
-				return _go_around(pos, rect, dir)
+				return _go_around(pos, rect, dir, walls)
 	var out := dir
 	for bp in bumpers:
 		var away := pos - bp.global_position
@@ -148,13 +162,19 @@ func _avoid_obstacles(pos: Vector2, dir: Vector2) -> Vector2:
 	return out
 
 
-func _go_around(pos: Vector2, rect: Rect2, dir: Vector2) -> Vector2:
+## Head for whichever end of `rect` is nearer and has room to fit through
+## (a gap in a row may be too narrow for a big blob).
+func _go_around(pos: Vector2, rect: Rect2, dir: Vector2, walls: Array[WallBlock]) -> Vector2:
 	var half := track.track_width * 0.5
 	var clearance := me.radius + 20.0
 	var left_x := rect.position.x - clearance
 	var right_x := rect.end.x + clearance
-	var left_ok := left_x > -half + me.radius
-	var right_ok := right_x < half - me.radius
+	var left_ok := left_x > -half + me.radius and _fits(Vector2(left_x, rect.get_center().y), walls)
+	var right_ok := right_x < half - me.radius and _fits(Vector2(right_x, rect.get_center().y), walls)
+	if not left_ok and not right_ok:
+		# No way round this wall: try the wider way anyway, and look for another.
+		left_ok = true
+		right_ok = true
 	var go_left := left_ok
 	if left_ok and right_ok:
 		go_left = absf(pos.x - left_x) < absf(pos.x - right_x)
@@ -162,6 +182,14 @@ func _go_around(pos: Vector2, rect: Rect2, dir: Vector2) -> Vector2:
 	if absf(tx - pos.x) < 6.0:
 		return dir
 	return Vector2(signf(tx - pos.x), 0.25 * signf(dir.y)).normalized()
+
+
+## Would this blob fit with its centre at `p`, clear of every wall?
+func _fits(p: Vector2, walls: Array[WallBlock]) -> bool:
+	for w in walls:
+		if w.rect().grow(me.radius).has_point(p):
+			return false
+	return true
 
 
 ## (top, bottom) world y of the kill lasers.

@@ -57,7 +57,7 @@ finds what it needs:
   - `lasers`: every `LaserEmitter`; the `LaserDirector` schedules them.
   - `shots`: every `Shot` in flight; bots watch them to raise their shields.
   - `grid`: the neon backdrop's `NeonGrid`; call `impulse(world_pos, strength, radius)` on the group to ripple it, `follow_y(y)` to scroll it.
-  - `kill_lasers`: at most one `KillLasers`; `kill_top()` / `kill_bottom()` for treadmill bots.
+  - `kill_lasers`: at most one `KillLasers` (the treadmill's belt: two lines `belt_height` apart, centred on the node); `kill_top()` / `kill_bottom()` for treadmill bots and the generator.
 - **Signals** for reporting upward: `Blob.pushed`, `Blob.dashed`, `Blob.slashed`, `Blob.spat`,
   `Blob.blocked`, `Blob.reflected`, `Blob.ate_food`, `Blob.died`,
   `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Pitch.goal_scored`, `Juice.impact`. The
@@ -122,12 +122,26 @@ pushes and lasers, and with `ghost_obstacles` walls and bumpers too) and
 whether moves cost energy (`OFF`: cooldowns, `DASH`, `ALL`), plus on/off
 for the slash, the spit and the shield. The shield blocks pushes, slashes
 and dash stuns (`Blob.try_block()`) and sends shots back
-(`Blob.try_reflect()`); anything new that hits blobs should ask one of the two. Every blob
+(`Blob.try_reflect()`); anything new that hits blobs should ask one of the two.
+
+### Mass
+
+Food makes blobs bigger, heavier, slower and stronger, up to
+`BlobStats.max_mass`. A mode whose `ModeInfo` has `mass_loss` (the
+treadmill) spawns blobs with `Blob.loses_mass`: they shrink all the time and
+pay mass for spit and laser hits (`MoveRules.mass_decay`, `spit_mass`,
+`laser_mass`, from the SHRINKING, SPIT COST and LASER BURN settings). Below
+`stats.low_mass` the blob flashes red and players hear a warning beep; below
+`stats.min_mass` it pops (`die(true)`). Anything that takes mass calls
+`blob.lose_mass(amount)`, which does nothing where mass loss is off (football,
+the ring). The FOOD setting scales how much food levels lay out
+(`GameSettings.food_amount()`). Every blob
 shares `GameSettings.rules()`, built from the player's settings, so a change
 in a menu applies at once. The numbers
 (dash speed and time, bar size, regen, costs) are in `BlobStats`. Anything
 that hits blobs skips `blob.is_ghost()`; obstacles skip
-`blob.phases_obstacles()`; the arena's own walls never do. The bar is drawn
+`blob.phases_obstacles()`; the arena's own walls never do, nor does a
+`WallBlock` with `ghost_proof` (drawn hatched: some pieces of the treadmill's wall rows). The bar is drawn
 by the blob's `EnergyMeter` child (above, below, ring) or the `EnergyHud` in
 the HUD, whichever the "meter" setting picks.
 
