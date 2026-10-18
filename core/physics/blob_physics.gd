@@ -73,10 +73,10 @@ func _collide_blobs(blobs: Array[Blob]) -> void:
 				var jimp := (1.0 + feel.blob_restitution) * impact / isum
 				if impact > feel.bump_pop_min_impact:
 					jimp += feel.bump_pop / isum
-				# A solid dash knocks whoever it hits out of control for a moment.
-				if a.is_dashing():
+				# A solid dash knocks whoever it hits out of control for a moment (not through a shield).
+				if a.is_dashing() and not b.is_shielding():
 					b.stun = maxf(b.stun, a.stats.dash_hit_stun)
-				if b.is_dashing():
+				if b.is_dashing() and not a.is_shielding():
 					a.stun = maxf(a.stun, b.stats.dash_hit_stun)
 				a.vel -= n * jimp * ia
 				b.vel += n * jimp * ib

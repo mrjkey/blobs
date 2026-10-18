@@ -24,6 +24,13 @@ func _ready() -> void:
 	_sounds["bumper"] = _tone(0.22, 700.0, 1400.0, 0.0, 0.0, 5.0)
 	_sounds["dash"] = _tone(0.18, 260.0, 900.0, 0.0, 0.6, 5.0)
 	_sounds["deny"] = _tone(0.12, 150.0, 110.0, 0.0, 0.15, 6.0)
+	_sounds["slash"] = _tone(0.09, 2200.0, 500.0, 0.0, 0.85, 4.0)
+	_sounds["slash_hit"] = _tone(0.16, 190.0, 55.0, 0.0, 0.45, 6.0)
+	_sounds["spit"] = _tone(0.1, 380.0, 820.0, 0.25, 0.15, 6.0)
+	_sounds["shield"] = _tone(0.2, 600.0, 1500.0, 0.06, 0.1, 4.0)
+	_sounds["shield_down"] = _tone(0.1, 900.0, 400.0, 0.0, 0.3, 6.0)
+	_sounds["clang"] = _tone(0.3, 2600.0, 2400.0, 0.12, 0.15, 7.0)
+	_sounds["reflect"] = _tone(0.35, 1700.0, 2300.0, 0.08, 0.05, 6.0)
 	for i in VOICES:
 		var p := AudioStreamPlayer.new()
 		add_child(p)

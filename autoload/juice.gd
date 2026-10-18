@@ -46,10 +46,11 @@ func impact_at(pos: Vector2, strength: float) -> void:
 
 
 ## Sparks, drawn by the FxLayer in the current scene (nothing happens without one).
-func burst(pos: Vector2, color: Color, count: int, speed: float = 250.0) -> void:
+## With a `dir`, they spray that way, `spread` radians either side.
+func burst(pos: Vector2, color: Color, count: int, speed: float = 250.0, dir := Vector2.ZERO, spread := PI) -> void:
 	var fx := get_tree().get_first_node_in_group("fx")
 	if fx != null:
-		fx.burst(pos, color, count, speed)
+		fx.burst(pos, color, count, speed, dir, spread)
 
 
 ## An expanding ring, drawn by the FxLayer in the current scene.

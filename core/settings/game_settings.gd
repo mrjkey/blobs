@@ -1,7 +1,7 @@
 class_name GameSettings
 extends RefCounted
 ## The options players can change: the look (theme, glow) and the gameplay
-## (the dash, energy, the energy bar). The main menu's SETTINGS screen and the
+## (the dash, the slash, spit and shield, energy, the energy bar). The main menu's SETTINGS screen and the
 ## sandbox lab (Tab) list them. Gameplay picks are saved in Session.settings,
 ## the look in Session.theme_name / Session.glow; everything reads them
 ## through here, so a change applies at once, mid-game too.
@@ -31,9 +31,21 @@ const OPTIONS := [
 		["blobs", "BLOBS", "A ghost dash passes through blobs, pushes and lasers, but not walls or bumpers."],
 	]},
 	{key = "energy", label = "ENERGY", default_id = "all", choices = [
-		["all", "DASH + PUSH", "Dash and push each cost a segment of the bar. The push keeps only a short cooldown."],
-		["dash", "DASH ONLY", "The dash costs a segment, the push keeps its normal cooldown."],
-		["off", "OFF", "No bar: the push and the dash each have their own cooldown."],
+		["all", "ALL MOVES", "Every move costs energy: a segment for the dash, push, spit and shield, half one for a slash. Only short cooldowns."],
+		["dash", "DASH ONLY", "The dash costs a segment, the other moves keep their normal cooldowns."],
+		["off", "OFF", "No bar: every move has its own cooldown."],
+	]},
+	{key = "slash", label = "SLASH", default_id = "on", choices = [
+		["on", "ON", "A quick blade swing the way you face. Short reach, no windup, knocks back whoever it cuts."],
+		["off", "OFF", "No slash."],
+	]},
+	{key = "spit", label = "SPIT", default_id = "on", choices = [
+		["on", "ON", "A glob fired the way you face. Flies far, knocks back the first blob it hits."],
+		["off", "OFF", "No spit."],
+	]},
+	{key = "shield", label = "SHIELD", default_id = "on", choices = [
+		["on", "ON", "A short bubble that slows you down. Blocks pushes and slashes; spit that touches it flies back at whoever fired it."],
+		["off", "OFF", "No shield."],
 	]},
 	{key = "meter", label = "BAR", default_id = "above", choices = [
 		["above", "ABOVE BLOB", "Pips over the blob's head."],
@@ -130,3 +142,6 @@ static func _sync() -> void:
 	_rules.ghost_obstacles = choice("ghost_through") == "obstacles"
 	_rules.energy = {"all": MoveRules.Energy.ALL, "dash": MoveRules.Energy.DASH}.get(choice("energy"), MoveRules.Energy.OFF)
 	_rules.bots_dash = choice("bots_dash") == "yes"
+	_rules.slash = choice("slash") == "on"
+	_rules.spit = choice("spit") == "on"
+	_rules.shield = choice("shield") == "on"

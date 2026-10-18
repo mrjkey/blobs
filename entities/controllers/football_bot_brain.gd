@@ -68,7 +68,7 @@ func _attack(pitch: Pitch, ball: Blob, bp: Vector2, goal: Vector2) -> Vector2:
 	var lined := to_ball.normalized().dot(aim) if dist > 0.001 else 1.0
 	if lined > lerpf(0.55, 0.8, skill) and dist < reach + 70.0:
 		# Lined up: run through the ball toward the goal.
-		if me.push_ready() and not _push_queued() and dist < me.push_reach() + ball.radius * 0.5:
+		if me.push_ready() and not _attack_queued() and dist < me.push_reach() + ball.radius * 0.5:
 			if bp.distance_to(goal) < shoot_range + 250.0 * aggression or randf() < 0.04 + 0.1 * aggression:
 				_queue_push()
 		return (aim * 0.7 + to_ball.normalized() * 0.5).normalized()
@@ -88,7 +88,7 @@ func _attack(pitch: Pitch, ball: Blob, bp: Vector2, goal: Vector2) -> Vector2:
 
 ## A defender with the ball close by pushes it away from its own goal.
 func _clear(ball: Blob, home: Vector2) -> void:
-	if not me.push_ready() or _push_queued():
+	if not me.push_ready() or _attack_queued():
 		return
 	var d := ball.global_position - me.global_position
 	if d.length() < me.push_reach() + ball.radius * 0.5 and d.dot(ball.global_position - home) > 0.0:
@@ -97,7 +97,7 @@ func _clear(ball: Blob, home: Vector2) -> void:
 
 ## Shove an opponent who is right next to us and between us and the ball.
 func _shove_opponents(ball: Blob) -> void:
-	if not me.push_ready() or _push_queued() or randf() > aggression * 0.3:
+	if not me.push_ready() or _attack_queued() or randf() > aggression * 0.3:
 		return
 	var to_ball := ball.global_position - me.global_position
 	for o: Blob in get_tree().get_nodes_in_group("blobs"):

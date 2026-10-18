@@ -93,10 +93,15 @@ func _attack_dir() -> Vector2:
 				side = -side
 			dir = (dir + side * 1.2).normalized()
 
-	if me.push_ready() and not _push_queued() and gap < reach * 0.9:
-		var near_edge := t_rel.length() > _ring_r * 0.6
-		if lined_up > -0.1 or near_edge:
+	var near_edge := t_rel.length() > _ring_r * 0.6
+	var good_angle := lined_up > -0.1 or near_edge
+	if gap < reach * 0.9 and good_angle and randf() < 0.55 and _try_shoot(target):
+		pass # close enough for the blade: a quick slash instead of the push
+	elif me.push_ready() and not _attack_queued() and gap < reach * 0.9:
+		if good_angle:
 			_queue_push()
+	elif lined_up > 0.2 or near_edge:
+		_try_shoot(target) # push not ready or out of reach: slash or spit them toward the edge
 	if _dash_ok() and randf() < skill * 0.5:
 		var dash_len := me.dash_speed() * me.stats.dash_time
 		var closing := lined_up > 0.2 and gap > reach * 0.8 and gap < dash_len + reach * 0.6

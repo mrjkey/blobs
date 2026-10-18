@@ -102,11 +102,15 @@ func _attack_dir(top: float, bottom: float) -> Vector2:
 				side = -side
 			dir = (dir + side * 1.2).normalized()
 
-	if me.push_ready() and not _push_queued() and gap < reach * 0.9:
+	if gap < reach * 0.9 and lined_up > 0.2 and randf() < 0.55 and _try_shoot(target):
+		pass # close enough for the blade: a quick slash instead of the push
+	elif me.push_ready() and not _attack_queued() and gap < reach * 0.9:
 		var near_bottom := tpos.y > bottom - 260.0
 		var near_top := tpos.y < top + 200.0 and lined_up < -0.3
 		if lined_up > -0.1 or near_bottom or near_top or randf() < 0.3 * aggression:
 			_queue_push()
+	elif lined_up > 0.2:
+		_try_shoot(target) # push not ready or out of reach: slash or spit them down
 	return dir
 
 

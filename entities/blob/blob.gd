@@ -1,21 +1,30 @@
 class_name Blob
 extends Node2D
-## One bumper blob: its movement, push and dash, energy and mass. It doesn't
-## steer itself: a controller child (PlayerInput, a BotBrain) sets `move_dir`
-## and calls `request_push()` / `request_dash()`. Which moves it has comes
-## from `rules`. BlobPhysics moves and collides it, and the Body child draws
-## it. Works in any scene that has a BlobPhysics node.
+## One bumper blob: its movement, its moves (push, dash, slash, spit, shield),
+## energy and mass. It doesn't steer itself: a controller child (PlayerInput,
+## a BotBrain) sets `move_dir` and calls `request_push()`, `request_dash()`,
+## `request_slash()`, `request_spit()`, `request_shield()`. Which moves it has
+## comes from `rules`. BlobPhysics moves and collides it, and the Body child
+## draws it. A slash is a Slash scene spawned on the blob; spit is a Shot,
+## spawned next to it. The shield blocks pushes and slashes and sends shots
+## back. Works in any scene that has a BlobPhysics node.
 
 signal pushed(blob: Blob, hits: int)
 signal ate_food(blob: Blob)
 signal died(blob: Blob)
 signal dashed(blob: Blob)
+signal slashed(blob: Blob)
+signal spat(blob: Blob)
+signal blocked(blob: Blob, attacker: Blob) # its shield stopped a push or a slash
+signal reflected(blob: Blob, shot: Shot) # its shield sent a shot back
 
 @export var stats: BlobStats = preload("res://entities/blob/stats/default.tres")
 @export var color := Color.WHITE
 @export var display_name := "Blob"
 @export var tag := "" # "P1"/"P2", shown over the head in multiplayer
 @export var team := -1 # in team modes (football): 0 or 1, shown as a coloured spot under it; -1 = no team
+@export_file("*.tscn") var slash_scene := "res://entities/slash/slash.tscn"
+@export_file("*.tscn") var spit_scene := "res://entities/shots/spit.tscn"
 
 var vel := Vector2.ZERO
 var mass := 1.0
@@ -37,6 +46,14 @@ var dash_buffer := 0.0 # > 0 means "dash as soon as you can"
 var energy := -1.0 # in segments, up to stats.energy_segments (filled in _ready)
 var energy_delay := 0.0 # refilling waits until this runs out
 var energy_denied := 0.0 # 1 -> 0 after trying a move without the energy (meters flash)
+var slash_cooldown := 0.0
+var slash_buffer := 0.0
+var spit_cooldown := 0.0
+var spit_buffer := 0.0
+var shield_t := 0.0 # > 0 while the shield is up
+var shield_cooldown := 0.0
+var shield_buffer := 0.0
+var shield_flash := 0.0 # 1 -> 0 after the shield stops something (it lights up)
 
 ## Worked out from `stats` every time, so editing the .tres resizes blobs live.
 var radius: float:
@@ -45,6 +62,9 @@ var radius: float:
 
 var _death_t := 0.0
 var _dash_aim := Vector2.ZERO
+var _slash_aim := Vector2.ZERO
+var _slash_side := 1.0 # flips every swing, so a combo goes back and forth
+var _spit_aim := Vector2.ZERO
 
 @onready var body: BlobBody = $Body
 
@@ -81,8 +101,36 @@ func push_reach() -> float:
 
 
 func push_ready() -> bool:
-	return push_cooldown <= 0.0 and windup <= 0.0 \
+	return push_cooldown <= 0.0 and windup <= 0.0 and shield_t <= 0.0 \
 		and (not rules.push_costs_energy() or energy >= stats.push_cost)
+
+
+func slash_ready() -> bool:
+	return _can_slash() and (not rules.attacks_cost_energy() or energy >= stats.slash_cost)
+
+
+func spit_ready() -> bool:
+	return _can_spit() and (not rules.attacks_cost_energy() or energy >= stats.spit_cost)
+
+
+func shield_ready() -> bool:
+	return _can_shield() and (not rules.shield_costs_energy() or energy >= stats.shield_cost)
+
+
+func is_shielding() -> bool:
+	return shield_t > 0.0
+
+
+func _can_slash() -> bool:
+	return rules.slash and slash_cooldown <= 0.0 and windup <= 0.0 and shield_t <= 0.0
+
+
+func _can_spit() -> bool:
+	return rules.spit and spit_cooldown <= 0.0 and windup <= 0.0 and shield_t <= 0.0
+
+
+func _can_shield() -> bool:
+	return rules.shield and shield_t <= 0.0 and shield_cooldown <= 0.0
 
 
 func dash_ready() -> bool:
@@ -131,6 +179,31 @@ func request_dash(dir := Vector2.ZERO) -> void:
 	_dash_aim = dir
 
 
+## Slash along `dir`; with no direction, the way it's steering or facing.
+func request_slash(dir := Vector2.ZERO) -> void:
+	slash_buffer = stats.push_buffer
+	_slash_aim = dir
+
+
+## Spit along `dir`; with no direction, the way it's steering or facing.
+func request_spit(dir := Vector2.ZERO) -> void:
+	spit_buffer = stats.push_buffer
+	_spit_aim = dir
+
+
+func request_shield() -> void:
+	shield_buffer = stats.push_buffer
+
+
+## `dir` if it's a direction, else the way the blob is steering, else the way it faces.
+func aim(dir := Vector2.ZERO) -> Vector2:
+	if dir.length() < 0.1:
+		dir = move_dir
+	if dir.length() < 0.1:
+		dir = body.look
+	return dir.normalized()
+
+
 ## Called by BlobPhysics once per substep. `in_mud` slows the blob down.
 func step_motion(h: float, in_mud: bool) -> void:
 	if dash_t > 0.0:
@@ -146,6 +219,8 @@ func step_motion(h: float, in_mud: bool) -> void:
 	if in_mud:
 		control *= stats.outside_control
 	var top := max_speed()
+	if shield_t > 0.0:
+		top *= stats.shield_move
 	# Flying faster than you could run means you got launched: keep the momentum,
 	# but bleed it off fast so hits read as a sharp shove, not a slow drift.
 	var launched := vel.length() > top * 1.05
@@ -173,6 +248,13 @@ func _physics_process(delta: float) -> void:
 	stun = maxf(stun - delta, 0.0)
 	energy_denied = maxf(energy_denied - delta * 2.5, 0.0)
 	energy_delay = maxf(energy_delay - delta, 0.0)
+	slash_cooldown = maxf(slash_cooldown - delta, 0.0)
+	slash_buffer = maxf(slash_buffer - delta, 0.0)
+	spit_cooldown = maxf(spit_cooldown - delta, 0.0)
+	spit_buffer = maxf(spit_buffer - delta, 0.0)
+	shield_cooldown = maxf(shield_cooldown - delta, 0.0)
+	shield_buffer = maxf(shield_buffer - delta, 0.0)
+	shield_flash = maxf(shield_flash - delta * 6.0, 0.0)
 	if energy_delay <= 0.0:
 		energy = minf(energy + stats.energy_regen * delta, stats.energy_segments)
 	if dash_t > 0.0:
@@ -188,7 +270,7 @@ func _physics_process(delta: float) -> void:
 			push_cooldown = push_cooldown_full
 			body.swell_kick(stats.push_swell * 22.0)
 			_release_push()
-	elif push_buffer > 0.0 and push_cooldown <= 0.0:
+	elif push_buffer > 0.0 and push_cooldown <= 0.0 and shield_t <= 0.0:
 		push_buffer = 0.0
 		if not rules.push_costs_energy() or _spend(stats.push_cost):
 			windup = stats.push_windup
@@ -197,6 +279,25 @@ func _physics_process(delta: float) -> void:
 		dash_buffer = 0.0
 		if not rules.dash_costs_energy() or _spend(stats.dash_cost):
 			_start_dash()
+	if slash_buffer > 0.0 and _can_slash():
+		slash_buffer = 0.0
+		if not rules.attacks_cost_energy() or _spend(stats.slash_cost):
+			_release_slash()
+	if spit_buffer > 0.0 and _can_spit():
+		spit_buffer = 0.0
+		if not rules.attacks_cost_energy() or _spend(stats.spit_cost):
+			_release_spit()
+	if shield_t > 0.0:
+		shield_t -= delta
+		if shield_t <= 0.0:
+			shield_t = 0.0
+			shield_cooldown = stats.shield_energy_cooldown if rules.shield_costs_energy() else stats.shield_cooldown
+			Juice.shockwave(global_position, radius + 12.0, radius + 30.0, color.lerp(Color.WHITE, 0.6), 0.18)
+			Sfx.play("shield_down", randf_range(0.95, 1.05), -6.0)
+	elif shield_buffer > 0.0 and _can_shield():
+		shield_buffer = 0.0
+		if not rules.shield_costs_energy() or _spend(stats.shield_cost):
+			_raise_shield()
 
 
 ## Takes `cost` energy, or flashes the meters and returns false if there isn't enough.
@@ -212,12 +313,7 @@ func _spend(cost: float) -> bool:
 
 
 func _start_dash() -> void:
-	var dir := _dash_aim
-	if dir.length() < 0.1:
-		dir = move_dir
-	if dir.length() < 0.1:
-		dir = body.look
-	dash_dir = dir.normalized()
+	dash_dir = aim(_dash_aim)
 	dash_t = stats.dash_time
 	if not rules.dash_costs_energy():
 		dash_cooldown = stats.dash_cooldown
@@ -247,6 +343,8 @@ func _release_push() -> void:
 		if dist - other.radius > reach:
 			continue
 		var n := d / dist if dist > 0.001 else Vector2.from_angle(randf() * TAU)
+		if other.try_block(self, other.global_position - n * other.radius):
+			continue
 		var gap := maxf(dist - other.radius - radius, 0.0)
 		var falloff := lerpf(1.0, stats.push_falloff, clampf(gap / (reach - radius), 0.0, 1.0))
 		var dv := stats.push_impulse * push_power() * falloff / pow(other.mass, other.stats.push_resist_exp)
@@ -262,6 +360,91 @@ func _release_push() -> void:
 	else:
 		Juice.shake(js.shake_whiff)
 	pushed.emit(self, hits)
+
+
+## Swing at once: no windup, so the button press and the cut are the same frame.
+func _release_slash() -> void:
+	slash_cooldown = stats.slash_cooldown
+	var d := aim(_slash_aim)
+	_slash_side = -_slash_side
+	var slash: Slash = load(slash_scene).instantiate()
+	add_child(slash)
+	slash.launch(self, d, _slash_side, push_power())
+	vel += d * stats.slash_lunge
+	body.look = d
+	body.bump(-d, 450.0) # stretch into the swing
+	body.swell_kick(4.0)
+	Sfx.play("slash", randf_range(0.92, 1.08) / sqrt(mass), 0.0, 0.0)
+	slashed.emit(self)
+
+
+func _raise_shield() -> void:
+	shield_t = stats.shield_time
+	body.swell_kick(-4.0)
+	Juice.shockwave(global_position, radius, radius + 16.0, color.lerp(Color.WHITE, 0.7), 0.14)
+	Juice.impact_at(global_position, 300.0)
+	Sfx.play("shield", randf_range(0.95, 1.05), 0.0)
+
+
+func _release_spit() -> void:
+	spit_cooldown = stats.spit_energy_cooldown if rules.attacks_cost_energy() else stats.spit_cooldown
+	var d := aim(_spit_aim)
+	var spit: Shot = _spawn(spit_scene)
+	spit.launch(self, global_position + d * (radius + stats.spit_radius), d, push_power())
+	vel -= d * stats.spit_recoil
+	set_mass(mass - stats.spit_mass)
+	body.swell_kick(-4.0)
+	body.bump(d, 300.0)
+	Juice.burst(global_position + d * radius, color.lightened(0.4), 5, 180.0)
+	Sfx.play("spit", randf_range(0.9, 1.1) / sqrt(mass), -2.0, 0.0)
+	spat.emit(self)
+
+
+## A Shot scene, added next to this blob (so it outlives it).
+func _spawn(path: String) -> Shot:
+	var shot: Shot = load(path).instantiate()
+	get_parent().add_child(shot)
+	return shot
+
+
+## A push or a slash from `attacker`, landing at `at`, asks whether the shield
+## stops it. True: blocked, and the shield shows it; the attack does nothing.
+func try_block(attacker: Blob, at: Vector2) -> bool:
+	if shield_t <= 0.0:
+		return false
+	var js := Juice.settings
+	var n := (at - global_position).normalized()
+	shield_flash = 1.0
+	body.swell_kick(5.0)
+	body.bump(n, 350.0)
+	Juice.burst(at, Color.WHITE, 14, 520.0, n, 0.8)
+	Juice.burst(at, color.lerp(Color.WHITE, 0.5), 8, 300.0, n, 1.4)
+	Juice.impact_at(at, 800.0)
+	Juice.hitstop(js.hitstop_block)
+	Juice.shake(js.shake_push * 0.5)
+	Sfx.play("clang", randf_range(0.95, 1.05), 0.0, 0.0)
+	blocked.emit(self, attacker)
+	return true
+
+
+## A Shot touching this blob asks whether it gets reflected. True: the shield
+## is up, so it flies back (the Shot does that) and this blob shows the catch.
+func try_reflect(shot: Shot) -> bool:
+	if shield_t <= 0.0:
+		return false
+	var js := Juice.settings
+	var n := (shot.global_position - global_position).normalized()
+	shield_flash = 1.0
+	body.swell_kick(6.0)
+	body.bump(n, 500.0)
+	Juice.shockwave(global_position, radius + 14.0, radius * 3.0, Color.WHITE, 0.25)
+	Juice.burst(global_position + n * (radius + 14.0), Color.WHITE, 16, 450.0, n, 1.0)
+	Juice.impact_at(global_position, 900.0)
+	Juice.hitstop(js.hitstop_push)
+	Juice.shake(js.shake_push * 0.7)
+	Sfx.play("reflect", randf_range(0.95, 1.05) * pow(1.06, shot.reflections), 0.0, 0.0)
+	reflected.emit(self, shot)
+	return true
 
 
 ## Knocked along `n` at `speed` px/s (a push, a laser...). With `clean_hit`,

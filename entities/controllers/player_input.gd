@@ -26,6 +26,9 @@ func _physics_process(_delta: float) -> void:
 	# Poll every frame, so a press during the countdown doesn't fire after it.
 	var pushed := _just_pressed("push", profile.push, profile.pad_push)
 	var dashed := _just_pressed("dash", profile.dash, profile.pad_dash)
+	var slashed := _just_pressed("slash", profile.slash, profile.pad_slash)
+	var spat := _just_pressed("spit", profile.spit, profile.pad_spit)
+	var shielded := _just_pressed("shield", profile.shield, profile.pad_shield)
 	if not blob.active:
 		blob.move_dir = Vector2.ZERO
 		return
@@ -34,6 +37,12 @@ func _physics_process(_delta: float) -> void:
 		blob.request_push()
 	if dashed:
 		blob.request_dash()
+	if slashed:
+		blob.request_slash()
+	if spat:
+		blob.request_spit()
+	if shielded:
+		blob.request_shield()
 
 
 func _pad() -> int:

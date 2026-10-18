@@ -13,12 +13,15 @@ func _enter_tree() -> void:
 	add_to_group("fx")
 
 
-func burst(pos: Vector2, col: Color, count: int, speed: float = 250.0) -> void:
+## With a `dir`, the sparks spray that way, `spread` radians either side.
+func burst(pos: Vector2, col: Color, count: int, speed: float = 250.0, dir := Vector2.ZERO, spread := PI) -> void:
+	var aimed := dir.length() > 0.001
 	for i in count:
 		var life := randf_range(0.25, 0.55)
+		var a := dir.angle() + randf_range(-spread, spread) if aimed else randf() * TAU
 		parts.append({
 			"pos": pos,
-			"vel": Vector2.from_angle(randf() * TAU) * speed * randf_range(0.3, 1.0),
+			"vel": Vector2.from_angle(a) * speed * randf_range(0.3, 1.0),
 			"life": life,
 			"max": life,
 			"size": randf_range(2.5, 5.5),

@@ -9,6 +9,7 @@ extends Resource
 @export var moves := true  # false: stands still, a training dummy
 @export var pushes := true # false: never pushes (still runs, eats, dodges)
 @export var dashes := true
+@export var shields := true # false: never raises its shield
 
 @export_group("Personality ranges")
 ## Each bot rolls its personality numbers (see BotBrain) inside these ranges on spawn.

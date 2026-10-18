@@ -12,19 +12,31 @@ enum Dash {
 
 enum Energy {
 	OFF, ## every move has its own cooldown
-	DASH, ## the dash costs energy, pushes keep their cooldown
-	ALL, ## the dash and the push both cost energy
+	DASH, ## the dash costs energy, the other moves keep their cooldowns
+	ALL, ## every move costs energy
 }
 
 @export var dash := Dash.NONE
 @export var ghost_obstacles := false # a ghost dash also passes through walls and bumpers (not the arena)
 @export var energy := Energy.OFF
 @export var bots_dash := true
+@export var slash := false # a quick blade swing the way the blob faces
+@export var spit := false # a glob fired the way the blob faces
+@export var shield := false # a short bubble that blocks pushes and slashes and sends spit back
 
 
 func dash_costs_energy() -> bool:
 	return energy != Energy.OFF
 
 
+## The push, the slash and the spit.
+func attacks_cost_energy() -> bool:
+	return energy == Energy.ALL
+
+
 func push_costs_energy() -> bool:
+	return attacks_cost_energy()
+
+
+func shield_costs_energy() -> bool:
 	return energy == Energy.ALL

@@ -13,7 +13,7 @@ in `themes/` (see Themes below).
 |---|---|
 | `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings and gameplay settings, the chosen theme), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres`, `Sfx` (synthesised sound kit) |
 | `core/` | Machinery every mode composes: `settings/` (`GameSettings`: the player's gameplay options), `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock) |
-| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `ball/` (`Ball`, `BallBody`: the football, a Blob with no moves), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
+| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `ball/` (`Ball`, `BallBody`: the football, a Blob with no moves), `slash/` (`Slash`: one blade swing, spawned on the blob), `shots/` (`Shot`, `Spit`: things blobs fire that fly on their own), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
 | `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`, `pitch/`: the floors and walls a mode plays on, with their own rules like ring-out, the kill lasers or goals), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`) |
 | `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style and backdrop |
 | `modes/` | One folder per game mode (`treadmill/`, `ring/`, `football/`): the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
@@ -55,9 +55,11 @@ finds what it needs:
   - `fx`: the `FxLayer` that `Juice.burst()` / `Juice.shockwave()` draw on.
   - `music`: at most one `Techno`. `Techno.current_beat()` / `Techno.current_kick()` read it (a steady 128 BPM / no kick without it).
   - `lasers`: every `LaserEmitter`; the `LaserDirector` schedules them.
+  - `shots`: every `Shot` in flight; bots watch them to raise their shields.
   - `grid`: the neon backdrop's `NeonGrid`; call `impulse(world_pos, strength, radius)` on the group to ripple it, `follow_y(y)` to scroll it.
   - `kill_lasers`: at most one `KillLasers`; `kill_top()` / `kill_bottom()` for treadmill bots.
-- **Signals** for reporting upward: `Blob.pushed`, `Blob.dashed`, `Blob.ate_food`, `Blob.died`,
+- **Signals** for reporting upward: `Blob.pushed`, `Blob.dashed`, `Blob.slashed`, `Blob.spat`,
+  `Blob.blocked`, `Blob.reflected`, `Blob.ate_food`, `Blob.died`,
   `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Pitch.goal_scored`, `Juice.impact`. The
   mode script connects to them. Anything that knocks a blob out calls
   `blob.die()`; the mode only listens to `Blob.died`.
@@ -70,7 +72,8 @@ finds what it needs:
 ### Who steers a blob
 
 `Blob` only moves where `move_dir` says, pushes when `request_push()` is
-called and dashes on `request_dash()`. A controller child sets those: `PlayerInput` (keys from an
+called, dashes on `request_dash()`, and slashes, spits and shields on
+`request_slash()`, `request_spit()`, `request_shield()`. A controller child sets those: `PlayerInput` (keys from an
 `InputProfile` resource, plus one gamepad) or a `BotBrain` subclass. The
 controller registers itself as `blob.controller`, so `blob.is_human()` works.
 `blob.active = false` makes controllers leave the blob alone (countdowns).
@@ -116,7 +119,10 @@ a colour index into `GameTheme.palette()`.
 Which moves a blob has comes from `blob.rules`, a `MoveRules`: the dash
 (`NONE`, `BUMP`: solid, stuns what it hits; `GHOST`: passes through blobs,
 pushes and lasers, and with `ghost_obstacles` walls and bumpers too) and
-whether moves cost energy (`OFF`: cooldowns, `DASH`, `ALL`). Every blob
+whether moves cost energy (`OFF`: cooldowns, `DASH`, `ALL`), plus on/off
+for the slash, the spit and the shield. The shield blocks pushes, slashes
+and dash stuns (`Blob.try_block()`) and sends shots back
+(`Blob.try_reflect()`); anything new that hits blobs should ask one of the two. Every blob
 shares `GameSettings.rules()`, built from the player's settings, so a change
 in a menu applies at once. The numbers
 (dash speed and time, bar size, regen, costs) are in `BlobStats`. Anything

@@ -45,12 +45,48 @@ extends Resource
 @export var dash_cooldown := 1.1   # used when energy is off
 @export var dash_hit_stun := 0.3   # a solid dash knocks the blob it hits out of control this long
 
+@export_group("Slash")
+@export var slash_impulse := 820.0 # speed given to a mass-1 target, along the swing
+@export var slash_range := 62.0    # how far the blade reaches beyond your own edge
+@export var slash_angle := 65.0    # half the arc's width, in degrees
+@export var slash_active := 0.07   # the blade cuts for this long (it fires the frame you press)
+@export var slash_cooldown := 0.3  # between swings, whatever the energy rules
+@export var slash_lunge := 110.0   # a small step into each swing (px/s)
+@export var slash_recoil := 280.0  # the slasher bounces back off what it hits (px/s)
+@export var slash_stun := 0.22
+@export var slash_blocked_recoil := 560.0 # slashing a shield throws you back this hard...
+@export var slash_blocked_stun := 0.35    # ...and staggers you this long
+
+@export_group("Spit")
+@export var spit_impulse := 650.0  # speed given to a mass-1 target
+@export var spit_speed := 620.0
+@export var spit_range := 520.0    # distance it flies before it fizzles
+@export var spit_radius := 8.0
+@export var spit_recoil := 90.0    # the spitter is nudged back this much (px/s)
+@export var spit_mass := 0.0       # mass lost per spit (0 = free; > 0 makes you lighter and faster)
+@export var spit_cooldown := 0.6
+@export var spit_energy_cooldown := 0.25 # replaces spit_cooldown when it costs energy
+@export var spit_stun := 0.25
+
+@export_group("Shield")
+@export var shield_time := 0.4     # how long it stays up: pushes and slashes are blocked, spit flies back
+@export var shield_move := 0.55    # top speed multiplier while it's up
+@export var shield_absorb := 0.12  # share of a blocked hit's knockback that still gets through
+@export var shield_cooldown := 1.2 # used when it doesn't cost energy
+@export var shield_energy_cooldown := 0.3 # between shields when it costs energy
+@export var reflect_speedup := 1.15 # each reflection flies this much faster...
+@export var reflect_boost := 1.15   # ...and hits this much harder
+@export var shot_max_speed := 1500.0 # rallies speed up to this, no further
+
 @export_group("Energy")
 @export var energy_segments := 4   # size of the bar
 @export var energy_regen := 0.85   # segments refilled per second
 @export var energy_regen_delay := 0.35 # refilling pauses this long after spending
 @export var dash_cost := 1.0
 @export var push_cost := 1.0
+@export var slash_cost := 0.5
+@export var spit_cost := 1.0
+@export var shield_cost := 1.0
 
 @export_group("Jelly")
 @export var jelly_stiffness := 380.0

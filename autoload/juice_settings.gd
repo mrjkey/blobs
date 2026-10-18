@@ -5,12 +5,15 @@ extends Resource
 
 @export_group("Hitstop")
 @export var hitstop_push := 0.06       # freeze when a push connects
+@export var hitstop_slash := 0.075     # freeze when a slash connects
+@export var hitstop_block := 0.05      # freeze when a shield stops a hit
 @export var hitstop_bump := 0.03       # freeze on a hard blob-vs-blob hit
 @export var hitstop_min_impact := 500.0
 @export var hitstop_elimination := 0.08
 
 @export_group("Shake")
 @export var shake_push := 7.0
+@export var shake_slash := 5.0
 @export var shake_whiff := 1.5
 @export var shake_per_impact := 0.012
 @export var shake_min_impact := 250.0

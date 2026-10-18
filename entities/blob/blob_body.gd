@@ -1,7 +1,7 @@
 class_name BlobBody
 extends Node2D
 ## Draws the parent Blob: the jelly spring (squash, stretch, swell), the body,
-## eyes and status rings, painted in the theme's style. Only reads the Blob's
+## eyes and status rings and the shield, painted in the theme's style. Only reads the Blob's
 ## state; the Blob never needs to know how it is drawn.
 
 const SEGMENTS := 40
@@ -51,7 +51,9 @@ func _process(delta: float) -> void:
 	modulate.a = lerpf(modulate.a, want_alpha, 1.0 - exp(-(30.0 if blob.is_ghost() else 12.0) * delta))
 
 	var want_look := look
-	if blob.move_dir.length() > 0.1:
+	if blob.slash_cooldown > 0.0:
+		want_look = look # hold the swing's facing until the next one is ready
+	elif blob.move_dir.length() > 0.1:
 		want_look = blob.move_dir.normalized()
 	elif speed > 20.0:
 		want_look = blob.vel / speed
@@ -113,6 +115,33 @@ func _draw() -> void:
 		draw_circle(xf(Vector2(-0.38, -0.4)) * r, r * 0.22, Color(1, 1, 1, 0.3))
 	_draw_eyes(st, r)
 	_draw_status(st, r)
+	if blob.is_shielding():
+		_draw_shield(st, r)
+
+
+## The shield: a hexagonal bubble that pops out with an overshoot, glows
+## white when it stops something and flickers just before it drops.
+func _draw_shield(st: ThemeStyle, r: float) -> void:
+	var up := maxf(blob.stats.shield_time - blob.shield_t, 0.0) # seconds since it went up
+	var pop := 1.0 - exp(-up * 30.0) * cos(up * 45.0) # springy overshoot
+	var size := (r + 20.0) * (0.8 + 0.2 * pop) + 5.0 * blob.shield_flash
+	var alpha := 1.0
+	if blob.shield_t < 0.12:
+		alpha = 0.35 + 0.65 * float(int(blob.shield_t * 40.0) % 2) # last moments: flicker
+	var col := blob.color.lerp(Color.WHITE, 0.7 + 0.3 * blob.shield_flash)
+	var spin := up * 0.8
+	var hex := PackedVector2Array()
+	for i in 6:
+		hex.append(Vector2.from_angle(spin + TAU * i / 6.0) * size)
+	draw_colored_polygon(hex, st.color(blob.color.lerp(Color.WHITE, 0.5), 1.2, (0.16 + 0.3 * blob.shield_flash) * alpha))
+	# Facets: spokes from the centre-ish to each corner, and an inner hexagon.
+	var inner := PackedVector2Array()
+	for p in hex:
+		inner.append(p * 0.55)
+	for i in 6:
+		st.line(self, inner[i], hex[i], col, 1.5, 1.5, 0.35 * alpha)
+	st.outline(self, inner, st.color(col, 1.5, 0.3 * alpha), 1.5)
+	st.outline(self, hex, st.color(col, 2.5 + 2.0 * blob.shield_flash, alpha), 4.5 + 3.0 * blob.shield_flash)
 
 
 ## A flat oval in the team's colour on the floor under the blob (team modes).
@@ -143,8 +172,9 @@ func _draw_eyes(st: ThemeStyle, r: float) -> void:
 		else:
 			draw_circle(c, er, st.color(Color.WHITE, 2.2))
 			draw_circle(c + look * er * 0.4, er * 0.5, st.ink)
-		if blob.windup > 0.0 or (blob.push_cooldown > blob.push_cooldown_full - 0.15):
-			# angry brows while pushing
+		if blob.windup > 0.0 or blob.push_cooldown > blob.push_cooldown_full - 0.15 \
+				or blob.slash_cooldown > blob.stats.slash_cooldown - 0.15:
+			# angry brows while pushing or slashing
 			var brow_in := c + look * er * 0.9 - side * (er * 0.5 * s)
 			var brow_out := c + look * er * 1.5 + side * (er * 0.9 * s)
 			draw_line(brow_in, brow_out, mark, 3.0, true)
@@ -161,6 +191,13 @@ func _draw_status(st: ThemeStyle, r: float) -> void:
 				st.ring(self, Vector2.ZERO, ring_r, Color.WHITE, 3.0, 1.2, 0.3, -PI / 2.0, -PI / 2.0 + TAU * frac)
 		else:
 			st.ring(self, Vector2.ZERO, ring_r, Color.WHITE, 2.0, 1.6, 0.6)
+		if blob.rules.slash or blob.rules.spit:
+			# Where a slash or spit would go: a small notch outside the body.
+			var d := blob.aim()
+			var side := Vector2(-d.y, d.x)
+			var base := d * (ring_r + 4.0)
+			draw_colored_polygon(PackedVector2Array([base + d * 7.0, base + side * 5.0, base - side * 5.0]),
+				st.color(blob.color.lerp(Color.WHITE, 0.5), 2.0, 0.8))
 		var tip := Vector2(0.0, -r - 14.0)
 		draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(-7, -10), tip + Vector2(7, -10)]), st.color(Color.WHITE, 2.5))
 		if blob.tag != "":
