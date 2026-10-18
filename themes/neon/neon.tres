@@ -9,7 +9,7 @@
 [sub_resource type="Resource" id="style"]
 script = ExtResource("2_style")
 glow = 1.0
-brightness = 0.75
+brightness = 0.68
 fill = 0.12
 fill_alpha = 0.92
 flash_fill = 0.0
