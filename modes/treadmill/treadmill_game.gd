@@ -51,7 +51,9 @@ func _load_map() -> void:
 
 func _spawn_blobs() -> void:
 	var total := slots.size()
-	var points: Array[SpawnPoint] = map.spawn_points() if map != null else []
+	var points: Array[SpawnPoint] = []
+	if map != null:
+		points = map.spawn_points()
 	for i in total:
 		var at := Vector2(lerpf(-settings.track_width * 0.35, settings.track_width * 0.35, (i + 0.5) / total),
 			belt_y + settings.spawn_y)

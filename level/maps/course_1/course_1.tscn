@@ -1,437 +1,437 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dqw06x21cq1wj"]
 
-[ext_resource type="Script" path="res://level/maps/map.gd" id="1_lgbmq"]
+[ext_resource type="Script" uid="uid://cprr8pphpvk67" path="res://level/maps/map.gd" id="1_lgbmq"]
 [ext_resource type="PackedScene" path="res://level/obstacles/wall_block.tscn" id="2_6nt2u"]
 [ext_resource type="PackedScene" path="res://level/obstacles/bumper.tscn" id="4_ha2s8"]
-[ext_resource type="Script" path="res://level/maps/food_spot.gd" id="6_dc6o7"]
-[ext_resource type="Script" path="res://level/maps/spawn_point.gd" id="7_rgkkd"]
-[ext_resource type="Script" path="res://level/maps/finish_line.gd" id="8_n44ni"]
+[ext_resource type="Script" uid="uid://dyjpsa3050g1p" path="res://level/maps/food_spot.gd" id="6_dc6o7"]
+[ext_resource type="Script" uid="uid://jsqwbfjo1rdn" path="res://level/maps/spawn_point.gd" id="7_rgkkd"]
+[ext_resource type="Script" uid="uid://ddoor1xgkhs1i" path="res://level/maps/finish_line.gd" id="8_n44ni"]
 
 [node name="Course1" type="Node2D" unique_id=1768404814]
 script = ExtResource("1_lgbmq")
 
 [node name="Walls" type="Node2D" parent="." unique_id=2003739355]
 
-[node name="WallBlock1" type="Node2D" parent="Walls" unique_id=134291826 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock1" parent="Walls" unique_id=134291826 instance=ExtResource("2_6nt2u")]
 position = Vector2(-231.48804, 597.0465)
 size = Vector2(91.92548, 24)
 ghost_proof = true
 
-[node name="WallBlock2" type="Node2D" parent="Walls" unique_id=241186264 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock2" parent="Walls" unique_id=241186264 instance=ExtResource("2_6nt2u")]
 position = Vector2(-38.46113, 597.0465)
 size = Vector2(146.50255, 24)
 ghost_proof = true
 
-[node name="WallBlock3" type="Node2D" parent="Walls" unique_id=2038426434 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock3" parent="Walls" unique_id=2038426434 instance=ExtResource("2_6nt2u")]
 position = Vector2(270.5327, 597.0465)
 size = Vector2(158.9346, 24)
 ghost_proof = true
 
-[node name="WallBlock4" type="Node2D" parent="Walls" unique_id=124228139 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock4" parent="Walls" unique_id=124228139 instance=ExtResource("2_6nt2u")]
 position = Vector2(4.6813965, 370.1979)
 size = Vector2(185.76917, 24)
 ghost_proof = true
 
-[node name="WallBlock5" type="Node2D" parent="Walls" unique_id=1432802976 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock5" parent="Walls" unique_id=1432802976 instance=ExtResource("2_6nt2u")]
 position = Vector2(57.14199, -183.25223)
 size = Vector2(169.27249, 24)
 ghost_proof = true
 
-[node name="WallBlock6" type="Node2D" parent="Walls" unique_id=1782455695 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock6" parent="Walls" unique_id=1782455695 instance=ExtResource("2_6nt2u")]
 position = Vector2(-276.29263, -257.85492)
 size = Vector2(147.41473, 24)
 ghost_proof = true
 
-[node name="WallBlock7" type="Node2D" parent="Walls" unique_id=2066864433 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock7" parent="Walls" unique_id=2066864433 instance=ExtResource("2_6nt2u")]
 position = Vector2(-199.37766, -519.34924)
 size = Vector2(143.79457, 24)
 ghost_proof = true
 
-[node name="WallBlock8" type="Node2D" parent="Walls" unique_id=44554958 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock8" parent="Walls" unique_id=44554958 instance=ExtResource("2_6nt2u")]
 position = Vector2(129.8467, -519.34924)
 size = Vector2(106.0572, 24)
 ghost_proof = true
 
-[node name="WallBlock9" type="Node2D" parent="Walls" unique_id=139042484 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock9" parent="Walls" unique_id=139042484 instance=ExtResource("2_6nt2u")]
 position = Vector2(313.19244, -519.34924)
 size = Vector2(73.61511, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock10" type="Node2D" parent="Walls" unique_id=1300658871 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock10" parent="Walls" unique_id=1300658871 instance=ExtResource("2_6nt2u")]
 position = Vector2(-301.7578, -938.5779)
 size = Vector2(96.48436, 24)
 ghost_proof = true
 
-[node name="WallBlock11" type="Node2D" parent="Walls" unique_id=1497742686 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock11" parent="Walls" unique_id=1497742686 instance=ExtResource("2_6nt2u")]
 position = Vector2(-124.19533, -938.5779)
 size = Vector2(100.83286, 24)
 ghost_proof = true
 
-[node name="WallBlock12" type="Node2D" parent="Walls" unique_id=1099976216 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock12" parent="Walls" unique_id=1099976216 instance=ExtResource("2_6nt2u")]
 position = Vector2(137.76538, -938.5779)
 size = Vector2(76.19304, 24)
 ghost_proof = true
 
-[node name="WallBlock13" type="Node2D" parent="Walls" unique_id=380158125 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock13" parent="Walls" unique_id=380158125 instance=ExtResource("2_6nt2u")]
 position = Vector2(304.2361, -938.5779)
 size = Vector2(91.52773, 24)
 ghost_proof = true
 
-[node name="WallBlock14" type="Node2D" parent="Walls" unique_id=1844340868 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock14" parent="Walls" unique_id=1844340868 instance=ExtResource("2_6nt2u")]
 position = Vector2(264.04074, -780.54987)
 size = Vector2(171.9185, 24)
 ghost_proof = true
 
-[node name="WallBlock15" type="Node2D" parent="Walls" unique_id=561982747 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock15" parent="Walls" unique_id=561982747 instance=ExtResource("2_6nt2u")]
 position = Vector2(-153.73904, -1317.4658)
 size = Vector2(392.5219, 24)
 ghost_proof = true
 
-[node name="WallBlock16" type="Node2D" parent="Walls" unique_id=1657646262 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock16" parent="Walls" unique_id=1657646262 instance=ExtResource("2_6nt2u")]
 position = Vector2(298.66644, -1317.4658)
 size = Vector2(102.66712, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock17" type="Node2D" parent="Walls" unique_id=1005484521 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock17" parent="Walls" unique_id=1005484521 instance=ExtResource("2_6nt2u")]
 position = Vector2(-273.95856, -1665.7096)
 size = Vector2(152.08287, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock18" type="Node2D" parent="Walls" unique_id=414011732 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock18" parent="Walls" unique_id=414011732 instance=ExtResource("2_6nt2u")]
 position = Vector2(92.1781, -1665.7096)
 size = Vector2(265.79922, 24)
 ghost_proof = true
 
-[node name="WallBlock19" type="Node2D" parent="Walls" unique_id=344859891 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock19" parent="Walls" unique_id=344859891 instance=ExtResource("2_6nt2u")]
 position = Vector2(318.84555, -1665.7096)
 size = Vector2(62.308907, 24)
 ghost_proof = true
 
-[node name="WallBlock20" type="Node2D" parent="Walls" unique_id=1924533848 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock20" parent="Walls" unique_id=1924533848 instance=ExtResource("2_6nt2u")]
 position = Vector2(-297.02185, -2077.4546)
 size = Vector2(105.95633, 24)
 ghost_proof = true
 
-[node name="WallBlock21" type="Node2D" parent="Walls" unique_id=37874532 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock21" parent="Walls" unique_id=37874532 instance=ExtResource("2_6nt2u")]
 position = Vector2(-78.1285, -2077.4546)
 size = Vector2(134.84602, 24)
 ghost_proof = true
 
-[node name="WallBlock22" type="Node2D" parent="Walls" unique_id=1891380718 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock22" parent="Walls" unique_id=1891380718 instance=ExtResource("2_6nt2u")]
 position = Vector2(125.234665, -2077.4546)
 size = Vector2(106.82183, 24)
 ghost_proof = true
 
-[node name="WallBlock23" type="Node2D" parent="Walls" unique_id=768542808 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock23" parent="Walls" unique_id=768542808 instance=ExtResource("2_6nt2u")]
 position = Vector2(318.4585, -2077.4546)
 size = Vector2(63.08304, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock24" type="Node2D" parent="Walls" unique_id=874614053 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock24" parent="Walls" unique_id=874614053 instance=ExtResource("2_6nt2u")]
 position = Vector2(35.380104, -1905.5828)
 size = Vector2(191.2088, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock25" type="Node2D" parent="Walls" unique_id=1885207525 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock25" parent="Walls" unique_id=1885207525 instance=ExtResource("2_6nt2u")]
 position = Vector2(180.41225, -2343.158)
 size = Vector2(56.423065, 56.423065)
 ghost_proof = true
 
-[node name="WallBlock26" type="Node2D" parent="Walls" unique_id=284252039 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock26" parent="Walls" unique_id=284252039 instance=ExtResource("2_6nt2u")]
 position = Vector2(33.589268, -2572.0515)
 size = Vector2(137.22697, 24)
 ghost_proof = true
 
-[node name="WallBlock27" type="Node2D" parent="Walls" unique_id=348132672 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock27" parent="Walls" unique_id=348132672 instance=ExtResource("2_6nt2u")]
 position = Vector2(-223.93205, -2811.1165)
 size = Vector2(252.1359, 24)
 ghost_proof = true
 
-[node name="WallBlock28" type="Node2D" parent="Walls" unique_id=1138701431 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock28" parent="Walls" unique_id=1138701431 instance=ExtResource("2_6nt2u")]
 position = Vector2(226.59013, -2811.1165)
 size = Vector2(246.81972, 24)
 ghost_proof = true
 
-[node name="WallBlock29" type="Node2D" parent="Walls" unique_id=1290080944 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock29" parent="Walls" unique_id=1290080944 instance=ExtResource("2_6nt2u")]
 position = Vector2(283.75745, -2933.6653)
 size = Vector2(132.48508, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock30" type="Node2D" parent="Walls" unique_id=1740145452 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock30" parent="Walls" unique_id=1740145452 instance=ExtResource("2_6nt2u")]
 position = Vector2(-142.63101, -3183.4568)
 size = Vector2(414.73798, 24)
 ghost_proof = true
 
-[node name="WallBlock31" type="Node2D" parent="Walls" unique_id=1772997331 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock31" parent="Walls" unique_id=1772997331 instance=ExtResource("2_6nt2u")]
 position = Vector2(271.98312, -3183.4568)
 size = Vector2(156.03375, 24)
 ghost_proof = true
 
-[node name="WallBlock32" type="Node2D" parent="Walls" unique_id=638725498 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock32" parent="Walls" unique_id=638725498 instance=ExtResource("2_6nt2u")]
 position = Vector2(-126.54961, -3339.1409)
 size = Vector2(138.26819, 24)
 ghost_proof = true
 
-[node name="WallBlock33" type="Node2D" parent="Walls" unique_id=594923808 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock33" parent="Walls" unique_id=594923808 instance=ExtResource("2_6nt2u")]
 position = Vector2(-282.78525, -3535.8179)
 size = Vector2(134.4295, 24)
 ghost_proof = true
 
-[node name="WallBlock34" type="Node2D" parent="Walls" unique_id=347227273 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock34" parent="Walls" unique_id=347227273 instance=ExtResource("2_6nt2u")]
 position = Vector2(86.68017, -3535.8179)
 size = Vector2(275.62936, 24)
 ghost_proof = true
 
-[node name="WallBlock35" type="Node2D" parent="Walls" unique_id=1131435892 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock35" parent="Walls" unique_id=1131435892 instance=ExtResource("2_6nt2u")]
 position = Vector2(328.36465, -3535.8179)
 size = Vector2(43.27065, 24)
 ghost_proof = true
 
-[node name="WallBlock36" type="Node2D" parent="Walls" unique_id=175917806 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock36" parent="Walls" unique_id=175917806 instance=ExtResource("2_6nt2u")]
 position = Vector2(264.85037, -3715.3982)
 size = Vector2(170.29927, 24)
 ghost_proof = true
 
-[node name="WallBlock37" type="Node2D" parent="Walls" unique_id=1234705315 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock37" parent="Walls" unique_id=1234705315 instance=ExtResource("2_6nt2u")]
 position = Vector2(-199.34785, -3930.7593)
 size = Vector2(301.3043, 24)
 ghost_proof = true
 
-[node name="WallBlock38" type="Node2D" parent="Walls" unique_id=1908302387 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock38" parent="Walls" unique_id=1908302387 instance=ExtResource("2_6nt2u")]
 position = Vector2(200.80806, -3930.7593)
 size = Vector2(298.38385, 24)
 ghost_proof = true
 
-[node name="WallBlock39" type="Node2D" parent="Walls" unique_id=1393355293 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock39" parent="Walls" unique_id=1393355293 instance=ExtResource("2_6nt2u")]
 position = Vector2(-279.12454, -4105.4336)
 size = Vector2(141.75092, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock40" type="Node2D" parent="Walls" unique_id=1799239758 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock40" parent="Walls" unique_id=1799239758 instance=ExtResource("2_6nt2u")]
 position = Vector2(125.57458, -4373.4956)
 size = Vector2(63.5977, 63.5977)
 ghost_proof = true
 
-[node name="WallBlock41" type="Node2D" parent="Walls" unique_id=586560429 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock41" parent="Walls" unique_id=586560429 instance=ExtResource("2_6nt2u")]
 position = Vector2(-125.45726, -4316.5723)
 size = Vector2(63.00323, 63.00323)
 ghost_proof = true
 
-[node name="WallBlock42" type="Node2D" parent="Walls" unique_id=1110604292 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock42" parent="Walls" unique_id=1110604292 instance=ExtResource("2_6nt2u")]
 position = Vector2(-315.7565, -4719.4346)
 size = Vector2(68.487015, 24)
 ghost_proof = true
 
-[node name="WallBlock43" type="Node2D" parent="Walls" unique_id=561916948 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock43" parent="Walls" unique_id=561916948 instance=ExtResource("2_6nt2u")]
 position = Vector2(-41.498215, -4719.4346)
 size = Vector2(63.024143, 24)
 ghost_proof = true
 
-[node name="WallBlock44" type="Node2D" parent="Walls" unique_id=1069383199 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock44" parent="Walls" unique_id=1069383199 instance=ExtResource("2_6nt2u")]
 position = Vector2(129.1605, -4719.4346)
 size = Vector2(102.522606, 24)
 ghost_proof = true
 
-[node name="WallBlock45" type="Node2D" parent="Walls" unique_id=1243591715 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock45" parent="Walls" unique_id=1243591715 instance=ExtResource("2_6nt2u")]
 position = Vector2(312.71985, -4719.4346)
 size = Vector2(74.560265, 24)
 ghost_proof = true
 
-[node name="WallBlock46" type="Node2D" parent="Walls" unique_id=1485544098 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock46" parent="Walls" unique_id=1485544098 instance=ExtResource("2_6nt2u")]
 position = Vector2(-96.74036, -4555.9287)
 size = Vector2(268.7943, 24)
 ghost_proof = true
 
-[node name="WallBlock47" type="Node2D" parent="Walls" unique_id=537565200 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock47" parent="Walls" unique_id=537565200 instance=ExtResource("2_6nt2u")]
 position = Vector2(-332.5331, -5120.85)
 size = Vector2(34.933765, 24)
 ghost_proof = true
 
-[node name="WallBlock48" type="Node2D" parent="Walls" unique_id=742839241 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock48" parent="Walls" unique_id=742839241 instance=ExtResource("2_6nt2u")]
 position = Vector2(-143.80344, -5120.85)
 size = Vector2(156.77711, 24)
 ghost_proof = true
 
-[node name="WallBlock49" type="Node2D" parent="Walls" unique_id=1592057467 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock49" parent="Walls" unique_id=1592057467 instance=ExtResource("2_6nt2u")]
 position = Vector2(63.648434, -5120.85)
 size = Vector2(94.00076, 24)
 ghost_proof = true
 
-[node name="WallBlock50" type="Node2D" parent="Walls" unique_id=507184339 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock50" parent="Walls" unique_id=507184339 instance=ExtResource("2_6nt2u")]
 position = Vector2(315.99905, -5120.85)
 size = Vector2(68.001854, 24)
 ghost_proof = true
 
-[node name="WallBlock51" type="Node2D" parent="Walls" unique_id=452369420 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock51" parent="Walls" unique_id=452369420 instance=ExtResource("2_6nt2u")]
 position = Vector2(-273.1212, -5456.84)
 size = Vector2(153.75763, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock52" type="Node2D" parent="Walls" unique_id=449126322 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock52" parent="Walls" unique_id=449126322 instance=ExtResource("2_6nt2u")]
 position = Vector2(-45.831337, -5456.84)
 size = Vector2(120.9182, 24)
 ghost_proof = true
 
-[node name="WallBlock53" type="Node2D" parent="Walls" unique_id=1088285587 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock53" parent="Walls" unique_id=1088285587 instance=ExtResource("2_6nt2u")]
 position = Vector2(286.43356, -5456.84)
 size = Vector2(127.13288, 24)
 ghost_proof = true
 
-[node name="WallBlock54" type="Node2D" parent="Walls" unique_id=1069666650 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock54" parent="Walls" unique_id=1069666650 instance=ExtResource("2_6nt2u")]
 position = Vector2(217.40092, -5623.1616)
 size = Vector2(265.19818, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock55" type="Node2D" parent="Walls" unique_id=846242572 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock55" parent="Walls" unique_id=846242572 instance=ExtResource("2_6nt2u")]
 position = Vector2(-236.30826, -5852.2207)
 size = Vector2(227.38347, 24)
 ghost_proof = true
 
-[node name="WallBlock56" type="Node2D" parent="Walls" unique_id=735541231 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock56" parent="Walls" unique_id=735541231 instance=ExtResource("2_6nt2u")]
 position = Vector2(162.82217, -5852.2207)
 size = Vector2(374.35565, 24)
 ghost_proof = true
 
-[node name="WallBlock57" type="Node2D" parent="Walls" unique_id=1838465118 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock57" parent="Walls" unique_id=1838465118 instance=ExtResource("2_6nt2u")]
 position = Vector2(240.5069, -5992.4927)
 size = Vector2(218.98619, 24)
 ghost_proof = true
 
-[node name="WallBlock58" type="Node2D" parent="Walls" unique_id=1822322106 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock58" parent="Walls" unique_id=1822322106 instance=ExtResource("2_6nt2u")]
 position = Vector2(-178.3061, -6228.6235)
 size = Vector2(343.3878, 24)
 ghost_proof = true
 
-[node name="WallBlock59" type="Node2D" parent="Walls" unique_id=943581150 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock59" parent="Walls" unique_id=943581150 instance=ExtResource("2_6nt2u")]
 position = Vector2(243.83398, -6228.6235)
 size = Vector2(212.33203, 24)
 ghost_proof = true
 
-[node name="WallBlock60" type="Node2D" parent="Walls" unique_id=201920598 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock60" parent="Walls" unique_id=201920598 instance=ExtResource("2_6nt2u")]
 position = Vector2(-263.2458, -6355.945)
 size = Vector2(173.50839, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock61" type="Node2D" parent="Walls" unique_id=146297242 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock61" parent="Walls" unique_id=146297242 instance=ExtResource("2_6nt2u")]
 position = Vector2(-249.66751, -6646.7)
 size = Vector2(200.665, 24)
 ghost_proof = true
 
-[node name="WallBlock62" type="Node2D" parent="Walls" unique_id=1983631978 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock62" parent="Walls" unique_id=1983631978 instance=ExtResource("2_6nt2u")]
 position = Vector2(160.42188, -6646.7)
 size = Vector2(210.81255, 24)
 ghost_proof = true
 
-[node name="WallBlock63" type="Node2D" parent="Walls" unique_id=1953736887 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock63" parent="Walls" unique_id=1953736887 instance=ExtResource("2_6nt2u")]
 position = Vector2(-273.39322, -7003.5664)
 size = Vector2(153.21358, 24)
 ghost_proof = true
 
-[node name="WallBlock64" type="Node2D" parent="Walls" unique_id=1301415072 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock64" parent="Walls" unique_id=1301415072 instance=ExtResource("2_6nt2u")]
 position = Vector2(37.925785, -7003.5664)
 size = Vector2(173.1187, 24)
 ghost_proof = true
 
-[node name="WallBlock65" type="Node2D" parent="Walls" unique_id=660604979 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock65" parent="Walls" unique_id=660604979 instance=ExtResource("2_6nt2u")]
 position = Vector2(273.54013, -7003.5664)
 size = Vector2(152.91972, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock66" type="Node2D" parent="Walls" unique_id=836104994 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock66" parent="Walls" unique_id=836104994 instance=ExtResource("2_6nt2u")]
 position = Vector2(-180.95343, -7406.6035)
 size = Vector2(338.09314, 24)
 ghost_proof = true
 
-[node name="WallBlock67" type="Node2D" parent="Walls" unique_id=1241172368 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock67" parent="Walls" unique_id=1241172368 instance=ExtResource("2_6nt2u")]
 position = Vector2(244.06564, -7406.6035)
 size = Vector2(211.86871, 24)
 ghost_proof = true
 
-[node name="WallBlock68" type="Node2D" parent="Walls" unique_id=748989227 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock68" parent="Walls" unique_id=748989227 instance=ExtResource("2_6nt2u")]
 position = Vector2(-229.84119, -7280.0454)
 size = Vector2(240.31763, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock69" type="Node2D" parent="Walls" unique_id=1991111920 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock69" parent="Walls" unique_id=1991111920 instance=ExtResource("2_6nt2u")]
 position = Vector2(220.92017, -7237.22)
 size = Vector2(258.15967, 24)
 ghost_proof = true
 
-[node name="WallBlock70" type="Node2D" parent="Walls" unique_id=1936243222 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock70" parent="Walls" unique_id=1936243222 instance=ExtResource("2_6nt2u")]
 position = Vector2(-304.65625, -7770.732)
 size = Vector2(90.68749, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock71" type="Node2D" parent="Walls" unique_id=593883402 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock71" parent="Walls" unique_id=593883402 instance=ExtResource("2_6nt2u")]
 position = Vector2(-66.424194, -7770.732)
 size = Vector2(219.30737, 24)
 ghost_proof = true
 
-[node name="WallBlock72" type="Node2D" parent="Walls" unique_id=479215877 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock72" parent="Walls" unique_id=479215877 instance=ExtResource("2_6nt2u")]
 position = Vector2(203.29683, -7770.732)
 size = Vector2(94.45704, 24)
 kicker = true
 ghost_proof = true
 
-[node name="WallBlock73" type="Node2D" parent="Walls" unique_id=1052664691 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock73" parent="Walls" unique_id=1052664691 instance=ExtResource("2_6nt2u")]
 position = Vector2(-206.40578, -7613.5615)
 size = Vector2(287.18845, 24)
 ghost_proof = true
 
-[node name="WallBlock74" type="Node2D" parent="Walls" unique_id=630012254 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock74" parent="Walls" unique_id=630012254 instance=ExtResource("2_6nt2u")]
 position = Vector2(-227.37262, -7968.8413)
 size = Vector2(245.25478, 24)
 ghost_proof = true
 
-[node name="WallBlock75" type="Node2D" parent="Walls" unique_id=380151260 instance=ExtResource("2_6nt2u")]
+[node name="WallBlock75" parent="Walls" unique_id=380151260 instance=ExtResource("2_6nt2u")]
 position = Vector2(214.23918, -7968.8413)
 size = Vector2(271.5216, 24)
 ghost_proof = true
 
 [node name="Obstacles" type="Node2D" parent="." unique_id=797393782]
 
-[node name="Bumper1" type="Node2D" parent="Obstacles" unique_id=1095910384 instance=ExtResource("4_ha2s8")]
+[node name="Bumper1" parent="Obstacles" unique_id=1095910384 instance=ExtResource("4_ha2s8")]
 position = Vector2(256.48877, 375.17938)
 radius = 31.073769728252504
 
-[node name="Bumper2" type="Node2D" parent="Obstacles" unique_id=78936420 instance=ExtResource("4_ha2s8")]
+[node name="Bumper2" parent="Obstacles" unique_id=78936420 instance=ExtResource("4_ha2s8")]
 position = Vector2(272.4207, -236.59554)
 radius = 22.591811848419205
 
-[node name="Bumper3" type="Node2D" parent="Obstacles" unique_id=311710954 instance=ExtResource("4_ha2s8")]
+[node name="Bumper3" parent="Obstacles" unique_id=311710954 instance=ExtResource("4_ha2s8")]
 position = Vector2(-274.38467, -766.2131)
 radius = 25.73582959932434
 
-[node name="Bumper4" type="Node2D" parent="Obstacles" unique_id=1464131568 instance=ExtResource("4_ha2s8")]
+[node name="Bumper4" parent="Obstacles" unique_id=1464131568 instance=ExtResource("4_ha2s8")]
 position = Vector2(-249.10445, -2675.204)
 radius = 22.18427862372023
 
-[node name="Bumper5" type="Node2D" parent="Obstacles" unique_id=2074209477 instance=ExtResource("4_ha2s8")]
+[node name="Bumper5" parent="Obstacles" unique_id=2074209477 instance=ExtResource("4_ha2s8")]
 position = Vector2(247.01999, -4089.2769)
 radius = 28.134813399548584
 
-[node name="Bumper6" type="Node2D" parent="Obstacles" unique_id=1213948652 instance=ExtResource("4_ha2s8")]
+[node name="Bumper6" parent="Obstacles" unique_id=1213948652 instance=ExtResource("4_ha2s8")]
 position = Vector2(62.137653, -4185.5293)
 radius = 30.488462270688515
 
-[node name="Bumper7" type="Node2D" parent="Obstacles" unique_id=394247353 instance=ExtResource("4_ha2s8")]
+[node name="Bumper7" parent="Obstacles" unique_id=394247353 instance=ExtResource("4_ha2s8")]
 position = Vector2(-244.75705, -5991.493)
 radius = 22.769993161375783
 
-[node name="Bumper8" type="Node2D" parent="Obstacles" unique_id=1802191184 instance=ExtResource("4_ha2s8")]
+[node name="Bumper8" parent="Obstacles" unique_id=1802191184 instance=ExtResource("4_ha2s8")]
 position = Vector2(105.16131, -6463.431)
 radius = 31.824268167300144
 
