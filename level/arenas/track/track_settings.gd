@@ -41,4 +41,3 @@ extends Resource
 
 @export_group("Ships")
 @export var ship_speed := 0.6 # how fast they cruise up and down
-

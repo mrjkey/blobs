@@ -68,6 +68,12 @@ extends Resource
 @export var spit_cooldown := 0.6
 @export var spit_energy_cooldown := 0.25 # replaces spit_cooldown when it costs energy
 @export var spit_stun := 0.25
+@export var slime_time := 1.5      # a spit hit leaves the target slimed this long (another hit starts it again)
+@export var slime_drain := 2.0     # energy segments a hit takes...
+@export var slime_drain_floor := 1.0 # ...but never below this, so there's always a shield left
+@export_range(0.0, 1.0) var slime_control := 0.3 # steering multiplier while slimed: little grip
+@export_range(0.0, 1.0) var slime_drag := 0.4    # normal drag multiplier while slimed: it glides on
+@export var slime_knockback := 1.2 # knockback taken while slimed, times this
 
 @export_group("Shield")
 @export var shield_time := 0.4     # how long it stays up: pushes and slashes are blocked, spit flies back
@@ -86,7 +92,7 @@ extends Resource
 @export var dash_cost := 1.0
 @export var push_cost := 2.0
 @export var slash_cost := 0.5
-@export var spit_cost := 1.0
+@export var spit_cost := 0.5
 @export var shield_cost := 1.0
 
 @export_group("Jelly")

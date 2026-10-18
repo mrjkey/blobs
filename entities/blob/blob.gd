@@ -6,8 +6,8 @@ extends Node2D
 ## `request_slash()`, `request_spit()`, `request_shield()`. Which moves it has
 ## comes from `rules`. BlobPhysics moves and collides it, and the Body child
 ## draws it. A slash is a Slash scene spawned on the blob; spit is a Shot,
-## spawned next to it. The shield blocks pushes and slashes and sends shots
-## back. With `loses_mass` (set by modes whose ModeInfo asks for it) it
+## spawned next to it; a spit hit slimes the blob (slime()). The shield blocks
+## pushes and slashes and sends shots back. With `loses_mass` (set by modes whose ModeInfo asks for it) it
 ## shrinks over time and pays mass for spit and laser hits, as `rules` say;
 ## below `stats.low_mass` it flashes a warning, below `stats.min_mass` it pops.
 ## Works in any scene that has a BlobPhysics node.
@@ -50,7 +50,7 @@ var dash_cooldown := 0.0
 var dash_buffer := 0.0 # > 0 means "dash as soon as you can"
 var energy := -1.0 # in segments, up to stats.energy_segments (filled in _ready)
 var energy_delay := 0.0 # refilling waits until this runs out
-var energy_denied := 0.0 # 1 -> 0 after trying a move without the energy (meters flash)
+var energy_denied := 0.0 # 1 -> 0 after trying a move without the energy, or losing some to slime (meters flash)
 var slash_cooldown := 0.0
 var slash_buffer := 0.0
 var spit_cooldown := 0.0
@@ -59,6 +59,8 @@ var shield_t := 0.0 # > 0 while the shield is up
 var shield_cooldown := 0.0
 var shield_buffer := 0.0
 var shield_flash := 0.0 # 1 -> 0 after the shield stops something (it lights up)
+var slime_t := 0.0 # > 0 while slimed by a spit: slippery, and knocked back a little harder
+var slime_color := Color.WHITE # the spit's colour, for the goo
 
 ## Worked out from `stats` every time, so editing the .tres resizes blobs live.
 var radius: float:
@@ -238,6 +240,8 @@ func step_motion(h: float, in_mud: bool) -> void:
 	var control := 1.0
 	if stun > 0.0:
 		control = stats.stun_control
+	if slime_t > 0.0:
+		control *= stats.slime_control
 	if in_mud:
 		control *= stats.outside_control
 	var top := max_speed()
@@ -254,6 +258,8 @@ func step_motion(h: float, in_mud: bool) -> void:
 		acc *= stats.turn_accel_mult  # snappy direction changes
 	vel += (target - vel).limit_length(acc * control * h)
 	var drag := stats.knockback_drag if launched else stats.drag
+	if slime_t > 0.0 and not launched:
+		drag *= stats.slime_drag # slippery: it glides on
 	if in_mud:
 		drag += stats.outside_drag
 	vel *= exp(-drag * h)
@@ -277,6 +283,7 @@ func _physics_process(delta: float) -> void:
 	shield_cooldown = maxf(shield_cooldown - delta, 0.0)
 	shield_buffer = maxf(shield_buffer - delta, 0.0)
 	shield_flash = maxf(shield_flash - delta * 6.0, 0.0)
+	slime_t = maxf(slime_t - delta, 0.0)
 	if energy_delay <= 0.0:
 		energy = minf(energy + stats.energy_regen * delta, stats.energy_segments)
 	if active:
@@ -478,6 +485,8 @@ func try_reflect(shot: Shot) -> bool:
 ## Knocked along `n` at `speed` px/s (a push, a laser...). With `clean_hit`,
 ## any motion back toward the hit is cancelled first so the shove always lands.
 func take_hit(n: Vector2, speed: float, stun_time: float, clean_hit := true) -> void:
+	if slime_t > 0.0:
+		speed *= stats.slime_knockback
 	if clean_hit:
 		var incoming := vel.dot(n)
 		if incoming < 0.0:
@@ -486,6 +495,17 @@ func take_hit(n: Vector2, speed: float, stun_time: float, clean_hit := true) -> 
 	stun = maxf(stun, stun_time)
 	body.flash = 1.0
 	body.bump(n, speed)
+
+
+## Hit by a spit of colour `col`: slippery for `stats.slime_time` (another hit
+## starts it again), and it loses energy, but never below
+## `stats.slime_drain_floor`, so it can still shield. The meters flash.
+func slime(col: Color) -> void:
+	slime_t = stats.slime_time
+	slime_color = col
+	if energy > stats.slime_drain_floor:
+		energy = maxf(energy - stats.slime_drain, stats.slime_drain_floor)
+		energy_denied = 1.0
 
 
 ## Squash along n. `impact_speed` is in px/s.

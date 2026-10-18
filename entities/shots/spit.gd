@@ -1,7 +1,8 @@
 class_name Spit
 extends Shot
-## A glob of blob, flying straight. Knocks back the first blob it touches and
-## splats; fizzles out after `stats.spit_range`. Reflected by a shield, it
+## A glob of blob, flying straight. Knocks back the first blob it touches,
+## slimes it (Blob.slime(): slippery, and drained of some energy) and splats;
+## fizzles out after `stats.spit_range`. Reflected by a shield, it
 ## turns round at the shooter, takes the shield blob's colour and gets a
 ## white ring for each reflection. Draws itself stretched along its flight, with a short trail.
 
@@ -42,6 +43,7 @@ func _hit_blob(b: Blob) -> void:
 	var js := Juice.settings
 	var dv := stats.spit_impulse * power / pow(b.mass, b.stats.push_resist_exp)
 	b.take_hit(dir, dv, b.stats.spit_stun)
+	b.slime(color)
 	Juice.burst(global_position, color.lightened(0.4), 12, dv * 0.6)
 	Juice.impact_at(global_position, dv)
 	Juice.hitstop(js.hitstop_push * 0.6)

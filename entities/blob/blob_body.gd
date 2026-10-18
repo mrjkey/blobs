@@ -121,6 +121,8 @@ func _draw() -> void:
 		st.outline(self, pts, st.color(blob.color.lerp(Color.WHITE, 0.6), 2.2), 4.0)
 	if st.highlights:
 		draw_circle(xf(Vector2(-0.38, -0.4)) * r, r * 0.22, Color(1, 1, 1, 0.3))
+	if blob.slime_t > 0.0 and blob.alive:
+		_draw_slime(st, pts, r)
 	_draw_eyes(st, r)
 	_draw_status(st, r)
 	if blob.is_shielding():
@@ -150,6 +152,26 @@ func _draw_danger(st: ThemeStyle, r: float, danger: float) -> void:
 	draw_colored_polygon(tri, st.color(DANGER_COLOR, 2.0 + pulse, 0.75 + 0.25 * pulse))
 	draw_line(c + Vector2(0.0, -s * 0.45), c + Vector2(0.0, s * 0.15), st.ink, 3.0, true)
 	draw_circle(c + Vector2(0.0, s * 0.42), 1.8, st.ink)
+
+
+## Slimed by a spit: a glossy coat in the spit's colour, splotches on the
+## body and drips running off the bottom, fading out as it wears off.
+func _draw_slime(st: ThemeStyle, pts: PackedVector2Array, r: float) -> void:
+	var fade := clampf(blob.slime_t / 0.3, 0.0, 1.0)
+	var col := blob.slime_color.lerp(Color.WHITE, 0.15)
+	var age := blob.stats.slime_time - blob.slime_t
+	st.outline(self, pts, st.color(col, 1.6, 0.7 * fade), 3.0)
+	for a: float in [-2.5, -0.7, 0.8, 2.4]:
+		var wob := 1.0 + 0.12 * sin(age * 9.0 + a * 3.0)
+		st.dot(self, xf(Vector2.from_angle(a) * 0.62) * r, r * 0.2 * wob, col, 1.4, 0.55 * fade)
+	# Each drip grows down from the bottom edge, lets go, and starts again.
+	for i in 3:
+		var a := PI * 0.5 + (i - 1) * 0.55
+		var from := xf(Vector2.from_angle(a)) * r
+		var cycle := fmod(age * 1.4 + i * 0.37, 1.0)
+		var to := from + Vector2.DOWN * r * 0.55 * cycle
+		st.line(self, from, to, col, 3.5 * (1.0 - 0.5 * cycle), 1.4, 0.8 * fade)
+		st.dot(self, to, 2.5 + 2.0 * cycle, col, 1.6, 0.9 * fade)
 
 
 ## The shield: a hexagonal bubble that pops out with an overshoot, glows

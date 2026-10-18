@@ -32,7 +32,7 @@ const OPTIONS := [
 		["blobs", "BLOBS", "A ghost dash passes through blobs, pushes and lasers, but not walls or bumpers."],
 	]},
 	{key = "energy", label = "ENERGY", default_id = "all", choices = [
-		["all", "ALL MOVES", "Every move costs energy: two segments for a push, one for the dash, spit and shield, half one for a slash. Only short cooldowns."],
+		["all", "ALL MOVES", "Every move costs energy: two segments for a push, one for the dash and shield, half one for a slash or spit. Only short cooldowns."],
 		["dash", "DASH ONLY", "The dash costs a segment, the other moves keep their normal cooldowns."],
 		["off", "OFF", "No bar: every move has its own cooldown."],
 	]},
@@ -41,7 +41,7 @@ const OPTIONS := [
 		["off", "OFF", "No slash."],
 	]},
 	{key = "spit", label = "SPIT", default_id = "on", choices = [
-		["on", "ON", "A glob fired the way you face. Flies far, knocks back the first blob it hits."],
+		["on", "ON", "A glob fired the way you face. Flies far and slimes the first blob it hits: knocked back, slippery for a moment, and drained of energy (never the last segment)."],
 		["off", "OFF", "No spit."],
 	]},
 	{key = "shield", label = "SHIELD", default_id = "on", choices = [

@@ -124,6 +124,10 @@ whether moves cost energy (`OFF`: cooldowns, `DASH`, `ALL`), plus on/off
 for the slash, the spit and the shield. The shield blocks pushes, slashes
 and dash stuns (`Blob.try_block()`) and sends shots back
 (`Blob.try_reflect()`); anything new that hits blobs should ask one of the two.
+A spit hit slimes the blob (`Blob.slime()`): for `stats.slime_time` it has
+little grip, takes a bit more knockback and loses energy, but never below
+`stats.slime_drain_floor`, so it can still shield. The slime numbers are in
+`BlobStats`, with the spit's.
 
 ### Mass
 
