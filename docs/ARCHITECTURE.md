@@ -14,13 +14,13 @@ in `themes/` (see Themes below).
 | `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings and gameplay settings, the chosen theme), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres`, `Sfx` (synthesised sound kit) |
 | `core/` | Machinery every mode composes: `settings/` (`GameSettings`: the player's gameplay options), `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock) |
 | `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `ball/` (`Ball`, `BallBody`: the football, a Blob with no moves), `slash/` (`Slash`: one blade swing, spawned on the blob), `shots/` (`Shot`, `Spit`: things blobs fire that fly on their own), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
-| `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`, `pitch/`: the floors and walls a mode plays on, with their own rules like ring-out, the kill lasers or goals), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`) |
+| `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`, `pitch/`: the floors and walls a mode plays on, with their own rules like ring-out, the kill lasers or goals), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`), `maps/` (hand-made levels: `Map`, `SpawnPoint`, `FoodSpot`, `FinishLine`, and one folder per map) |
 | `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style and backdrop |
 | `modes/` | One folder per game mode (`treadmill/`, `ring/`, `football/`): the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
 | `ui/` | `menus/` (main menu, `lobby/` (game and player select), settings; `options/`: `OptionList`, `OptionRow`, shared by the settings screen and the lab), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`), `themes/menu_theme.tres` |
 | `sandbox/` | Test bench scene for trying components, its props, and `lab/` (the Tab menu) |
 | `docs/` | This file |
-| `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md) |
+| `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md); `tools/bake_track.gd` bakes a generated treadmill track into a map |
 
 Where a new thing goes: something that acts on its own (an enemy, a new kind of
 blob) under `entities/`; something placed in a level under `level/`: a solid
@@ -57,7 +57,8 @@ finds what it needs:
   - `lasers`: every `LaserEmitter`; the `LaserDirector` schedules them.
   - `shots`: every `Shot` in flight; bots watch them to raise their shields.
   - `grid`: the neon backdrop's `NeonGrid`; call `impulse(world_pos, strength, radius)` on the group to ripple it, `follow_y(y)` to scroll it.
-  - `kill_lasers`: at most one `KillLasers` (the treadmill's belt: two lines `belt_height` apart, centred on the node); `kill_top()` / `kill_bottom()` for treadmill bots and the generator.
+  - `kill_lasers`: at most one `KillLasers` (the treadmill's belt: two lines `belt_height()` apart, centred on the node); `kill_top()` / `kill_bottom()` for treadmill bots and the generator.
+  - `finish`: a map's `FinishLine`; treadmill bots race for it once it's inside the belt.
 - **Signals** for reporting upward: `Blob.pushed`, `Blob.dashed`, `Blob.slashed`, `Blob.spat`,
   `Blob.blocked`, `Blob.reflected`, `Blob.ate_food`, `Blob.died`,
   `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Pitch.goal_scored`, `Juice.impact`. The
@@ -274,6 +275,14 @@ option) in its `values`.
 **New pickup or power-up:** like `Food` in `level/pickups/`: join a group bots
 can look for, check overlap with living blobs in `_physics_process`, apply the
 effect to the blob, `queue_free()`.
+
+**New map:** a scene under `level/maps/<name>/` with a `Map` root (see
+`docs/STATIC_LEVELS.md`). To start from a generated track, bake one:
+`godot --headless --path <project> -s tools/bake_track.gd -- name=<name> seed=<n> length=<px>`.
+Add a choice for it to the `track_map` option in `GameSettings.OPTIONS` and
+it shows up in the treadmill's lobby (TRACK). New pieces for maps are `@tool`
+scripts whose `_draw()` returns early in the game when only the editor needs
+to see them (`SpawnPoint`), or draw in both (`FinishLine`, `WallBlock`).
 
 **New enemy:** under `entities/enemies/`. Beat-driven ones can extend
 `LaserEmitter` (see `LaserTurret`, `LaserShip`: they only give their shape).

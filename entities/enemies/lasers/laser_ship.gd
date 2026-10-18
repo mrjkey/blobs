@@ -1,9 +1,10 @@
 class_name LaserShip
 extends LaserEmitter
 ## A laser ship beside the treadmill: cruises up and down its side of the
-## screen, stops while it charges, never aims along the wall, and fires across
-## to the far side wall. `side` is -1 (left) or 1 (right); `slot` spreads the
-## ships on one side apart.
+## screen, stops while it charges, and fires straight across to the far side
+## wall. It never tilts to track anyone: it's a line on the beat to dodge.
+## `side` is -1 (left) or 1 (right); `slot` (0..2) spreads the ships on one
+## side apart.
 
 @export_range(-1, 1, 2) var side := -1
 @export var slot := 0
@@ -16,7 +17,7 @@ var _clock := 0.0
 
 func _ready() -> void:
 	super._ready()
-	_phase = randf() * TAU + slot * PI
+	_phase = slot * TAU / 3.0 + (0.0 if side < 0 else PI / 3.0) + randf_range(-0.4, 0.4)
 	_rel_y = sin(_phase) * _cruise()
 	aim = Vector2(-side, 0.0)
 	global_position = Vector2(_x(), _cam_y() + _rel_y)
@@ -32,13 +33,11 @@ func _idle(delta: float) -> void:
 	var want := sin(_clock * track.ship_speed + _phase) * _cruise()
 	_rel_y = lerpf(_rel_y, want, 1.0 - exp(-2.0 * delta))
 	global_position = Vector2(_x(), _cam_y() + _rel_y)
-	aim = aim.slerp(Vector2(-side, 0.0), 1.0 - exp(-3.0 * delta)).normalized()
+	aim = Vector2(-side, 0.0)
 
 
-func _limit_aim(want: Vector2) -> Vector2:
-	if want.x * -side < 0.3:
-		return Vector2(-side * 0.3, signf(want.y) * 0.95).normalized() # never aim along the wall
-	return want
+func _limit_aim(_want: Vector2) -> Vector2:
+	return Vector2(-side, 0.0) # straight across, always
 
 
 ## _idle() isn't called while charging and firing, so the ship holds still in

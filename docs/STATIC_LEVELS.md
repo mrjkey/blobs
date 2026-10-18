@@ -3,6 +3,22 @@
 How we get hand-made maps you can see and edit in the Godot editor, next to
 (not instead of) the generated treadmill. Written 2026-10-18.
 
+## Status (2026-10-18)
+
+Built so far (most of phase 1 and part of phase 2):
+- `Map`, `SpawnPoint`, `FoodSpot` and `FinishLine` in `level/maps/`. In the
+  editor, `Map` draws the track bed and a ruler in metres. `FoodSpot` draws
+  its pellet (`Food` itself isn't `@tool`).
+- `tools/bake_track.gd` bakes a generated track into a map. One baked map is
+  checked in: `level/maps/course_1/course_1.tscn` (seed 1, 8000 px, 800 m).
+- The treadmill plays a map instead of the generated track when you pick it
+  in the lobby (TRACK: COURSE 1) or set `map_path` on the treadmill scene.
+  Blobs start on the spawn points, the belt stops just past the finish line,
+  and the first blob across it wins.
+
+Not built yet: `FoodZone`, practice mode (no scroll, dev keys), the preview
+renderer, and editor drawing for the kill lasers.
+
 ## The goal
 
 - Open a map scene in the editor and see it the way it looks in the game:

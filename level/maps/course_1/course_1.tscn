@@ -1,0 +1,753 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://level/maps/map.gd" id="1_lgbmq"]
+[ext_resource type="PackedScene" path="res://level/obstacles/wall_block.tscn" id="2_6nt2u"]
+[ext_resource type="PackedScene" path="res://level/obstacles/bumper.tscn" id="4_ha2s8"]
+[ext_resource type="Script" path="res://level/maps/food_spot.gd" id="6_dc6o7"]
+[ext_resource type="Script" path="res://level/maps/spawn_point.gd" id="7_rgkkd"]
+[ext_resource type="Script" path="res://level/maps/finish_line.gd" id="8_n44ni"]
+
+[node name="Course1" type="Node2D" unique_id=1768404814]
+script = ExtResource("1_lgbmq")
+
+[node name="Walls" type="Node2D" parent="." unique_id=2003739355]
+
+[node name="WallBlock1" type="Node2D" parent="Walls" unique_id=134291826 instance=ExtResource("2_6nt2u")]
+position = Vector2(-231.48804, 597.0465)
+size = Vector2(91.92548, 24)
+ghost_proof = true
+
+[node name="WallBlock2" type="Node2D" parent="Walls" unique_id=241186264 instance=ExtResource("2_6nt2u")]
+position = Vector2(-38.46113, 597.0465)
+size = Vector2(146.50255, 24)
+ghost_proof = true
+
+[node name="WallBlock3" type="Node2D" parent="Walls" unique_id=2038426434 instance=ExtResource("2_6nt2u")]
+position = Vector2(270.5327, 597.0465)
+size = Vector2(158.9346, 24)
+ghost_proof = true
+
+[node name="WallBlock4" type="Node2D" parent="Walls" unique_id=124228139 instance=ExtResource("2_6nt2u")]
+position = Vector2(4.6813965, 370.1979)
+size = Vector2(185.76917, 24)
+ghost_proof = true
+
+[node name="WallBlock5" type="Node2D" parent="Walls" unique_id=1432802976 instance=ExtResource("2_6nt2u")]
+position = Vector2(57.14199, -183.25223)
+size = Vector2(169.27249, 24)
+ghost_proof = true
+
+[node name="WallBlock6" type="Node2D" parent="Walls" unique_id=1782455695 instance=ExtResource("2_6nt2u")]
+position = Vector2(-276.29263, -257.85492)
+size = Vector2(147.41473, 24)
+ghost_proof = true
+
+[node name="WallBlock7" type="Node2D" parent="Walls" unique_id=2066864433 instance=ExtResource("2_6nt2u")]
+position = Vector2(-199.37766, -519.34924)
+size = Vector2(143.79457, 24)
+ghost_proof = true
+
+[node name="WallBlock8" type="Node2D" parent="Walls" unique_id=44554958 instance=ExtResource("2_6nt2u")]
+position = Vector2(129.8467, -519.34924)
+size = Vector2(106.0572, 24)
+ghost_proof = true
+
+[node name="WallBlock9" type="Node2D" parent="Walls" unique_id=139042484 instance=ExtResource("2_6nt2u")]
+position = Vector2(313.19244, -519.34924)
+size = Vector2(73.61511, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock10" type="Node2D" parent="Walls" unique_id=1300658871 instance=ExtResource("2_6nt2u")]
+position = Vector2(-301.7578, -938.5779)
+size = Vector2(96.48436, 24)
+ghost_proof = true
+
+[node name="WallBlock11" type="Node2D" parent="Walls" unique_id=1497742686 instance=ExtResource("2_6nt2u")]
+position = Vector2(-124.19533, -938.5779)
+size = Vector2(100.83286, 24)
+ghost_proof = true
+
+[node name="WallBlock12" type="Node2D" parent="Walls" unique_id=1099976216 instance=ExtResource("2_6nt2u")]
+position = Vector2(137.76538, -938.5779)
+size = Vector2(76.19304, 24)
+ghost_proof = true
+
+[node name="WallBlock13" type="Node2D" parent="Walls" unique_id=380158125 instance=ExtResource("2_6nt2u")]
+position = Vector2(304.2361, -938.5779)
+size = Vector2(91.52773, 24)
+ghost_proof = true
+
+[node name="WallBlock14" type="Node2D" parent="Walls" unique_id=1844340868 instance=ExtResource("2_6nt2u")]
+position = Vector2(264.04074, -780.54987)
+size = Vector2(171.9185, 24)
+ghost_proof = true
+
+[node name="WallBlock15" type="Node2D" parent="Walls" unique_id=561982747 instance=ExtResource("2_6nt2u")]
+position = Vector2(-153.73904, -1317.4658)
+size = Vector2(392.5219, 24)
+ghost_proof = true
+
+[node name="WallBlock16" type="Node2D" parent="Walls" unique_id=1657646262 instance=ExtResource("2_6nt2u")]
+position = Vector2(298.66644, -1317.4658)
+size = Vector2(102.66712, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock17" type="Node2D" parent="Walls" unique_id=1005484521 instance=ExtResource("2_6nt2u")]
+position = Vector2(-273.95856, -1665.7096)
+size = Vector2(152.08287, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock18" type="Node2D" parent="Walls" unique_id=414011732 instance=ExtResource("2_6nt2u")]
+position = Vector2(92.1781, -1665.7096)
+size = Vector2(265.79922, 24)
+ghost_proof = true
+
+[node name="WallBlock19" type="Node2D" parent="Walls" unique_id=344859891 instance=ExtResource("2_6nt2u")]
+position = Vector2(318.84555, -1665.7096)
+size = Vector2(62.308907, 24)
+ghost_proof = true
+
+[node name="WallBlock20" type="Node2D" parent="Walls" unique_id=1924533848 instance=ExtResource("2_6nt2u")]
+position = Vector2(-297.02185, -2077.4546)
+size = Vector2(105.95633, 24)
+ghost_proof = true
+
+[node name="WallBlock21" type="Node2D" parent="Walls" unique_id=37874532 instance=ExtResource("2_6nt2u")]
+position = Vector2(-78.1285, -2077.4546)
+size = Vector2(134.84602, 24)
+ghost_proof = true
+
+[node name="WallBlock22" type="Node2D" parent="Walls" unique_id=1891380718 instance=ExtResource("2_6nt2u")]
+position = Vector2(125.234665, -2077.4546)
+size = Vector2(106.82183, 24)
+ghost_proof = true
+
+[node name="WallBlock23" type="Node2D" parent="Walls" unique_id=768542808 instance=ExtResource("2_6nt2u")]
+position = Vector2(318.4585, -2077.4546)
+size = Vector2(63.08304, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock24" type="Node2D" parent="Walls" unique_id=874614053 instance=ExtResource("2_6nt2u")]
+position = Vector2(35.380104, -1905.5828)
+size = Vector2(191.2088, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock25" type="Node2D" parent="Walls" unique_id=1885207525 instance=ExtResource("2_6nt2u")]
+position = Vector2(180.41225, -2343.158)
+size = Vector2(56.423065, 56.423065)
+ghost_proof = true
+
+[node name="WallBlock26" type="Node2D" parent="Walls" unique_id=284252039 instance=ExtResource("2_6nt2u")]
+position = Vector2(33.589268, -2572.0515)
+size = Vector2(137.22697, 24)
+ghost_proof = true
+
+[node name="WallBlock27" type="Node2D" parent="Walls" unique_id=348132672 instance=ExtResource("2_6nt2u")]
+position = Vector2(-223.93205, -2811.1165)
+size = Vector2(252.1359, 24)
+ghost_proof = true
+
+[node name="WallBlock28" type="Node2D" parent="Walls" unique_id=1138701431 instance=ExtResource("2_6nt2u")]
+position = Vector2(226.59013, -2811.1165)
+size = Vector2(246.81972, 24)
+ghost_proof = true
+
+[node name="WallBlock29" type="Node2D" parent="Walls" unique_id=1290080944 instance=ExtResource("2_6nt2u")]
+position = Vector2(283.75745, -2933.6653)
+size = Vector2(132.48508, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock30" type="Node2D" parent="Walls" unique_id=1740145452 instance=ExtResource("2_6nt2u")]
+position = Vector2(-142.63101, -3183.4568)
+size = Vector2(414.73798, 24)
+ghost_proof = true
+
+[node name="WallBlock31" type="Node2D" parent="Walls" unique_id=1772997331 instance=ExtResource("2_6nt2u")]
+position = Vector2(271.98312, -3183.4568)
+size = Vector2(156.03375, 24)
+ghost_proof = true
+
+[node name="WallBlock32" type="Node2D" parent="Walls" unique_id=638725498 instance=ExtResource("2_6nt2u")]
+position = Vector2(-126.54961, -3339.1409)
+size = Vector2(138.26819, 24)
+ghost_proof = true
+
+[node name="WallBlock33" type="Node2D" parent="Walls" unique_id=594923808 instance=ExtResource("2_6nt2u")]
+position = Vector2(-282.78525, -3535.8179)
+size = Vector2(134.4295, 24)
+ghost_proof = true
+
+[node name="WallBlock34" type="Node2D" parent="Walls" unique_id=347227273 instance=ExtResource("2_6nt2u")]
+position = Vector2(86.68017, -3535.8179)
+size = Vector2(275.62936, 24)
+ghost_proof = true
+
+[node name="WallBlock35" type="Node2D" parent="Walls" unique_id=1131435892 instance=ExtResource("2_6nt2u")]
+position = Vector2(328.36465, -3535.8179)
+size = Vector2(43.27065, 24)
+ghost_proof = true
+
+[node name="WallBlock36" type="Node2D" parent="Walls" unique_id=175917806 instance=ExtResource("2_6nt2u")]
+position = Vector2(264.85037, -3715.3982)
+size = Vector2(170.29927, 24)
+ghost_proof = true
+
+[node name="WallBlock37" type="Node2D" parent="Walls" unique_id=1234705315 instance=ExtResource("2_6nt2u")]
+position = Vector2(-199.34785, -3930.7593)
+size = Vector2(301.3043, 24)
+ghost_proof = true
+
+[node name="WallBlock38" type="Node2D" parent="Walls" unique_id=1908302387 instance=ExtResource("2_6nt2u")]
+position = Vector2(200.80806, -3930.7593)
+size = Vector2(298.38385, 24)
+ghost_proof = true
+
+[node name="WallBlock39" type="Node2D" parent="Walls" unique_id=1393355293 instance=ExtResource("2_6nt2u")]
+position = Vector2(-279.12454, -4105.4336)
+size = Vector2(141.75092, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock40" type="Node2D" parent="Walls" unique_id=1799239758 instance=ExtResource("2_6nt2u")]
+position = Vector2(125.57458, -4373.4956)
+size = Vector2(63.5977, 63.5977)
+ghost_proof = true
+
+[node name="WallBlock41" type="Node2D" parent="Walls" unique_id=586560429 instance=ExtResource("2_6nt2u")]
+position = Vector2(-125.45726, -4316.5723)
+size = Vector2(63.00323, 63.00323)
+ghost_proof = true
+
+[node name="WallBlock42" type="Node2D" parent="Walls" unique_id=1110604292 instance=ExtResource("2_6nt2u")]
+position = Vector2(-315.7565, -4719.4346)
+size = Vector2(68.487015, 24)
+ghost_proof = true
+
+[node name="WallBlock43" type="Node2D" parent="Walls" unique_id=561916948 instance=ExtResource("2_6nt2u")]
+position = Vector2(-41.498215, -4719.4346)
+size = Vector2(63.024143, 24)
+ghost_proof = true
+
+[node name="WallBlock44" type="Node2D" parent="Walls" unique_id=1069383199 instance=ExtResource("2_6nt2u")]
+position = Vector2(129.1605, -4719.4346)
+size = Vector2(102.522606, 24)
+ghost_proof = true
+
+[node name="WallBlock45" type="Node2D" parent="Walls" unique_id=1243591715 instance=ExtResource("2_6nt2u")]
+position = Vector2(312.71985, -4719.4346)
+size = Vector2(74.560265, 24)
+ghost_proof = true
+
+[node name="WallBlock46" type="Node2D" parent="Walls" unique_id=1485544098 instance=ExtResource("2_6nt2u")]
+position = Vector2(-96.74036, -4555.9287)
+size = Vector2(268.7943, 24)
+ghost_proof = true
+
+[node name="WallBlock47" type="Node2D" parent="Walls" unique_id=537565200 instance=ExtResource("2_6nt2u")]
+position = Vector2(-332.5331, -5120.85)
+size = Vector2(34.933765, 24)
+ghost_proof = true
+
+[node name="WallBlock48" type="Node2D" parent="Walls" unique_id=742839241 instance=ExtResource("2_6nt2u")]
+position = Vector2(-143.80344, -5120.85)
+size = Vector2(156.77711, 24)
+ghost_proof = true
+
+[node name="WallBlock49" type="Node2D" parent="Walls" unique_id=1592057467 instance=ExtResource("2_6nt2u")]
+position = Vector2(63.648434, -5120.85)
+size = Vector2(94.00076, 24)
+ghost_proof = true
+
+[node name="WallBlock50" type="Node2D" parent="Walls" unique_id=507184339 instance=ExtResource("2_6nt2u")]
+position = Vector2(315.99905, -5120.85)
+size = Vector2(68.001854, 24)
+ghost_proof = true
+
+[node name="WallBlock51" type="Node2D" parent="Walls" unique_id=452369420 instance=ExtResource("2_6nt2u")]
+position = Vector2(-273.1212, -5456.84)
+size = Vector2(153.75763, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock52" type="Node2D" parent="Walls" unique_id=449126322 instance=ExtResource("2_6nt2u")]
+position = Vector2(-45.831337, -5456.84)
+size = Vector2(120.9182, 24)
+ghost_proof = true
+
+[node name="WallBlock53" type="Node2D" parent="Walls" unique_id=1088285587 instance=ExtResource("2_6nt2u")]
+position = Vector2(286.43356, -5456.84)
+size = Vector2(127.13288, 24)
+ghost_proof = true
+
+[node name="WallBlock54" type="Node2D" parent="Walls" unique_id=1069666650 instance=ExtResource("2_6nt2u")]
+position = Vector2(217.40092, -5623.1616)
+size = Vector2(265.19818, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock55" type="Node2D" parent="Walls" unique_id=846242572 instance=ExtResource("2_6nt2u")]
+position = Vector2(-236.30826, -5852.2207)
+size = Vector2(227.38347, 24)
+ghost_proof = true
+
+[node name="WallBlock56" type="Node2D" parent="Walls" unique_id=735541231 instance=ExtResource("2_6nt2u")]
+position = Vector2(162.82217, -5852.2207)
+size = Vector2(374.35565, 24)
+ghost_proof = true
+
+[node name="WallBlock57" type="Node2D" parent="Walls" unique_id=1838465118 instance=ExtResource("2_6nt2u")]
+position = Vector2(240.5069, -5992.4927)
+size = Vector2(218.98619, 24)
+ghost_proof = true
+
+[node name="WallBlock58" type="Node2D" parent="Walls" unique_id=1822322106 instance=ExtResource("2_6nt2u")]
+position = Vector2(-178.3061, -6228.6235)
+size = Vector2(343.3878, 24)
+ghost_proof = true
+
+[node name="WallBlock59" type="Node2D" parent="Walls" unique_id=943581150 instance=ExtResource("2_6nt2u")]
+position = Vector2(243.83398, -6228.6235)
+size = Vector2(212.33203, 24)
+ghost_proof = true
+
+[node name="WallBlock60" type="Node2D" parent="Walls" unique_id=201920598 instance=ExtResource("2_6nt2u")]
+position = Vector2(-263.2458, -6355.945)
+size = Vector2(173.50839, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock61" type="Node2D" parent="Walls" unique_id=146297242 instance=ExtResource("2_6nt2u")]
+position = Vector2(-249.66751, -6646.7)
+size = Vector2(200.665, 24)
+ghost_proof = true
+
+[node name="WallBlock62" type="Node2D" parent="Walls" unique_id=1983631978 instance=ExtResource("2_6nt2u")]
+position = Vector2(160.42188, -6646.7)
+size = Vector2(210.81255, 24)
+ghost_proof = true
+
+[node name="WallBlock63" type="Node2D" parent="Walls" unique_id=1953736887 instance=ExtResource("2_6nt2u")]
+position = Vector2(-273.39322, -7003.5664)
+size = Vector2(153.21358, 24)
+ghost_proof = true
+
+[node name="WallBlock64" type="Node2D" parent="Walls" unique_id=1301415072 instance=ExtResource("2_6nt2u")]
+position = Vector2(37.925785, -7003.5664)
+size = Vector2(173.1187, 24)
+ghost_proof = true
+
+[node name="WallBlock65" type="Node2D" parent="Walls" unique_id=660604979 instance=ExtResource("2_6nt2u")]
+position = Vector2(273.54013, -7003.5664)
+size = Vector2(152.91972, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock66" type="Node2D" parent="Walls" unique_id=836104994 instance=ExtResource("2_6nt2u")]
+position = Vector2(-180.95343, -7406.6035)
+size = Vector2(338.09314, 24)
+ghost_proof = true
+
+[node name="WallBlock67" type="Node2D" parent="Walls" unique_id=1241172368 instance=ExtResource("2_6nt2u")]
+position = Vector2(244.06564, -7406.6035)
+size = Vector2(211.86871, 24)
+ghost_proof = true
+
+[node name="WallBlock68" type="Node2D" parent="Walls" unique_id=748989227 instance=ExtResource("2_6nt2u")]
+position = Vector2(-229.84119, -7280.0454)
+size = Vector2(240.31763, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock69" type="Node2D" parent="Walls" unique_id=1991111920 instance=ExtResource("2_6nt2u")]
+position = Vector2(220.92017, -7237.22)
+size = Vector2(258.15967, 24)
+ghost_proof = true
+
+[node name="WallBlock70" type="Node2D" parent="Walls" unique_id=1936243222 instance=ExtResource("2_6nt2u")]
+position = Vector2(-304.65625, -7770.732)
+size = Vector2(90.68749, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock71" type="Node2D" parent="Walls" unique_id=593883402 instance=ExtResource("2_6nt2u")]
+position = Vector2(-66.424194, -7770.732)
+size = Vector2(219.30737, 24)
+ghost_proof = true
+
+[node name="WallBlock72" type="Node2D" parent="Walls" unique_id=479215877 instance=ExtResource("2_6nt2u")]
+position = Vector2(203.29683, -7770.732)
+size = Vector2(94.45704, 24)
+kicker = true
+ghost_proof = true
+
+[node name="WallBlock73" type="Node2D" parent="Walls" unique_id=1052664691 instance=ExtResource("2_6nt2u")]
+position = Vector2(-206.40578, -7613.5615)
+size = Vector2(287.18845, 24)
+ghost_proof = true
+
+[node name="WallBlock74" type="Node2D" parent="Walls" unique_id=630012254 instance=ExtResource("2_6nt2u")]
+position = Vector2(-227.37262, -7968.8413)
+size = Vector2(245.25478, 24)
+ghost_proof = true
+
+[node name="WallBlock75" type="Node2D" parent="Walls" unique_id=380151260 instance=ExtResource("2_6nt2u")]
+position = Vector2(214.23918, -7968.8413)
+size = Vector2(271.5216, 24)
+ghost_proof = true
+
+[node name="Obstacles" type="Node2D" parent="." unique_id=797393782]
+
+[node name="Bumper1" type="Node2D" parent="Obstacles" unique_id=1095910384 instance=ExtResource("4_ha2s8")]
+position = Vector2(256.48877, 375.17938)
+radius = 31.073769728252504
+
+[node name="Bumper2" type="Node2D" parent="Obstacles" unique_id=78936420 instance=ExtResource("4_ha2s8")]
+position = Vector2(272.4207, -236.59554)
+radius = 22.591811848419205
+
+[node name="Bumper3" type="Node2D" parent="Obstacles" unique_id=311710954 instance=ExtResource("4_ha2s8")]
+position = Vector2(-274.38467, -766.2131)
+radius = 25.73582959932434
+
+[node name="Bumper4" type="Node2D" parent="Obstacles" unique_id=1464131568 instance=ExtResource("4_ha2s8")]
+position = Vector2(-249.10445, -2675.204)
+radius = 22.18427862372023
+
+[node name="Bumper5" type="Node2D" parent="Obstacles" unique_id=2074209477 instance=ExtResource("4_ha2s8")]
+position = Vector2(247.01999, -4089.2769)
+radius = 28.134813399548584
+
+[node name="Bumper6" type="Node2D" parent="Obstacles" unique_id=1213948652 instance=ExtResource("4_ha2s8")]
+position = Vector2(62.137653, -4185.5293)
+radius = 30.488462270688515
+
+[node name="Bumper7" type="Node2D" parent="Obstacles" unique_id=394247353 instance=ExtResource("4_ha2s8")]
+position = Vector2(-244.75705, -5991.493)
+radius = 22.769993161375783
+
+[node name="Bumper8" type="Node2D" parent="Obstacles" unique_id=1802191184 instance=ExtResource("4_ha2s8")]
+position = Vector2(105.16131, -6463.431)
+radius = 31.824268167300144
+
+[node name="Food" type="Node2D" parent="." unique_id=2078546251]
+
+[node name="Food1" type="Node2D" parent="Food" unique_id=1909413201]
+position = Vector2(197.02425, 772.8771)
+script = ExtResource("6_dc6o7")
+
+[node name="Food2" type="Node2D" parent="Food" unique_id=1364348937]
+position = Vector2(107.015884, 686.55396)
+script = ExtResource("6_dc6o7")
+
+[node name="Food3" type="Node2D" parent="Food" unique_id=601756284]
+position = Vector2(-52.844444, 236.37479)
+script = ExtResource("6_dc6o7")
+
+[node name="Food4" type="Node2D" parent="Food" unique_id=390505432]
+position = Vector2(-169.58548, 319.72977)
+script = ExtResource("6_dc6o7")
+
+[node name="Food5" type="Node2D" parent="Food" unique_id=512685907]
+position = Vector2(251.93033, -0.5332996)
+script = ExtResource("6_dc6o7")
+
+[node name="Food6" type="Node2D" parent="Food" unique_id=1818337396]
+position = Vector2(174.25056, -142.91672)
+script = ExtResource("6_dc6o7")
+
+[node name="Food7" type="Node2D" parent="Food" unique_id=1121437918]
+position = Vector2(130.9767, 14.427045)
+script = ExtResource("6_dc6o7")
+
+[node name="Food8" type="Node2D" parent="Food" unique_id=2132739174]
+position = Vector2(81.93208, -228.63864)
+script = ExtResource("6_dc6o7")
+
+[node name="Food9" type="Node2D" parent="Food" unique_id=103358930]
+position = Vector2(108.95581, -385.16895)
+script = ExtResource("6_dc6o7")
+
+[node name="Food10" type="Node2D" parent="Food" unique_id=1016621319]
+position = Vector2(-277.87845, -369.673)
+script = ExtResource("6_dc6o7")
+
+[node name="Food11" type="Node2D" parent="Food" unique_id=1870534943]
+position = Vector2(222.80193, -421.63977)
+script = ExtResource("6_dc6o7")
+
+[node name="Food12" type="Node2D" parent="Food" unique_id=907603324]
+position = Vector2(131.91724, -629.4975)
+script = ExtResource("6_dc6o7")
+
+[node name="Food13" type="Node2D" parent="Food" unique_id=383624132]
+position = Vector2(99.070694, -788.2115)
+script = ExtResource("6_dc6o7")
+
+[node name="Food14" type="Node2D" parent="Food" unique_id=1263482751]
+position = Vector2(-212.59015, -754.34235)
+script = ExtResource("6_dc6o7")
+
+[node name="Food15" type="Node2D" parent="Food" unique_id=1265799280]
+position = Vector2(-5.01964, -758.85046)
+script = ExtResource("6_dc6o7")
+
+[node name="Food16" type="Node2D" parent="Food" unique_id=1928970765]
+position = Vector2(309.07736, -1004.7956)
+script = ExtResource("6_dc6o7")
+
+[node name="Food17" type="Node2D" parent="Food" unique_id=1853446745]
+position = Vector2(-56.70089, -1208.9313)
+script = ExtResource("6_dc6o7")
+
+[node name="Food18" type="Node2D" parent="Food" unique_id=523631310]
+position = Vector2(97.57604, -1449.1808)
+script = ExtResource("6_dc6o7")
+
+[node name="Food19" type="Node2D" parent="Food" unique_id=2067218141]
+position = Vector2(29.789013, -1125.2843)
+script = ExtResource("6_dc6o7")
+
+[node name="Food20" type="Node2D" parent="Food" unique_id=661557002]
+position = Vector2(-204.49597, -1749.6117)
+script = ExtResource("6_dc6o7")
+
+[node name="Food21" type="Node2D" parent="Food" unique_id=1531890289]
+position = Vector2(177.58466, -1609.2772)
+script = ExtResource("6_dc6o7")
+
+[node name="Food22" type="Node2D" parent="Food" unique_id=2029780077]
+position = Vector2(101.169495, -1732.9475)
+script = ExtResource("6_dc6o7")
+
+[node name="Food23" type="Node2D" parent="Food" unique_id=2110935487]
+position = Vector2(-236.80392, -1514.3699)
+script = ExtResource("6_dc6o7")
+
+[node name="Food24" type="Node2D" parent="Food" unique_id=1080907140]
+position = Vector2(-214.13553, -1945.2219)
+script = ExtResource("6_dc6o7")
+
+[node name="Food25" type="Node2D" parent="Food" unique_id=2139420170]
+position = Vector2(-111.725204, -1971.3115)
+script = ExtResource("6_dc6o7")
+
+[node name="Food26" type="Node2D" parent="Food" unique_id=406770646]
+position = Vector2(296.61606, -2167.9707)
+script = ExtResource("6_dc6o7")
+
+[node name="Food27" type="Node2D" parent="Food" unique_id=2050911187]
+position = Vector2(-161.91727, -2319.6453)
+script = ExtResource("6_dc6o7")
+
+[node name="Food28" type="Node2D" parent="Food" unique_id=2059352564]
+position = Vector2(-27.81367, -2296.7444)
+script = ExtResource("6_dc6o7")
+
+[node name="Food29" type="Node2D" parent="Food" unique_id=605940675]
+position = Vector2(126.53603, -2430.517)
+script = ExtResource("6_dc6o7")
+
+[node name="Food30" type="Node2D" parent="Food" unique_id=1365372723]
+position = Vector2(-249.63774, -2756.539)
+script = ExtResource("6_dc6o7")
+
+[node name="Food31" type="Node2D" parent="Food" unique_id=1121285751]
+position = Vector2(-220.062, -2865.036)
+script = ExtResource("6_dc6o7")
+
+[node name="Food32" type="Node2D" parent="Food" unique_id=595063868]
+position = Vector2(-182.6215, -2726.997)
+script = ExtResource("6_dc6o7")
+
+[node name="Food33" type="Node2D" parent="Food" unique_id=665467662]
+position = Vector2(181.38913, -2892.477)
+script = ExtResource("6_dc6o7")
+
+[node name="Food34" type="Node2D" parent="Food" unique_id=834442807]
+position = Vector2(-112.541084, -3066.9216)
+script = ExtResource("6_dc6o7")
+
+[node name="Food35" type="Node2D" parent="Food" unique_id=795474888]
+position = Vector2(-172.46587, -3281.3057)
+script = ExtResource("6_dc6o7")
+
+[node name="Food36" type="Node2D" parent="Food" unique_id=156259298]
+position = Vector2(53.25391, -3313.9517)
+script = ExtResource("6_dc6o7")
+
+[node name="Food37" type="Node2D" parent="Food" unique_id=1313797908]
+position = Vector2(-64.39196, -3427.147)
+script = ExtResource("6_dc6o7")
+
+[node name="Food38" type="Node2D" parent="Food" unique_id=577788814]
+position = Vector2(74.57844, -3422.691)
+script = ExtResource("6_dc6o7")
+
+[node name="Food39" type="Node2D" parent="Food" unique_id=258285578]
+position = Vector2(126.06478, -3688.808)
+script = ExtResource("6_dc6o7")
+
+[node name="Food40" type="Node2D" parent="Food" unique_id=16763371]
+position = Vector2(276.81012, -3801.7207)
+script = ExtResource("6_dc6o7")
+
+[node name="Food41" type="Node2D" parent="Food" unique_id=1191698431]
+position = Vector2(-46.343407, -3789.6687)
+script = ExtResource("6_dc6o7")
+
+[node name="Food42" type="Node2D" parent="Food" unique_id=1702954967]
+position = Vector2(-182.47968, -4190.0967)
+script = ExtResource("6_dc6o7")
+
+[node name="Food43" type="Node2D" parent="Food" unique_id=1916589371]
+position = Vector2(-226.48232, -4182.509)
+script = ExtResource("6_dc6o7")
+
+[node name="Food44" type="Node2D" parent="Food" unique_id=1632940649]
+position = Vector2(137.63206, -4254.2764)
+script = ExtResource("6_dc6o7")
+
+[node name="Food45" type="Node2D" parent="Food" unique_id=1910371146]
+position = Vector2(35.62012, -4620.1187)
+script = ExtResource("6_dc6o7")
+
+[node name="Food46" type="Node2D" parent="Food" unique_id=1322510712]
+position = Vector2(105.93871, -4617.5845)
+script = ExtResource("6_dc6o7")
+
+[node name="Food47" type="Node2D" parent="Food" unique_id=1415227984]
+position = Vector2(288.4017, -4604.2256)
+script = ExtResource("6_dc6o7")
+
+[node name="Food48" type="Node2D" parent="Food" unique_id=1009787145]
+position = Vector2(-266.15585, -5209.944)
+script = ExtResource("6_dc6o7")
+
+[node name="Food49" type="Node2D" parent="Food" unique_id=1833158046]
+position = Vector2(-41.203457, -4942.884)
+script = ExtResource("6_dc6o7")
+
+[node name="Food50" type="Node2D" parent="Food" unique_id=338427406]
+position = Vector2(-50.901253, -5634.885)
+script = ExtResource("6_dc6o7")
+
+[node name="Food51" type="Node2D" parent="Food" unique_id=2141418612]
+position = Vector2(-151.21622, -5575.8945)
+script = ExtResource("6_dc6o7")
+
+[node name="Food52" type="Node2D" parent="Food" unique_id=1670991516]
+position = Vector2(258.64584, -5561.244)
+script = ExtResource("6_dc6o7")
+
+[node name="Food53" type="Node2D" parent="Food" unique_id=1425768057]
+position = Vector2(-302.0251, -5633.2573)
+script = ExtResource("6_dc6o7")
+
+[node name="Food54" type="Node2D" parent="Food" unique_id=766441881]
+position = Vector2(309.80475, -5725.635)
+script = ExtResource("6_dc6o7")
+
+[node name="Food55" type="Node2D" parent="Food" unique_id=390029683]
+position = Vector2(195.11716, -5789.6406)
+script = ExtResource("6_dc6o7")
+
+[node name="Food56" type="Node2D" parent="Food" unique_id=1883850636]
+position = Vector2(184.15886, -5800.8584)
+script = ExtResource("6_dc6o7")
+
+[node name="Food57" type="Node2D" parent="Food" unique_id=604692465]
+position = Vector2(-226.54698, -5731.2495)
+script = ExtResource("6_dc6o7")
+
+[node name="Food58" type="Node2D" parent="Food" unique_id=920710188]
+position = Vector2(299.94287, -6088.7227)
+script = ExtResource("6_dc6o7")
+
+[node name="Food59" type="Node2D" parent="Food" unique_id=325894425]
+position = Vector2(-84.0129, -6176.8945)
+script = ExtResource("6_dc6o7")
+
+[node name="Food60" type="Node2D" parent="Food" unique_id=1380899247]
+position = Vector2(-304.81607, -6088.4937)
+script = ExtResource("6_dc6o7")
+
+[node name="Food61" type="Node2D" parent="Food" unique_id=1593729393]
+position = Vector2(13.523978, -6479.97)
+script = ExtResource("6_dc6o7")
+
+[node name="Food62" type="Node2D" parent="Food" unique_id=541385866]
+position = Vector2(163.13258, -6779.9536)
+script = ExtResource("6_dc6o7")
+
+[node name="Food63" type="Node2D" parent="Food" unique_id=955400866]
+position = Vector2(-2.7227252, -6566.5996)
+script = ExtResource("6_dc6o7")
+
+[node name="Food64" type="Node2D" parent="Food" unique_id=550550762]
+position = Vector2(-291.9147, -6703.4233)
+script = ExtResource("6_dc6o7")
+
+[node name="Food65" type="Node2D" parent="Food" unique_id=1589423222]
+position = Vector2(189.69283, -6895.9253)
+script = ExtResource("6_dc6o7")
+
+[node name="Food66" type="Node2D" parent="Food" unique_id=1587465923]
+position = Vector2(52.41133, -7050.875)
+script = ExtResource("6_dc6o7")
+
+[node name="Food67" type="Node2D" parent="Food" unique_id=1047212292]
+position = Vector2(4.5290823, -7494.523)
+script = ExtResource("6_dc6o7")
+
+[node name="Food68" type="Node2D" parent="Food" unique_id=1752552304]
+position = Vector2(6.940102, -7303.5186)
+script = ExtResource("6_dc6o7")
+
+[node name="Food69" type="Node2D" parent="Food" unique_id=1952104650]
+position = Vector2(274.27084, -7509.993)
+script = ExtResource("6_dc6o7")
+
+[node name="Food70" type="Node2D" parent="Food" unique_id=1864998155]
+position = Vector2(224.52208, -7680.055)
+script = ExtResource("6_dc6o7")
+
+[node name="Food71" type="Node2D" parent="Food" unique_id=477792508]
+position = Vector2(159.94896, -7593.6597)
+script = ExtResource("6_dc6o7")
+
+[node name="Food72" type="Node2D" parent="Food" unique_id=1829648933]
+position = Vector2(-112.82462, -7714.773)
+script = ExtResource("6_dc6o7")
+
+[node name="Spawns" type="Node2D" parent="." unique_id=612620833]
+
+[node name="P1" type="Node2D" parent="Spawns" unique_id=1974912397]
+position = Vector2(-84, 150)
+script = ExtResource("7_rgkkd")
+
+[node name="P2" type="Node2D" parent="Spawns" unique_id=1602728209]
+position = Vector2(84, 150)
+script = ExtResource("7_rgkkd")
+seat = 2
+
+[node name="P3" type="Node2D" parent="Spawns" unique_id=204015306]
+position = Vector2(-245, 150)
+script = ExtResource("7_rgkkd")
+seat = 3
+
+[node name="P4" type="Node2D" parent="Spawns" unique_id=134400625]
+position = Vector2(245, 150)
+script = ExtResource("7_rgkkd")
+seat = 4
+
+[node name="Finish" type="Node2D" parent="." unique_id=1621497964]
+
+[node name="FinishLine" type="Node2D" parent="Finish" unique_id=383844825]
+position = Vector2(0, -8000)
+script = ExtResource("8_n44ni")

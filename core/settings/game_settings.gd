@@ -1,7 +1,8 @@
 class_name GameSettings
 extends RefCounted
 ## The options players can change: the look (theme, glow) and the gameplay
-## (the dash, the slash, spit and shield, energy, the energy bar, mass loss and food). The main menu's SETTINGS screen and the
+## (the dash, the slash, spit and shield, energy, the energy bar, mass loss,
+## food, and the treadmill's view and speeds). The main menu's SETTINGS screen and the
 ## sandbox lab (Tab) list them. Gameplay picks are saved in Session.settings,
 ## the look in Session.theme_name / Session.glow; everything reads them
 ## through here, so a change applies at once, mid-game too.
@@ -70,6 +71,21 @@ const OPTIONS := [
 		["less", "LESS", "Scarce food: blobs fight over every pellet."],
 		["more", "MORE", "Plenty of food: easy to grow big (and get stuck)."],
 	]},
+	{key = "track_view", label = "TRACK VIEW", default_id = "normal", choices = [
+		["normal", "NORMAL", "The treadmill always shows the whole belt between the kill lasers. A medium belt."],
+		["near", "CLOSE", "A shorter belt, seen up close: less room to run, bigger blobs."],
+		["far", "FAR", "A tall belt, seen from further away: lots of room, smaller blobs."],
+	]},
+	{key = "track_speed", label = "TRACK SPEED", default_id = "normal", choices = [
+		["normal", "NORMAL", "How fast the treadmill's belt climbs. It speeds up as the round goes on."],
+		["slow", "SLOW", "A relaxed climb."],
+		["fast", "FAST", "A hurried climb: keep moving."],
+	]},
+	{key = "blob_speed", label = "BLOB SPEED", default_id = "normal", choices = [
+		["normal", "NORMAL", "How fast blobs run in the treadmill: a little quicker than in the other modes."],
+		["slow", "SLOW", "The same speed as in the other modes."],
+		["fast", "FAST", "Quick blobs: dodging is easy, stopping isn't."],
+	]},
 	{key = "meter", label = "BAR", default_id = "above", choices = [
 		["above", "ABOVE BLOB", "Pips over the blob's head."],
 		["below", "BELOW BLOB", "Pips under the blob."],
@@ -98,6 +114,10 @@ const OPTIONS := [
 		["7", "FIRST TO 7", "The first team to score 7 wins, even before the time is up."],
 		["10", "FIRST TO 10", "The first team to score 10 wins, even before the time is up."],
 		["0", "NO LIMIT", "No goal count: the clock decides."],
+	]},
+	{key = "track_map", label = "TRACK", default_id = "generated", only = "lobby", choices = [
+		["generated", "ENDLESS", "A new random track every run, for as long as you last."],
+		["course_1", "COURSE 1", "A hand-made course with a finish line: the first blob across wins."],
 	]},
 	{key = "props", label = "PROPS", default_id = "walls", only = "lab", choices = [
 		["walls", "WALLS + BUMPERS", "A wall, a kicker wall and two bumpers to dash into (or through)."],
@@ -176,3 +196,25 @@ static func _sync() -> void:
 ## How much food levels lay out, as a multiplier (the FOOD setting).
 static func food_amount() -> float:
 	return {"less": 0.6, "more": 1.7}.get(choice("food"), 1.0)
+
+
+## The treadmill map the lobby's TRACK option picked (a scene path), or "" to generate the track.
+## A map with id `x` lives at res://level/maps/x/x.tscn.
+static func track_map() -> String:
+	var id := choice("track_map")
+	return "" if id == "generated" or id == "" else "res://level/maps/%s/%s.tscn" % [id, id]
+
+
+## The treadmill's belt height, as a multiple of TrackSettings.belt_height (TRACK VIEW).
+static func track_view() -> float:
+	return {"near": 0.68, "far": 1.0}.get(choice("track_view"), 0.82)
+
+
+## The treadmill's scroll speed, as a multiplier (TRACK SPEED).
+static func track_speed() -> float:
+	return {"slow": 0.75, "fast": 1.3}.get(choice("track_speed"), 1.0)
+
+
+## Blobs' top speed and acceleration in the treadmill, as a multiplier (BLOB SPEED).
+static func blob_speed() -> float:
+	return {"slow": 1.0, "fast": 1.35}.get(choice("blob_speed"), 1.18)

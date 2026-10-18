@@ -33,6 +33,7 @@ signal reflected(blob: Blob, shot: Shot) # its shield sent a shot back
 var vel := Vector2.ZERO
 var mass := 1.0
 var move_dir := Vector2.ZERO # steering input, length <= 1, set by the controller
+var speed_scale := 1.0 # top speed and acceleration multiplier, set by the mode (the treadmill's BLOB SPEED)
 var alive := true
 var active := true # false = controllers leave it alone (e.g. during the countdown)
 var controller: Node # the PlayerInput or BotBrain steering this blob
@@ -105,11 +106,11 @@ func shrink_danger() -> float:
 
 
 func max_speed() -> float:
-	return stats.base_speed / pow(mass, stats.size_speed_exp)
+	return stats.base_speed * speed_scale / pow(mass, stats.size_speed_exp)
 
 
 func accel() -> float:
-	return stats.base_accel / pow(mass, stats.size_accel_exp)
+	return stats.base_accel * speed_scale / pow(mass, stats.size_accel_exp)
 
 
 func push_power() -> float:

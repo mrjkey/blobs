@@ -1,7 +1,8 @@
 class_name LaserEmitter
 extends Node2D
 ## A laser that fires on the beat. Once a LaserDirector gives it a `fire_beat`,
-## it charges (tracking a random blob, with a thin telegraph line), locks its
+## it charges (tracking a random blob as far as _limit_aim() lets it, with a
+## thin telegraph line), locks its
 ## aim (bots that notice try to sidestep), fires (a stun that stops blobs in
 ## their tracks and burns off mass where mass loss is on, sparks, a grid
 ## ripple along the beam) and goes back to idle. Subclasses say where the beam

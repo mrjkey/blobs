@@ -3,17 +3,19 @@ extends Node2D
 ## Builds the treadmill as it climbs: one chunk at a time just above what can
 ## be seen (the screen, or the top kill laser if that's higher). Most chunks
 ## get a row: a wall right across the track with a few gaps of mixed widths,
-## so big blobs have to find the wide one, ghost dash through a piece that
-## lets them (if they have the energy), or get stuck. Around it go loose
+## so big blobs have to find the wide one or get stuck (walls stop ghost
+## dashes too, as `settings.ghost_proof_chance` says). Around it go loose
 ## walls (some of them kickers), bumpers and food, denser the further up it
 ## is. The floor around the spawn line is left clear. Pieces that fall well
 ## below the belt are freed. The pieces are added as children of this node,
-## in world coordinates.
+## in world coordinates. With `auto` off it does nothing by itself: build()
+## lays out a fixed stretch (tools/bake_track.gd uses it to make a map).
 
 @export var settings: TrackSettings = preload("res://level/arenas/track/track_settings.tres")
 @export var wall_scene: PackedScene = preload("res://level/obstacles/wall_block.tscn")
 @export var bumper_scene: PackedScene = preload("res://level/obstacles/bumper.tscn")
 @export var food_scene: PackedScene = preload("res://level/pickups/food/food.tscn")
+@export var auto := true # build ahead of the camera and free what's behind
 
 var _next_chunk_y := 0.0
 var _prev_rects: Array[Rect2] = []
@@ -21,13 +23,25 @@ var _prev_rects: Array[Rect2] = []
 
 func _ready() -> void:
 	process_physics_priority = -7 # after the mode scrolls the camera (-8)
+	if not auto:
+		return
 	_next_chunk_y = _span().y # fill the whole belt below the start, too
 	_generate_ahead()
 
 
 func _physics_process(_delta: float) -> void:
+	if not auto:
+		return
 	_generate_ahead()
 	_cull_behind()
+
+
+## Lay out the track from world y `bottom` up to `top`, chunk by chunk.
+func build(top: float, bottom: float) -> void:
+	_next_chunk_y = bottom
+	while _next_chunk_y > top:
+		_gen_chunk(maxf(_next_chunk_y - settings.chunk_height, top), _next_chunk_y)
+		_next_chunk_y -= settings.chunk_height
 
 
 ## (top, bottom) world y of everything that matters: the camera's view and
@@ -71,6 +85,7 @@ func _gen_chunk(y0: float, y1: float) -> void:
 			var w: WallBlock = wall_scene.instantiate()
 			w.size = rect.size
 			w.kicker = randf() < 0.15 + 0.25 * difficulty
+			w.ghost_proof = randf() < settings.ghost_proof_chance
 			_place(w, rect.get_center())
 			break
 
@@ -133,8 +148,7 @@ func _gen_row(y: float, half: float, difficulty: float, placed: Array[Rect2]) ->
 			var w: WallBlock = wall_scene.instantiate()
 			w.size = rect.size
 			w.kicker = randf() < settings.row_kicker_chance * (1.0 + difficulty)
-			# Some pieces can't be dashed through: there, too big for the gaps is too big.
-			w.ghost_proof = randf() < settings.row_ghost_proof_chance
+			w.ghost_proof = randf() < settings.ghost_proof_chance # too big for the gaps is too big
 			_place(w, rect.get_center())
 		x += length
 		if i < gaps.size():

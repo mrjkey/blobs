@@ -32,5 +32,5 @@ func _apply_lab() -> void:
 		for c in props_parent.get_children():
 			c.queue_free()
 
-	hint.text = "WASD / arrows: move     SPACE / J: push     SHIFT / K: dash     E / L: slash     F / I: spit     Q / U: shield\n" \
+	hint.text = "WASD / arrows: move     SPACE: push     SHIFT: dash     J: slash     K: spit     L: shield\n" \
 		+ "TAB: lab     R: reset     Esc: menu     dash: %s     energy: %s" % [GameSettings.choice_label("dash"), GameSettings.choice_label("energy")]

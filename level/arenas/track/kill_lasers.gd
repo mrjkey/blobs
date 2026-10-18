@@ -1,7 +1,6 @@
 class_name KillLasers
 extends Node2D
-## Two lasers across the track, `settings.belt_height` apart and centred on
-## this node: the mode moves it up the track as it scrolls. A blob that ends
+## Two lasers across the track, belt_height() apart and centred on this node: the mode moves it up the track as it scrolls. A blob that ends
 ## up past either one is out (`blob.die()`). With `lethal` off they hold blobs
 ## between them instead (the round's over: keep the winner in view). Group "kill_lasers"; bots read kill_top() /
 ## kill_bottom() to keep clear. Draws above the blobs (z_index 5); colour from
@@ -26,12 +25,17 @@ func _ready() -> void:
 	process_physics_priority = 20 # after blob abilities (10)
 
 
+## The distance between the lasers: TrackSettings.belt_height scaled by the TRACK VIEW setting.
+func belt_height() -> float:
+	return settings.belt_height * GameSettings.track_view()
+
+
 func kill_top() -> float:
-	return global_position.y - settings.belt_height * 0.5
+	return global_position.y - belt_height() * 0.5
 
 
 func kill_bottom() -> float:
-	return global_position.y + settings.belt_height * 0.5
+	return global_position.y + belt_height() * 0.5
 
 
 func _physics_process(_delta: float) -> void:

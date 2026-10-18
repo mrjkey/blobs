@@ -14,7 +14,7 @@
 [ext_resource type="PackedScene" path="res://core/audio/techno.tscn" id="14_music"]
 [ext_resource type="Resource" path="res://modes/treadmill/treadmill_mode.tres" id="15_info"]
 
-[node name="Treadmill" type="Node2D" node_paths=PackedStringArray("blobs_node", "hud", "camera", "kill_lasers", "laser_director")]
+[node name="Treadmill" type="Node2D" node_paths=PackedStringArray("blobs_node", "hud", "camera", "kill_lasers", "laser_director", "generator")]
 script = ExtResource("1_mode")
 info = ExtResource("15_info")
 blobs_node = NodePath("Blobs")
@@ -23,6 +23,7 @@ bot_names = PackedStringArray("Bonk", "Wobbles", "Gummy", "Blorb")
 camera = NodePath("GameCamera")
 kill_lasers = NodePath("KillLasers")
 laser_director = NodePath("LaserDirector")
+generator = NodePath("Track")
 
 [node name="ThemeBackdrop" type="Node2D" parent="."]
 script = ExtResource("12_backdrop")
@@ -52,6 +53,9 @@ script = ExtResource("4_generator")
 [node name="LeftShip2" parent="Ships" instance=ExtResource("7_ship")]
 slot = 1
 
+[node name="LeftShip3" parent="Ships" instance=ExtResource("7_ship")]
+slot = 2
+
 [node name="RightShip1" parent="Ships" instance=ExtResource("7_ship")]
 side = 1
 
@@ -59,9 +63,16 @@ side = 1
 side = 1
 slot = 1
 
+[node name="RightShip3" parent="Ships" instance=ExtResource("7_ship")]
+side = 1
+slot = 2
+
 [node name="LaserDirector" type="Node" parent="."]
 script = ExtResource("8_director")
 start_delay = 5.0
+first_chance = 0.9
+ramp = PackedFloat32Array(15, 35, 60, 90)
+ramp_chance = 0.6
 
 [node name="FxLayer" parent="." instance=ExtResource("9_fx")]
 

@@ -9,11 +9,16 @@ for the neon bloom.
 | Action  | Keyboard               | Gamepad          |
 |---------|------------------------|------------------|
 | Move    | WASD / arrows          | Left stick, D-pad |
-| Push    | Space / J / Enter      | A, X or RB       |
+| Push    | Space (Enter)          | A                |
+| Dash    | Shift                  | B                |
+| Slash   | J                      | X                |
+| Spit    | K                      | LB               |
+| Shield  | L                      | RB               |
 | Restart | R                      | Start            |
 | Menu    | Esc                    | Back             |
 
-Two players (treadmill): P1 is WASD + Space, P2 is arrows + Enter. With one controller P2
+Two players on one keyboard: P1 is WASD + Space, Shift, J, K, L; P2 is arrows + Enter
+(push), `.` (dash), `,` (slash), `;` (spit), `'` (shield). With one controller P2
 gets it; with two, one each.
 
 ## Modes

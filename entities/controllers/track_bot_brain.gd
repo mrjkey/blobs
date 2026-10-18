@@ -28,6 +28,10 @@ func _decide() -> void:
 	var span := bottom - top
 	# Where this bot likes to hang out: the upper-middle of the screen.
 	var comfy_y := top + span * lerpf(0.5, 0.3, caution)
+	# A map's finish line inside the belt: race for it.
+	var finish := get_tree().get_first_node_in_group("finish") as Node2D
+	if finish != null and finish.global_position.y > top:
+		comfy_y = finish.global_position.y - 80.0
 
 	_pick_target()
 	var dir := Vector2.ZERO
