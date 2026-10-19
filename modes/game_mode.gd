@@ -1,12 +1,12 @@
 class_name GameMode
 extends Node2D
 ## Round rules shared by the modes: the lineup, spawning blobs, the countdown,
-## reacting to eliminations, the win check and its banners, R to restart, Esc
-## to leave. A mode script extends this, places one blob per slot in
+## reacting to eliminations, the win check and its banners, and the pause menu. A mode script extends this, places one blob per slot in
 ## _spawn_blobs() with spawn_slot(), says which bot brain its CPUs use in
 ## _new_brain(), starts its hazards in _on_play_started() and stops them in
 ## _on_round_over(). Whatever knocks a blob out (an arena, a laser) just calls
-## `blob.die()`; the mode hears it through `Blob.died`.
+## `blob.die()`; the mode hears it through `Blob.died`. START or ESC pauses
+## (PauseMenu: resume, restart, quit); R restarts at once on the keyboard.
 ##
 ## Who plays comes from the lobby (Session.lineup). Started on its own (F6),
 ## a mode makes the default lineup from `info`: P1 on the keyboard, a
@@ -16,6 +16,7 @@ enum State { COUNTDOWN, PLAYING, OVER }
 
 @export var info: ModeInfo # name and player counts (also what the lobby shows)
 @export var blob_scene: PackedScene = preload("res://entities/blob/blob.tscn")
+@export var pause_scene: PackedScene = preload("res://ui/menus/pause/pause_menu.tscn")
 @export var blobs_node: Node2D # spawned blobs go here
 @export var hud: Hud
 @export var countdown_time := 2.4
@@ -61,14 +62,35 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("restart"):
-		get_tree().reload_current_scene()
-	elif event.is_action_pressed("quit"):
-		if from_lobby():
-			Session.next_mode = info
-			get_tree().change_scene_to_file(lobby_path)
-		else:
-			get_tree().change_scene_to_file(menu_path)
+	var esc: bool = event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE
+	var start: bool = event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_START
+	if esc or start:
+		get_viewport().set_input_as_handled()
+		pause()
+	elif event is InputEventKey and event.is_action_pressed("restart"):
+		restart()
+
+
+## Stop the game and show the pause menu.
+func pause() -> void:
+	var menu: PauseMenu = pause_scene.instantiate()
+	add_child(menu)
+	menu.restart_requested.connect(restart)
+	menu.quit_requested.connect(leave)
+	menu.open(state == State.OVER, "QUIT TO LOBBY" if from_lobby() else "QUIT TO MENU")
+
+
+func restart() -> void:
+	get_tree().reload_current_scene()
+
+
+## Back to the lobby (same players) or, started on its own, the main menu.
+func leave() -> void:
+	if from_lobby():
+		Session.next_mode = info
+		get_tree().change_scene_to_file(lobby_path)
+	else:
+		get_tree().change_scene_to_file(menu_path)
 
 
 ## The lobby's lineup if it was made for this mode, else the default one.
@@ -123,17 +145,17 @@ func spawn_blob(pos: Vector2, color: Color, display_name: String, controller: No
 
 ## The blob for `slots[i]` at `pos`: a human with their keys and gamepad
 ## (tagged P1..P4 when there's more than one human), or a computer with this
-## mode's brain at the slot's level. In a team mode it gets its seat's team
-## and plays in the seat's team colour (PlayerSlot.color_in).
+## mode's brain at the slot's level. In a team mode it gets the slot's team
+## and plays in its team colour (PlayerSlot.team_in, color_in).
 func spawn_slot(i: int, pos: Vector2) -> Blob:
 	var b := _spawn_slot_blob(i, pos)
 	b.team = slot_team(i)
 	return b
 
 
-## The team of `slots[i]`: from its seat (ModeInfo.team_of), -1 without teams.
+## The team of `slots[i]` (PlayerSlot.team_in), -1 without teams.
 func slot_team(i: int) -> int:
-	return info.team_of(slots[i].number - 1) if info != null else -1
+	return slots[i].team_in(info)
 
 
 func _spawn_slot_blob(i: int, pos: Vector2) -> Blob:
@@ -194,4 +216,4 @@ func _check_round_over() -> void:
 		hud.show_banner("YOU WIN!" if left[0].tag == "" else "%s WINS!" % left[0].tag, Color(1.0, 0.9, 0.35) if left[0].tag == "" else left[0].color)
 	else:
 		hud.show_banner("%s WINS" % left[0].display_name.to_upper(), left[0].color)
-	hud.set_hint("Press R to play again")
+	hud.set_hint("Start or Esc: play again or quit   ·   R: play again")

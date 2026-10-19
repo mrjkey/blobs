@@ -1,21 +1,40 @@
 class_name LobbyCard
 extends Control
-## One seat in the lobby: who sits there (a player, a CPU or nobody), their
-## colour as a little blob, READY, the seat's team in a team mode (a strip
-## along the top), a hint for the player pointing at it, and the hand markers
-## of everyone pointing at it (drawn just below the card).
+## One player panel in the lobby's PLAYERS view. A player's own panel (HUMAN)
+## shows their number, device, blob, their one choice (TEAM or COLOUR, with
+## arrows while it can change), READY, and the buttons that work for them
+## right now. A computer's seat (CPU) and a free seat (OPEN) show how to
+## join. In a team mode a strip along the top names the team. `toast` is a
+## short "no, because" note; `hold` fills a bar while a second keyboard
+## player holds their key to join here.
 ## The lobby sets the fields; the card only draws them, in the theme's style.
 
-const CLOSED_COLOR := Color(0.45, 0.45, 0.55)
+enum Kind { HUMAN, CPU, OPEN }
 
-var seat := 1 # 1..4
-var slot: PlayerSlot # null = a closed seat
-var player_ready := false # their own card: they pressed ready
-var hint := "" # for whoever points at this card
-var hands: Array = [] # [label, colour] of each player pointing here
+const DIM := Color(0.45, 0.47, 0.6)
+const INK := Color(0.82, 0.85, 1.0)
+const BG := Color(0.045, 0.045, 0.11, 0.92)
+const TOAST_BG := Color(0.24, 0.04, 0.1, 0.95)
+const TOAST_EDGE := Color(1.0, 0.36, 0.54)
+const GLYPH_H := 26.0
+const PROMPT_FS := 17
+const BAND := 28.0 # the team strip
+
+var kind := Kind.OPEN
+var title := "" # "P1", "CPU", "JOIN"
+var detail := "" # under the title: the device, or the computer's level
 var color := Color.WHITE # the colour the seat plays in
 var team_name := "" # in a team mode, the seat's team
 var team_color := Color.WHITE
+var choice_label := "" # HUMAN: "TEAM" or "COLOUR"
+var choice_value := "" # the team's name; "" draws a colour swatch instead
+var player_ready := false
+var prompts: Array = [] # [[glyphs, text], ...], stacked at the bottom
+var toast := ""
+var hold := 0.0 # 0..1
+var hold_text := ""
+
+static var _box: StyleBoxFlat
 
 
 func _draw() -> void:
@@ -25,49 +44,113 @@ func _draw() -> void:
 	var st := theme.style
 	var font := get_theme_default_font()
 	var w := size.x
-	var open := slot != null
-	var human := open and slot.human
-	var col := color if open else CLOSED_COLOR
-	var text_col := st.color(col.lerp(Color.WHITE, 0.35), 1.6)
+	var human := kind == Kind.HUMAN
+	var edge := color if kind != Kind.OPEN else DIM
 
-	draw_rect(Rect2(Vector2.ZERO, size), Color(0.05, 0.04, 0.1, 0.88))
-	draw_rect(Rect2(Vector2.ZERO, size), st.color(col, 1.8 if human else 0.7, 1.0 if open else 0.5), false,
-		3.0 if human else 1.5)
+	var box := _panel_box()
+	box.bg_color = BG
+	box.border_color = st.color(edge, 1.8 if human else 0.6, 1.0 if human else 0.55)
+	box.set_border_width_all(4 if human else 2)
+	box.draw(get_canvas_item(), Rect2(Vector2.ZERO, size))
 
 	if team_name != "":
-		draw_rect(Rect2(0, 0, w, 20), st.color(team_color, 1.4, 0.85))
-		draw_string(font, Vector2(0, 16), team_name, HORIZONTAL_ALIGNMENT_CENTER, w, 15, st.color(Color.WHITE, 2.0))
+		draw_rect(Rect2(4, 4, w - 8, BAND - 4), st.color(team_color, 1.3, 0.9 if human else 0.55))
+		_text(font, Vector2(w * 0.5, 4 + (BAND - 4) * 0.5), team_name, 16, Color.WHITE)
 
-	var header := "P%d" % seat if human else ("CPU" if open else "EMPTY")
-	draw_string(font, Vector2(0, 52), header, HORIZONTAL_ALIGNMENT_CENTER, w, 32,
-		text_col if open else Color(CLOSED_COLOR, 0.7))
+	var head_col := st.color(color.lerp(Color.WHITE, 0.3), 1.6) if kind != Kind.OPEN else DIM
+	_text(font, Vector2(w * 0.5, 64), title, 40, head_col if human else Color(head_col, 0.75))
+	if detail != "":
+		_text(font, Vector2(w * 0.5, 98), detail, 15, Color(INK, 0.8 if human else 0.6))
 
-	var centre := Vector2(w * 0.5, 130.0)
-	if open:
-		st.disc(self, centre, 46.0, col, 0.0, 1.0, 1.5, 3.0, true)
-		for side: float in [-1.0, 1.0]:
-			var eye := centre + Vector2(16.0 * side, -8.0)
-			draw_circle(eye, 9.0, st.color(Color.WHITE, 2.2))
-			draw_circle(eye + Vector2(0, 3), 4.5, st.ink)
-		var line := slot.describe() if human else "<  %s  >" % slot.bot_level.display_name
-		draw_string(font, Vector2(0, 216), line, HORIZONTAL_ALIGNMENT_CENTER, w, 17, text_col)
+	var centre := Vector2(w * 0.5, 168)
+	if kind == Kind.OPEN:
+		st.ring(self, centre, 44.0, DIM, 2.0, 0.6, 0.4)
+		_text(font, centre, "+", 44, Color(DIM, 0.8))
 	else:
-		st.ring(self, centre, 46.0, CLOSED_COLOR, 2.0, 0.6, 0.4)
-		draw_string(font, centre + Vector2(-w * 0.5, 12), "+", HORIZONTAL_ALIGNMENT_CENTER, w, 40, Color(CLOSED_COLOR, 0.6))
+		st.disc(self, centre, 44.0, color, 0.0, 1.0 if human else 0.6, 1.5, 3.0, true)
+		for side: float in [-1.0, 1.0]:
+			var eye := centre + Vector2(15.0 * side, -8.0)
+			draw_circle(eye, 8.5, st.color(Color.WHITE, 2.2))
+			draw_circle(eye + Vector2(0, 3), 4.2, st.ink)
 
-	if player_ready:
-		draw_rect(Rect2(0, 108, w, 44), Color(col.darkened(0.6), 0.92))
-		draw_string(font, Vector2(0, 140), "READY", HORIZONTAL_ALIGNMENT_CENTER, w, 28, st.color(Color.WHITE, 2.0))
+	var row := Rect2(14, 230, w - 28, 44)
+	if human and player_ready:
+		draw_rect(row, st.color(color, 1.4, 0.95))
+		_text(font, row.get_center(), "READY", 26, st.ink)
+	elif human:
+		box.bg_color = Color(color.darkened(0.75), 0.9)
+		box.border_color = st.color(color, 1.6)
+		box.set_border_width_all(2)
+		box.draw(get_canvas_item(), row)
+		var y := row.get_center().y
+		_text_left(font, Vector2(row.position.x + 12, y), choice_label, 16, Color(INK, 0.75))
+		var right := row.end.x - 12
+		var arrow := st.color(color.lerp(Color.WHITE, 0.4), 1.8)
+		_arrow(Vector2(right, y), 1.0, arrow)
+		if choice_value == "":
+			draw_circle(Vector2(right - 30, y), 10.0, st.color(color, 1.6))
+			_arrow(Vector2(right - 60, y), -1.0, arrow)
+		else:
+			var tw := font.get_string_size(choice_value, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
+			_text_left(font, Vector2(right - 20 - tw, y), choice_value, 20, Color.WHITE)
+			_arrow(Vector2(right - 38 - tw, y), -1.0, arrow)
 
-	if hint != "":
-		draw_multiline_string(font, Vector2(8, size.y - 44), hint, HORIZONTAL_ALIGNMENT_CENTER, w - 16, 14, -1,
-			Color(0.75, 0.78, 0.95))
+	if toast != "":
+		var t := Rect2(10, 282, w - 20, 0)
+		var lines := _wrap(font, toast, 15, t.size.x - 16)
+		t.size.y = lines.size() * 19 + 12
+		draw_rect(t, TOAST_BG)
+		draw_rect(t, TOAST_EDGE, false, 1.5)
+		for i in lines.size():
+			_text(font, Vector2(w * 0.5, t.position.y + 15 + i * 19), lines[i], 15, Color(1.0, 0.85, 0.9))
 
-	# Hand markers under the card: a little arrow and the player's label in their colour.
-	var x := w * 0.5 - (hands.size() - 1) * 26.0
-	for h: Array in hands:
-		var tip := Vector2(x, size.y + 8.0)
-		var hc: Color = h[1]
-		draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(-9, 13), tip + Vector2(9, 13)]), st.color(hc, 2.0))
-		draw_string(font, tip + Vector2(-26, 32), h[0], HORIZONTAL_ALIGNMENT_CENTER, 52, 16, st.color(hc, 1.8))
-		x += 52.0
+	if hold > 0.0:
+		var bar := Rect2(18, 296, w - 36, 10)
+		draw_rect(bar, Color(DIM, 0.35))
+		draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(hold, 0.0, 1.0), bar.size.y)), st.color(Color.WHITE, 1.6))
+		_text(font, Vector2(w * 0.5, 284), hold_text, 15, INK)
+
+	# The prompts, bottom up.
+	var y := size.y - 24.0
+	for i in range(prompts.size() - 1, -1, -1):
+		var p: Array = prompts[i]
+		var pw := PromptBar.prompt_width(font, p, GLYPH_H, PROMPT_FS)
+		PromptBar.draw_prompt(self, font, Vector2((w - pw) * 0.5, y), p, GLYPH_H, PROMPT_FS, INK)
+		y -= 36.0
+
+
+func _text(font: Font, centre: Vector2, text: String, fs: int, col: Color) -> void:
+	var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+	_text_left(font, Vector2(centre.x - tw * 0.5, centre.y), text, fs, col)
+
+
+## `at` is the left end of the text's vertical centre line.
+func _text_left(font: Font, at: Vector2, text: String, fs: int, col: Color) -> void:
+	draw_string(font, Vector2(at.x, at.y + (font.get_ascent(fs) - font.get_descent(fs)) * 0.5), text,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+
+
+## A small triangle at `at` pointing right (dir 1) or left (dir -1).
+func _arrow(at: Vector2, dir: float, col: Color) -> void:
+	draw_colored_polygon(PackedVector2Array([at, at + Vector2(-dir * 10, -8), at + Vector2(-dir * 10, 8)]), col)
+
+
+func _wrap(font: Font, text: String, fs: int, width: float) -> PackedStringArray:
+	var lines := PackedStringArray()
+	var line := ""
+	for word in text.split(" "):
+		var next := word if line == "" else line + " " + word
+		if line != "" and font.get_string_size(next, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > width:
+			lines.append(line)
+			line = word
+		else:
+			line = next
+	lines.append(line)
+	return lines
+
+
+static func _panel_box() -> StyleBoxFlat:
+	if _box == null:
+		_box = StyleBoxFlat.new()
+		_box.set_corner_radius_all(12)
+	return _box

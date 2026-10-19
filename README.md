@@ -14,8 +14,14 @@ for the neon bloom.
 | Slash   | J                      | X                |
 | Spit    | K                      | LB               |
 | Shield  | L                      | RB               |
-| Restart | R                      | Start            |
-| Menu    | Esc                    | Back             |
+| Pause   | Esc                    | Start            |
+| Restart | R (or from the pause menu) | Pause menu   |
+
+In the menus every button means one thing: up/down to choose, left/right to change,
+Space / Enter / A to confirm, Esc / B to go back, R / Y for the game and rules in the
+lobby, Tab / Start to play. In the lobby, PLAY first shows the game and its rules, then a
+panel per player: join with A, Space or Enter; each player picks their team or colour and
+gets ready on their own panel. A second keyboard player joins by holding the other confirm key.
 
 Two players on one keyboard: P1 is WASD + Space, Shift, J, K, L; P2 is arrows + Enter
 (push), `.` (dash), `,` (slash), `;` (spit), `'` (shield). With one controller P2

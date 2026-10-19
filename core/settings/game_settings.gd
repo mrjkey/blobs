@@ -11,82 +11,84 @@ extends RefCounted
 ## where it's used, or in _sync() if it's a MoveRules field. `only = "lab"`
 ## shows it only in the sandbox lab, `only = "menu"` only on the SETTINGS screen,
 ## `only = "lobby"` only in the lobby, for the modes that list it in
-## ModeInfo.options (match rules like football's time and goals).
+## ModeInfo.options (match rules like football's time and goals, the
+## treadmill's rules), plus CPU LEVEL for every mode with computers.
+## `group` puts a heading over the SETTINGS rows that share it.
 
 const OPTIONS := [
-	{key = "theme", label = "THEME", default_id = "neon", only = "menu", choices = [
+	{key = "theme", label = "THEME", default_id = "neon", only = "menu", group = "LOOK", choices = [
 		["neon", "NEON", "Glowing colours on a dark grid that pulses with the music."],
 		["classic", "CLASSIC", "Plain, solid colours with drop shadows."],
 	]},
-	{key = "glow", label = "GLOW", default_id = "off", only = "menu", choices = [
+	{key = "glow", label = "GLOW", default_id = "off", only = "menu", group = "LOOK", choices = [
 		["off", "OFF", "No bloom. Scenes load quickly."],
 		["on", "ON", "Bloom on glowing themes (neon). The first game with it loads slowly while shaders compile."],
 	]},
-	{key = "dash", label = "DASH", default_id = "ghost", choices = [
+	{key = "dash", label = "DASH", default_id = "ghost", group = "MOVES", choices = [
 		["ghost", "GHOST", "A quick ethereal burst. Passes through blobs, pushes and lasers."],
 		["bump", "BUMP", "A quick solid burst. Rams whatever is in the way and stuns the blob it hits."],
 		["off", "OFF", "No dash."],
 	]},
-	{key = "ghost_through", label = "GHOST PASSES", default_id = "obstacles", choices = [
+	{key = "ghost_through", label = "GHOST PASSES", default_id = "obstacles", group = "MOVES", choices = [
 		["obstacles", "BLOBS + OBSTACLES", "A ghost dash also passes through walls and bumpers (never the arena's own walls)."],
 		["blobs", "BLOBS", "A ghost dash passes through blobs, pushes and lasers, but not walls or bumpers."],
 	]},
-	{key = "energy", label = "ENERGY", default_id = "all", choices = [
+	{key = "energy", label = "ENERGY", default_id = "all", group = "MOVES", choices = [
 		["all", "ALL MOVES", "Every move costs energy: two segments for a push, one for the dash and shield, half one for a slash or spit. Only short cooldowns."],
 		["dash", "DASH ONLY", "The dash costs a segment, the other moves keep their normal cooldowns."],
 		["off", "OFF", "No bar: every move has its own cooldown."],
 	]},
-	{key = "slash", label = "SLASH", default_id = "on", choices = [
+	{key = "slash", label = "SLASH", default_id = "on", group = "MOVES", choices = [
 		["on", "ON", "A quick blade swing the way you face. Short reach, no windup, knocks back whoever it cuts."],
 		["off", "OFF", "No slash."],
 	]},
-	{key = "spit", label = "SPIT", default_id = "on", choices = [
+	{key = "spit", label = "SPIT", default_id = "on", group = "MOVES", choices = [
 		["on", "ON", "A glob fired the way you face. Flies far and slimes the first blob it hits: knocked back, slippery for a moment, and drained of energy (never the last segment)."],
 		["off", "OFF", "No spit."],
 	]},
-	{key = "shield", label = "SHIELD", default_id = "on", choices = [
+	{key = "shield", label = "SHIELD", default_id = "on", group = "MOVES", choices = [
 		["on", "ON", "A short bubble that slows you down. Blocks pushes and slashes; spit that touches it flies back at whoever fired it."],
 		["off", "OFF", "No shield."],
 	]},
-	{key = "shrink", label = "SHRINKING", default_id = "normal", choices = [
+	{key = "shrink", label = "SHRINKING", default_id = "normal", only = "lobby", choices = [
 		["normal", "NORMAL", "In the treadmill, blobs slowly lose mass all the time: keep eating. Too small and they pop."],
 		["slow", "SLOW", "Blobs lose mass slowly. Food is a nice extra."],
 		["fast", "FAST", "Blobs lose mass fast. Always be hunting food."],
 		["off", "OFF", "Blobs only lose mass by spitting and getting lasered."],
 	]},
-	{key = "spit_mass", label = "SPIT COST", default_id = "normal", choices = [
+	{key = "spit_mass", label = "SPIT COST", default_id = "normal", only = "lobby", choices = [
 		["normal", "NORMAL", "In the treadmill, each spit costs a little mass: a way to slim down and squeeze through gaps."],
 		["small", "SMALL", "Each spit costs a tiny bit of mass."],
 		["big", "BIG", "Each spit costs a lot of mass."],
 		["off", "OFF", "Spitting is free."],
 	]},
-	{key = "laser_mass", label = "LASER BURN", default_id = "normal", choices = [
+	{key = "laser_mass", label = "LASER BURN", default_id = "normal", only = "lobby", choices = [
 		["normal", "NORMAL", "In the treadmill, a laser hit stuns you and burns off some mass."],
 		["small", "SMALL", "A laser hit stuns you and burns off a little mass."],
 		["big", "BIG", "A laser hit stuns you and burns off a lot of mass."],
 		["off", "OFF", "A laser hit only stuns you."],
 	]},
-	{key = "food", label = "FOOD", default_id = "normal", choices = [
+	{key = "food", label = "FOOD", default_id = "normal", only = "lobby", choices = [
 		["normal", "NORMAL", "How much food the treadmill lays out: enough to keep up if you go looking."],
 		["less", "LESS", "Scarce food: blobs fight over every pellet."],
 		["more", "MORE", "Plenty of food: easy to grow big (and get stuck)."],
 	]},
-	{key = "track_view", label = "TRACK VIEW", default_id = "normal", choices = [
+	{key = "track_view", label = "TRACK VIEW", default_id = "normal", only = "lobby", choices = [
 		["normal", "NORMAL", "The treadmill always shows the whole belt between the kill lasers. A medium belt."],
 		["near", "CLOSE", "A shorter belt, seen up close: less room to run, bigger blobs."],
 		["far", "FAR", "A tall belt, seen from further away: lots of room, smaller blobs."],
 	]},
-	{key = "track_speed", label = "TRACK SPEED", default_id = "normal", choices = [
+	{key = "track_speed", label = "TRACK SPEED", default_id = "normal", only = "lobby", choices = [
 		["normal", "NORMAL", "How fast the treadmill's belt climbs. It speeds up as the round goes on."],
 		["slow", "SLOW", "A relaxed climb."],
 		["fast", "FAST", "A hurried climb: keep moving."],
 	]},
-	{key = "blob_speed", label = "BLOB SPEED", default_id = "normal", choices = [
+	{key = "blob_speed", label = "BLOB SPEED", default_id = "normal", only = "lobby", choices = [
 		["normal", "NORMAL", "How fast blobs run in the treadmill: a little quicker than in the other modes."],
 		["slow", "SLOW", "The same speed as in the other modes."],
 		["fast", "FAST", "Quick blobs: dodging is easy, stopping isn't."],
 	]},
-	{key = "meter", label = "BAR", default_id = "above", choices = [
+	{key = "meter", label = "BAR", default_id = "above", group = "ENERGY BAR", choices = [
 		["above", "ABOVE BLOB", "Pips over the blob's head."],
 		["below", "BELOW BLOB", "Pips under the blob."],
 		["ring", "RING", "Arcs around the blob, outside the push-cooldown ring."],
@@ -94,11 +96,11 @@ const OPTIONS := [
 		["top", "HUD TOP", "Big bars at the top centre of the screen."],
 		["bottom", "HUD BOTTOM", "Big bars at the bottom centre of the screen."],
 	]},
-	{key = "meter_bots", label = "BAR ON BOTS", default_id = "yes", choices = [
+	{key = "meter_bots", label = "BAR ON BOTS", default_id = "yes", group = "ENERGY BAR", choices = [
 		["yes", "YES", "Bots show their bar too (above, below and ring only)."],
 		["no", "NO", "Only players show a bar."],
 	]},
-	{key = "bots_dash", label = "BOTS DASH", default_id = "yes", choices = [
+	{key = "bots_dash", label = "BOTS DASH", default_id = "yes", group = "COMPUTERS", choices = [
 		["yes", "YES", "Bots dodge-dash out of pushes, ram with a bump dash, phase through with a ghost dash."],
 		["no", "NO", "Bots never dash."],
 	]},
@@ -121,6 +123,13 @@ const OPTIONS := [
 	]},
 	{key = "fat_level", label = "LEVEL", default_id = "fat_1", only = "lobby", choices = [
 		["fat_1", "LEVEL 1", "Warm-up: plenty of good stuff, junk you can see coming, a few bouncy walls."],
+	]},
+	{key = "cpu_level", label = "CPU LEVEL", default_id = "normal", only = "lobby", choices = [
+		["idle", "IDLE", "Computers stand still: training dummies."],
+		["passive", "PASSIVE", "Computers run around but never push."],
+		["easy", "EASY", "Slow, forgiving computers that react late."],
+		["normal", "NORMAL", "Computers that play properly: they push, dash and shield."],
+		["aggressive", "AGGRESSIVE", "Computers that come for you, and react fast."],
 	]},
 	{key = "props", label = "PROPS", default_id = "walls", only = "lab", choices = [
 		["walls", "WALLS + BUMPERS", "A wall, a kicker wall and two bumpers to dash into (or through)."],

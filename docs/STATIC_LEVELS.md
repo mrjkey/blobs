@@ -122,7 +122,7 @@ F6 (run current scene) in practice mode.
 2. My edits to a `.tscn` reach the editor through the Claude Sync plugin
    when the turn ends. It reloads scenes that are open, so you see the
    change in the editor tab. In the running game, the map shows the change
-   the next time it loads (Esc and back, or R).
+   the next time it loads (quit to the lobby and back, or R).
 3. When I add new pieces (new `class_name` scripts), click into the editor so
    it rescans, then restart the game.
 4. You commit; I never do. Commit a map before asking for a big change to

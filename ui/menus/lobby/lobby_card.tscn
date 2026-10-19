@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://ui/menus/lobby/lobby_card.gd" id="1_card"]
 
 [node name="LobbyCard" type="Control"]
-custom_minimum_size = Vector2(220, 300)
+custom_minimum_size = Vector2(264, 440)
 layout_mode = 3
 anchors_preset = 0
 mouse_filter = 2

@@ -17,7 +17,7 @@ in `themes/` (see Themes below).
 | `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`, `pitch/`: the floors and walls a mode plays on, with their own rules like ring-out, the kill lasers or goals), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`; `health/`: `BeltPickup`, `HealthItem`, `PowerUp`, `Magnet` for Don't Get Fat!), `maps/` (hand-made levels: `Map`, `SpawnPoint`, `FoodSpot`, `FinishLine`, `Gate`, and one folder per map) |
 | `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style and backdrop |
 | `modes/` | One folder per game mode (`treadmill/`, `ring/`, `football/`, `dont_get_fat/`): the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
-| `ui/` | `menus/` (main menu, `lobby/` (game and player select), settings; `options/`: `OptionList`, `OptionRow`, shared by the settings screen and the lab), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`), `themes/menu_theme.tres` |
+| `ui/` | `menus/` (main menu, `lobby/` (game and player select), settings, `pause/` (`PauseMenu`); `options/`: `OptionList`, `OptionRow`, shared by the settings screen, the lobby's GAME list and the lab; `prompts/`: `ButtonGlyph`, `PromptBar`, button prompts drawn as glyphs), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`), `themes/menu_theme.tres` |
 | `sandbox/` | Test bench scene for trying components, its props, and `lab/` (the Tab menu) |
 | `docs/` | This file; `STATIC_LEVELS.md` (maps), `DONT_GET_FAT.md` (the co-op mode), `IDEAS.md` |
 | `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md); `tools/bake_track.gd` bakes a generated treadmill track into a map |
@@ -90,16 +90,26 @@ by device id) or a computer at a `BotLevel` (`entities/controllers/levels/`:
 idle, passive, easy, normal, aggressive), and has a seat number (P1..P4) and
 a colour index into `GameTheme.palette()`.
 
-- **Main menu → lobby → mode.** PLAY opens the lobby (`ui/menus/lobby/`).
-  Its top picks the game, one of the lobby's `modes` (each a `ModeInfo`:
-  title, scene path, min/max/default seats, max humans, teams, options), and
-  that game's options; the last game picked is kept in `Session.next_mode`.
-  Players join from any device, pick a colour, take a seat (which also picks
-  their team), set the CPUs' levels and open or close seats (a mode whose
-  `ModeInfo` has `bots` off is for humans only: free seats stay empty and
-  someone has to join to start); the lobby writes
-  `Session.lineup` + `Session.lineup_mode` and starts the mode. Esc in the game
-  goes back to the lobby with the same seats.
+- **Main menu → lobby → mode.** PLAY opens the lobby (`ui/menus/lobby/`),
+  which has two views. GAME is one list, like SETTINGS: the game (one of
+  the lobby's `modes`, each a `ModeInfo`: title, scene path, min/max/default
+  seats, max humans, teams, options), its options, PLAYERS (how many play;
+  kept per game in `Session.lobby_seats`) and CPU LEVEL (the `cpu_level`
+  setting, one level for every computer). PLAYERS has a panel per seat:
+  players join from any device into the lowest free panel (P1, P2...) and
+  only ever change their own panel (their team in a team mode, else their
+  colour; ready; leave). Computers fill the seats nobody joined up to
+  PLAYERS (not in a mode whose `ModeInfo` has `bots` off: someone has to
+  join). Once everyone is ready a READY banner shows and the next confirm
+  starts. The last game picked is kept in `Session.next_mode`; the lobby
+  writes `Session.lineup` + `Session.lineup_mode` and starts the mode.
+  Quitting from the game's pause menu comes back to PLAYERS with the same people.
+- **Menu buttons mean one thing everywhere.** Up/down moves between rows,
+  left/right changes the focused value, A / SPACE / ENTER confirms, B / ESC
+  goes back one step, Y / R opens the game and rules, START / TAB plays (in a
+  game: pauses). Prompts show the glyph of the device that will press it
+  (`ButtonGlyph`, `PromptBar`). A lone keyboard player has every key; a
+  second one joins by holding the other half's confirm key.
 - **Started on its own (F6).** `GameMode.lineup()` makes
   `PlayerSlot.default_lineup(info)`: P1 on the keyboard, each connected
   gamepad takes the next seat, CPUs (normal) fill the rest (not without `bots`). With one human
@@ -109,16 +119,22 @@ a colour index into `GameTheme.palette()`.
   `PlayerInput` or the mode's `_new_brain()` with the slot's level. Humans are
   tagged P1..P4 when there's more than one.
 - **Teams.** A `ModeInfo` with `teams` (e.g. `["BLUE", "RED"]`) is a team
-  mode: seats alternate between the teams (`team_of()`: P1 and P3 against P2
-  and P4). `spawn_slot()` sets `blob.team`. Each seat plays in its team's
-  colours, the first seat in the team colour, the second in its partner colour
-  (blue + purple, red + orange: `GameTheme.team_member_color()`, theme values
-  `team.0`, `team.1`, `team.0.second`, `team.1.second`), unless the player
-  picked their own (`PlayerSlot.color_in()`). `BlobBody` draws a
+  mode: players pick their team in the lobby (`PlayerSlot.team`) and the
+  lobby spreads the computers to even the teams out, adding one for a team
+  nobody is on. Started on its own, seats alternate (`team_of()`: P1 and P3
+  against P2 and P4). `PlayerSlot.team_in()` gives a slot's team and
+  `spawn_slot()` sets `blob.team`. Each team member plays in the team's
+  colours, the first in the team colour, the second in its partner colour
+  (`team_second`; blue + purple, red + orange: `GameTheme.team_member_color()`, theme values
+  `team.0`, `team.1`, `team.0.second`, `team.1.second`). `BlobBody` draws a
   team-coloured spot under a blob with a team.
 - **Mode options.** `ModeInfo.options` lists `GameSettings` options (marked
-  `only = "lobby"`) that the lobby shows under the game's name, like
-  football's TIME and GOALS. The mode reads them with `GameSettings.choice()`.
+  `only = "lobby"`) that the lobby's GAME list shows for the game, like
+  football's TIME and GOALS or the treadmill's track and mass rules. The
+  mode reads them with `GameSettings.choice()`.
+- **Pausing.** START or ESC in a game opens the `PauseMenu` (resume,
+  restart, quit to the lobby or menu) and pauses the tree; R restarts at
+  once on the keyboard.
 
 ### Moves and energy
 
@@ -166,6 +182,7 @@ are saved in `Session.settings`, the look in `Session.theme_name` /
 them with `set_choice()`. The main menu's SETTINGS screen and the sandbox lab
 list them; `only = "menu"` / `only = "lab"` keeps an option to one of the two,
 and `only = "lobby"` marks a mode's match option (see Mode options above).
+`group` puts the SETTINGS rows under headings (LOOK, MOVES...).
 New option: add an entry, then read it where it's used (or in
 `GameSettings._sync()` for a `MoveRules` field).
 
@@ -197,7 +214,7 @@ What reaches the running game (see CLAUDE.md for the plumbing):
 |---|---|
 | a `.tres` (stats, settings, theme, environment) | immediately |
 | a `.gd` method body | immediately; node state is kept, `_ready()` does not run again |
-| a `.tscn` (nodes, exported values on nodes) | when that scene loads again (Esc to the menu and back) |
+| a `.tscn` (nodes, exported values on nodes) | when that scene loads again (quit to the lobby or menu and back) |
 
 So:
 

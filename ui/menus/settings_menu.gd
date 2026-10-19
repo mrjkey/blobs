@@ -1,6 +1,7 @@
 extends Control
-## The SETTINGS screen, from the main menu: the look (theme, glow) and every
-## gameplay option of GameSettings. Changes are saved as soon as they're made.
+## The SETTINGS screen, from the main menu: the look (theme, glow) and the
+## gameplay options every game shares, under their group headings; each
+## game's own rules are in the lobby. Changes are saved as soon as they're made.
 
 @export_file("*.tscn") var main_menu_path: String
 

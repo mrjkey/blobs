@@ -6,9 +6,10 @@ extends Resource
 ## default lineup when the scene is started on its own.
 ##
 ## `teams` names the teams of a team mode (empty: every blob for itself).
-## Seats alternate between them: P1 and P3 on the first, P2 and P4 on the
-## second. `options` are keys of GameSettings.OPTIONS the lobby shows under
-## the mode's name (match length and the like). A mode without `bots` is for
+## Players pick their team in the lobby; started on its own, seats alternate
+## between them (team_of: P1 and P3 on the first, P2 and P4 on the second).
+## `options` are keys of GameSettings.OPTIONS the lobby's GAME list shows
+## for the mode (match length and the like). A mode without `bots` is for
 ## humans only: the lobby never fills a seat with a computer. A mode with a
 ## `theme` always plays in that look, whatever the THEME setting says.
 
@@ -19,7 +20,7 @@ const MAX_SLOTS := 4
 @export_file("*.tscn") var scene := ""
 @export_range(1, 4) var min_slots := 2
 @export_range(1, 4) var max_slots := 4
-@export_range(1, 4) var default_slots := 2 # seats open when the lobby starts, and in the default lineup
+@export_range(1, 4) var default_slots := 2 # how many play (the lobby's PLAYERS until changed), and the default lineup
 @export_range(1, 4) var max_humans := 4 # 1 = a one-player mode: P1 plays with the keyboard and a gamepad
 @export var teams := PackedStringArray() # e.g. ["BLUE", "RED"]; empty = no teams
 @export var options := PackedStringArray() # GameSettings option keys, set in the lobby

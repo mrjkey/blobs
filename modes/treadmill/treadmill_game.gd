@@ -63,9 +63,9 @@ func _spawn_blobs() -> void:
 		b.body.look = Vector2.UP
 
 	if humans == 0:
-		hud.set_hint("Watching the bots  ·  R restart  ·  Esc back")
+		hud.set_hint("Watching the bots  ·  Start or Esc: pause")
 	else:
-		hud.set_hint("Stay ahead of the laser  ·  eat to keep your size, but big blobs get stuck  ·  R restart  ·  Esc back")
+		hud.set_hint("Stay ahead of the laser  ·  eat to keep your size, but big blobs get stuck  ·  Start or Esc: pause")
 
 
 func _new_brain() -> BotBrain:
@@ -132,7 +132,7 @@ func _check_finish(line_y: float) -> void:
 			hud.show_banner("YOU WIN!" if humans == 1 else "%s WINS!" % b.tag, b.color)
 		else:
 			hud.show_banner("%s WINS" % b.display_name.to_upper(), b.color)
-		hud.set_hint("Finished!   ·   R or Start: rematch   ·   Esc or Back: menu")
+		hud.set_hint("Finished!   ·   Start or Esc: rematch or quit   ·   R: rematch")
 		return
 
 
@@ -159,4 +159,4 @@ func _check_round_over() -> void:
 		hud.show_banner("THE BOTS WIN", Color(1.0, 0.4, 0.4))
 	else:
 		hud.show_banner("DRAW!", Color.WHITE)
-	hud.set_hint("%d m   ·   R or Start: rematch   ·   Esc or Back: menu" % int(distance / 10.0))
+	hud.set_hint("%d m   ·   Start or Esc: rematch or quit   ·   R: rematch" % int(distance / 10.0))

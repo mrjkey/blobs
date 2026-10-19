@@ -70,7 +70,7 @@ func _spawn_blobs() -> void:
 		var b := spawn_slot(i, at)
 		b.rules = move_rules
 		b.body.look = Vector2.UP
-	hud.set_hint("Catch the good stuff, dodge the junk: get your buddy through the gate under %d kg  ·  R restart  ·  Esc back"
+	hud.set_hint("Catch the good stuff, dodge the junk: get your buddy through the gate under %d kg  ·  Start or Esc: pause"
 		% roundi(rules.max_weight))
 
 
@@ -129,7 +129,7 @@ func _reach_gate() -> void:
 		Juice.burst(buddy.global_position + Vector2(0.0, -buddy.radius), Gate.BAD_COLOR, 24, 380.0)
 		Sfx.play("out", 0.7)
 		hud.show_banner("TOO BIG!\nLEVEL FAILED", Gate.BAD_COLOR)
-	hud.set_hint("%d kg, limit %d kg   ·   R or Start: play again   ·   Esc or Back: menu"
+	hud.set_hint("%d kg, limit %d kg   ·   Start or Esc: play again or quit   ·   R: play again"
 		% [roundi(buddy.weight), roundi(rules.max_weight)])
 
 

@@ -1,7 +1,7 @@
 class_name PlayerSlot
 extends Resource
 ## One seat in a game's lineup: a human on the keyboard and/or a gamepad, or a
-## computer at some BotLevel, with its colour. The lobby builds the lineup
+## computer at some BotLevel, with its colour and, in a team mode, its team. The lobby builds the lineup
 ## (Session.lineup); a mode started on its own uses default_lineup(). GameMode
 ## turns each slot into a blob with a PlayerInput or a BotBrain.
 
@@ -13,10 +13,11 @@ const NORMAL := preload("res://entities/controllers/levels/normal.tres")
 
 @export var number := 1 # the seat, 1..4: P1..P4
 @export var human := false
-@export var color_index := 0 # into GameTheme.palette()
-## In a team mode, play in the seat's team colour (GameTheme.team_member_color)
-## instead of color_index. Players turn it off by picking a colour in the lobby.
-@export var team_color := true
+@export var color_index := 0 # into GameTheme.palette(); not used in a team mode
+## In a team mode, the team (0, 1): players pick theirs in the lobby, which
+## spreads the computers to even the teams out. -1 = from the seat (ModeInfo.team_of).
+@export var team := -1
+@export var team_second := false # with `team` set: the team's second member, in the team's second colour
 
 @export_group("Human")
 @export var profile: InputProfile = KEYS_ALL # keys and gamepad buttons
@@ -85,13 +86,20 @@ static func recolor_bots(slots: Array) -> void:
 		taken[next] = true
 
 
-## The colour this slot plays in, in mode `info`: its seat's team colour in
-## a team mode (unless a player picked their own), else its palette colour.
+## The team this slot plays for in mode `info` (team_in), -1 without teams.
+func team_in(info: ModeInfo) -> int:
+	if info == null or info.teams.is_empty():
+		return -1
+	return team if team >= 0 else info.team_of(number - 1)
+
+
+## The colour this slot plays in, in mode `info`: its team's colour in a team
+## mode (the second colour for a team's second member), else its palette colour.
 func color_in(info: ModeInfo) -> Color:
 	var theme := GameTheme.current()
-	var team := info.team_of(number - 1) if info != null else -1
-	if team >= 0 and (team_color or not human):
-		return theme.team_member_color(team, number > 2)
+	var t := team_in(info)
+	if t >= 0:
+		return theme.team_member_color(t, team_second if team >= 0 else number > 2)
 	return theme.palette_color(color_index)
 
 
@@ -103,6 +111,8 @@ func describe() -> String:
 		var n := Input.get_connected_joypads().find(pad_device) + 1
 		return "CONTROLLER %d" % n if n > 0 else "CONTROLLER"
 	match device:
+		"keys":
+			return "KEYBOARD"
 		"keys_left":
 			return "KEYBOARD  WASD"
 		"keys_right":

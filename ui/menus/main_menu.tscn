@@ -45,7 +45,7 @@ horizontal_alignment = 1
 [node name="Subtitle" type="Label" parent="Center/Column" unique_id=1604580364]
 layout_mode = 2
 theme_type_variation = &"SubtitleLabel"
-text = "Push them out. Don't get pushed."
+text = "Push, dash and spit. 1 to 4 players."
 horizontal_alignment = 1
 
 [node name="Buttons" type="VBoxContainer" parent="Center/Column" unique_id=1591501762]
@@ -71,7 +71,7 @@ text = "QUIT"
 [node name="Hint" type="Label" parent="Center/Column" unique_id=2074995473]
 layout_mode = 2
 theme_type_variation = &"HintLabel"
-text = "W/S, arrows or D-pad to choose     Space, Enter or A to start"
+text = "W/S, arrows or D-pad to choose     Space, Enter or A to pick"
 horizontal_alignment = 1
 
 [connection signal="pressed" from="Center/Column/Buttons/PlayButton" to="." method="_on_play_button_pressed"]

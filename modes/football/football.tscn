@@ -17,7 +17,7 @@ info = ExtResource("10_info")
 blobs_node = NodePath("Blobs")
 hud = NodePath("Hud")
 countdown_time = 2.4
-hint = "Move   ·   push to kick   ·   dash   ·   R restart   ·   Esc back"
+hint = "Move   ·   push to kick   ·   dash   ·   Start or Esc: pause"
 pitch = NodePath("Pitch")
 ball_scene = ExtResource("5_ball")
 

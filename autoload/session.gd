@@ -19,6 +19,10 @@ var next_mode: Resource
 var lineup: Array = []
 var lineup_mode := ""
 
+## The lobby's PLAYERS row per game (ModeInfo path -> how many play, computers
+## filling the rest). Kept while the game runs, not saved.
+var lobby_seats := {}
+
 ## Neon bloom (HDR 2D + glow). Off by default: the first scene that uses it
 ## loads slowly while the GPU compiles shaders. Saved between runs.
 var glow := false:

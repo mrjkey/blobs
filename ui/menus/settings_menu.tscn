@@ -4,6 +4,7 @@
 [ext_resource type="Theme" uid="uid://clopy5laifscb" path="res://ui/themes/menu_theme.tres" id="2_theme"]
 [ext_resource type="Script" path="res://ui/menus/options/option_list.gd" id="3_list"]
 [ext_resource type="PackedScene" path="res://ui/menus/options/option_row.tscn" id="4_row"]
+[ext_resource type="PackedScene" path="res://ui/menus/options/option_header.tscn" id="5_header"]
 
 [node name="SettingsMenu" type="Control"]
 layout_mode = 3
@@ -42,13 +43,21 @@ theme_type_variation = &"TitleLabel"
 text = "SETTINGS"
 horizontal_alignment = 1
 
-[node name="Options" type="VBoxContainer" parent="Center/Column" node_paths=PackedStringArray("help")]
+[node name="Scroll" type="ScrollContainer" parent="Center/Column"]
+custom_minimum_size = Vector2(700, 600)
+layout_mode = 2
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="Options" type="VBoxContainer" parent="Center/Column/Scroll" node_paths=PackedStringArray("help")]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 2
 script = ExtResource("3_list")
 row_scene = ExtResource("4_row")
-help = NodePath("../Help")
+header_scene = ExtResource("5_header")
+help = NodePath("../../Help")
 
 [node name="Help" type="Label" parent="Center/Column"]
 custom_minimum_size = Vector2(620, 60)
@@ -65,7 +74,7 @@ text = "BACK"
 [node name="Hint" type="Label" parent="Center/Column"]
 layout_mode = 2
 theme_type_variation = &"HintLabel"
-text = "W/S choose     A/D, arrows or click to change     Esc to go back"
+text = "W/S, up/down or D-pad to choose     A/D, left/right or click to change     Esc or B to go back"
 horizontal_alignment = 1
 
 [connection signal="pressed" from="Center/Column/BackButton" to="." method="_on_back_button_pressed"]
