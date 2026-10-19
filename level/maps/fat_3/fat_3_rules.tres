@@ -5,10 +5,15 @@
 [resource]
 script = ExtResource("1_script")
 title = "SNACK ATTACK"
-start_weight = 70.0
+start_weight = 70.5
 window_low = 73.0
 window_high = 77.0
 scroll_start = 320.0
 scroll_end = 380.0
 plate_target = 6
 treat_slots = 5
+feed_workouts = 6.0
+feed_beds = 14.0
+feed_water = 12.0
+feed_food = 5.0
+feed_treats = 6.0

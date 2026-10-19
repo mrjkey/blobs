@@ -6,9 +6,10 @@ extends Control
 ##     by one: cleared or not, then the three stars (Balanced plate, Bull's-eye,
 ##     Light on treats), then how many upgrade picks that earns. Anyone's A
 ##     (or their push key) goes on.
-##   await pick(...): one upgrade pick. The picker chooses one of three cards
-##     with left and right on their own controls and takes it with A. Returns
-##     the card's id.
+##   await pick(...): one upgrade pick. The picker chooses one of the cards
+##     with left and right on their own controls and takes it with A, or
+##     (with Ask the chef) swaps the hand with B. Returns the card's id, or
+##     "" for a new hand. A snowball card shows how strong it is now.
 ##   await run_report(run, complete): the run's report card: every level
 ##     played with its stars, the upgrades, the total.
 ## Drawn by hand, in the HUD's font.
@@ -24,7 +25,9 @@ const STAR_OFF := Color(0.28, 0.28, 0.34)
 const LINE_TIME := 0.45 # a report card line shows every this many seconds
 const STAR_NAMES := ["BALANCED PLATE", "BULL'S-EYE", "LIGHT ON TREATS"]
 const KIND_COLORS := {"BUDDY": Color(1.0, 0.75, 0.45), "WINDOW": Color(0.4, 0.9, 0.6), "PLATE": Color(1.0, 0.85, 0.3),
-	"BELT": Color(0.4, 0.75, 1.0), "BLOB": Color(1.0, 0.5, 0.75), "POWER-UP": Color(0.75, 0.55, 1.0), "TEAM": Color(0.6, 0.95, 0.95)}
+	"TREATS": Color(1.0, 0.45, 0.5), "MUSCLE": Color(1.0, 0.6, 0.85), "REST": Color(0.6, 0.78, 1.0),
+	"BELT": Color(0.4, 0.75, 1.0), "BLOB": Color(0.55, 0.95, 0.95), "POWER-UP": Color(0.75, 0.55, 1.0),
+	"PICKS": Color(1.0, 0.95, 0.6), "TEAM": Color(0.6, 0.95, 0.7)}
 
 var inputs: Array[PlayerInput] = [] # every human's controls, for "go on"
 
@@ -40,6 +43,7 @@ var _picker: PlayerInput
 var _pick_n := 0
 var _pick_of := 0
 var _taken := {}
+var _swaps := 0 # new hands the picker can still ask for (Ask the chef)
 var _run: FatRun
 var _complete := false
 var _was_x := 0.0
@@ -53,8 +57,9 @@ func _ready() -> void:
 
 
 ## The level's report card. `entry`: {title, cleared, why, weight, low, high,
-## plate: [protein, grains, veg], target, treats, slots, has_plate, stars:
-## [plate, bull's-eye, treats]}. `picks` < 0: no picks to show.
+## mid, bull, plate: [protein, grains, veg], target, treats, slots, has_plate,
+## stars: [plate, bull's-eye, treats], muscle, muscle_gained, workouts, rest,
+## leftovers: [protein, grains, veg] over the target}. `picks` < 0: no picks to show.
 func report(entry: Dictionary, picks: int) -> void:
 	_entry = entry
 	_picks = picks
@@ -62,9 +67,9 @@ func report(entry: Dictionary, picks: int) -> void:
 
 
 ## One pick from `hand` (card ids) by `who`, steering with `input`; this is
-## pick `n` of `of`; `taken`: the run's upgrades so far. `who` is "" when
-## there's only one player. Returns the card's id.
-func pick(hand: Array[String], who: String, color: Color, input: PlayerInput, n: int, of: int, taken: Dictionary) -> String:
+## pick `n` of `of` in `run`; `swaps`: new hands they can still ask for. `who`
+## is "" when there's only one player. Returns the card's id, or "" for a new hand.
+func pick(hand: Array[String], who: String, color: Color, input: PlayerInput, n: int, of: int, run: FatRun, swaps: int) -> String:
 	_hand = hand
 	_choice = 1 if hand.size() > 1 else 0
 	_who = who
@@ -72,7 +77,9 @@ func pick(hand: Array[String], who: String, color: Color, input: PlayerInput, n:
 	_picker = input
 	_pick_n = n
 	_pick_of = of
-	_taken = taken
+	_run = run
+	_taken = run.upgrades
+	_swaps = swaps
 	return await _open("pick")
 
 
@@ -112,6 +119,11 @@ func _process(delta: float) -> void:
 			ok = ok or (pressed and (_mode != "pick" or input == _picker))
 	if _mode == "pick":
 		_steer()
+		var swap := is_instance_valid(_picker) and _picker.alt_pressed()
+		if swap and _swaps > 0 and _t >= _reveal_time():
+			Sfx.play("pop", 0.7)
+			_done.emit("")
+			return
 	if not ok:
 		return
 	if _t < _reveal_time():
@@ -167,7 +179,7 @@ func _prompt(font: Font, r: Rect2, text: String) -> void:
 
 func _draw_report(font: Font) -> void:
 	var e := _entry
-	var r := _panel(760.0, 600.0)
+	var r := _panel(760.0, 650.0)
 	var x := r.position.x + 48.0
 	var w := r.size.x - 96.0
 	var y := r.position.y + 60.0
@@ -201,25 +213,38 @@ func _draw_report(font: Font) -> void:
 		_text(font, Vector2(x + 60.0, y), line[0], 26, (INK if line[2] else DIM) * col_a)
 		_text(font, Vector2(x + 60.0, y + 26.0), line[1], 18, DIM * col_a)
 		if line[2] and _picks >= 0:
-			_text(font, Vector2(x, y), "+1 PICK", 20, STAR_ON * col_a, w, HORIZONTAL_ALIGNMENT_RIGHT)
+			var worth := 1 + (FatRun.count("gold_star") if i == 2 else 0) # Gold star: the Bull's-eye is worth more
+			_text(font, Vector2(x, y), "+%d PICK%s" % [worth, "" if worth == 1 else "S"], 20, STAR_ON * col_a, w,
+				HORIZONTAL_ALIGNMENT_RIGHT)
 		y += 68.0
-	if _t >= LINE_TIME * 5.0 and _picks >= 0:
-		_text(font, Vector2(x, y + 18.0), "%d UPGRADE PICK%s" % [_picks, "" if _picks == 1 else "S"], 30, STAR_ON, w,
-			HORIZONTAL_ALIGNMENT_CENTER)
+	if _t >= LINE_TIME * 5.0:
+		_text(font, Vector2(x, y), _body_line(e), 18, Color(1.0, 0.7, 0.9), w, HORIZONTAL_ALIGNMENT_CENTER)
+		if _picks >= 0:
+			_text(font, Vector2(x, y + 44.0), "%d UPGRADE PICK%s" % [_picks, "" if _picks == 1 else "S"], 30, STAR_ON, w,
+				HORIZONTAL_ALIGNMENT_CENTER)
 	if _t >= _reveal_time():
 		_prompt(font, r, "A / Space: continue")
 
 
+## "MUSCLE 23 (+9 this level) · REST 2 · NEXT LEVEL: recovery 1 · energy 2 · fibre 1"
+func _body_line(e: Dictionary) -> String:
+	var line := "MUSCLE %d (+%d this level)   ·   REST %d" % [floori(e.muscle), roundi(e.muscle_gained), e.rest]
+	var left: Array = e.leftovers
+	if e.cleared and (left[0] + left[1] + left[2]) > 0:
+		line += "   ·   NEXT LEVEL: recovery %d, energy %d, fibre %d" % [left[0], left[1], left[2]]
+	return line
+
+
 func _draw_pick(font: Font) -> void:
-	var r := _panel(1000.0, 640.0)
+	var r := _panel(minf(size.x - 80.0, 1240.0), 640.0)
 	var x := r.position.x
 	var w := r.size.x
 	_text(font, Vector2(x, r.position.y + 62.0), "PICK AN UPGRADE" if _who == "" else "%s PICKS AN UPGRADE" % _who, 40,
 		_who_color, w, HORIZONTAL_ALIGNMENT_CENTER)
 	_text(font, Vector2(x, r.position.y + 98.0), "pick %d of %d" % [_pick_n, _pick_of], 22, DIM, w, HORIZONTAL_ALIGNMENT_CENTER)
-	var cw := 270.0
-	var ch := 300.0
 	var gap := 34.0
+	var cw := minf(270.0, (w - 80.0 - gap * (_hand.size() - 1)) / maxf(_hand.size(), 1))
+	var ch := 300.0
 	var left := x + (w - cw * _hand.size() - gap * (_hand.size() - 1)) * 0.5
 	for i in _hand.size():
 		var id := _hand[i]
@@ -242,19 +267,23 @@ func _draw_pick(font: Font) -> void:
 			_text(font, Vector2(ix, cr.position.y + 40.0), "you have %d" % have, 16, DIM, iw, HORIZONTAL_ALIGNMENT_RIGHT)
 		draw_multiline_string(font, Vector2(ix, cr.position.y + 84.0), card[0], HORIZONTAL_ALIGNMENT_LEFT, iw, 28, 2,
 			INK if on else Color(INK, 0.8))
-		draw_multiline_string(font, Vector2(ix, cr.position.y + 176.0), card[2], HORIZONTAL_ALIGNMENT_LEFT, iw, 20, 5,
+		draw_multiline_string(font, Vector2(ix, cr.position.y + 176.0), card[2], HORIZONTAL_ALIGNMENT_LEFT, iw, 20, 4,
 			INK if on else DIM)
+		var now := _run.note(id)
+		if now != "":
+			_text(font, Vector2(ix, cr.end.y - 18.0), "now: " + now, 16, STAR_ON, iw)
 	var names: Array[String] = []
 	for id: String in _taken:
 		names.append(FatRun.CARDS[id][0] + ("" if _taken[id] == 1 else " ×%d" % _taken[id]))
 	_text(font, Vector2(x + 40.0, r.end.y - 72.0), "Upgrades: " + (", ".join(names) if not names.is_empty() else "none yet"),
 		18, DIM, w - 80.0, HORIZONTAL_ALIGNMENT_CENTER)
-	_prompt(font, r, ("" if _who == "" else _who + ": ") + "left / right to choose · A / push key: take it")
+	var swap := " · B / dash key: new hand (%d left)" % _swaps if _swaps > 0 else ""
+	_prompt(font, r, ("" if _who == "" else _who + ": ") + "left / right to choose · A / push key: take it" + swap)
 
 
 func _draw_run(font: Font) -> void:
 	var rows := _run.report.size()
-	var r := _panel(820.0, 300.0 + rows * 52.0 + 60.0)
+	var r := _panel(820.0, 330.0 + rows * 52.0 + 60.0)
 	var x := r.position.x + 60.0
 	var w := r.size.x - 120.0
 	var y := r.position.y + 70.0
@@ -275,7 +304,9 @@ func _draw_run(font: Font) -> void:
 		y += 52.0
 	y += 14.0
 	_text(font, Vector2(x, y), "%d STARS" % _run.stars(), 34, STAR_ON, w, HORIZONTAL_ALIGNMENT_CENTER)
-	y += 44.0
+	y += 34.0
+	_text(font, Vector2(x, y), "MUSCLE %d" % floori(_run.muscle), 20, Color(1.0, 0.7, 0.9), w, HORIZONTAL_ALIGNMENT_CENTER)
+	y += 30.0
 	var names: Array[String] = []
 	for id: String in _run.upgrades:
 		names.append(FatRun.CARDS[id][0] + ("" if _run.upgrades[id] == 1 else " ×%d" % _run.upgrades[id]))

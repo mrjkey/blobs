@@ -22,6 +22,11 @@ script = ExtResource("9_sign")
 position = Vector2(0, -450)
 text = "WALLS CLOSE IN"
 
+[node name="Sign2" type="Node2D" parent="Signs"]
+script = ExtResource("9_sign")
+position = Vector2(0, -9910)
+text = "WORKOUT!"
+
 [node name="Rushes" type="Node2D" parent="."]
 
 [node name="Items" type="Node2D" parent="."]
@@ -218,264 +223,264 @@ kind = 17
 position = Vector2(-250, -9610)
 kind = 15
 
+[node name="Football1" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(220, -10170)
+kind = 12
+
+[node name="Dumbbell1" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(80, -10330)
+kind = 11
+
+[node name="Water1" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-64, -10390)
+kind = 10
+
+[node name="Football2" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(220, -10490)
+kind = 12
+
+[node name="Football3" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-80, -10650)
+kind = 12
+
+[node name="Dumbbell2" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-80, -10810)
+kind = 11
+
+[node name="Water2" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(64, -10870)
+kind = 10
+
+[node name="Dumbbell3" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-220, -10970)
+kind = 11
+
+[node name="Dumbbell4" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-220, -11130)
+kind = 11
+
+[node name="Football4" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-220, -11290)
+kind = 12
+
+[node name="Water3" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(176, -11350)
+kind = 10
+
 [node name="Drumstick7" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(67, -9910)
+position = Vector2(-220, -11800)
 kind = 15
 
-[node name="Rice7" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-108, -10020)
-kind = 17
-
-[node name="Rice8" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(24, -10130)
-kind = 17
-
-[node name="Fries3" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-278, -10240)
-kind = 1
-
-[node name="Rice9" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-40, -10350)
-kind = 17
-
-[node name="Fries4" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-44, -10460)
-kind = 1
-
 [node name="Burger7" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-10, -10570)
+position = Vector2(220, -11800)
 kind = 0
 
-[node name="Corn3" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(193, -10680)
-kind = 18
+[node name="Burger8" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(40, -12260)
+kind = 0
 
-[node name="Broccoli6" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(0, -11050)
-kind = 9
-
-[node name="Fries5" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-250, -11050)
-kind = 1
-
-[node name="Fries6" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(20, -11670)
+[node name="Fries3" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(222, -12370)
 kind = 1
 
 [node name="Tv4" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-38, -11780)
+position = Vector2(-136, -12480)
 kind = 6
 
 [node name="Cake4" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(81, -11890)
+position = Vector2(39, -12590)
 kind = 2
 
-[node name="Burger8" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-257, -12000)
-kind = 0
+[node name="Corn3" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-65, -12700)
+kind = 18
 
-[node name="Burger9" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-290, -12110)
-kind = 0
-
-[node name="Fries7" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-103, -12220)
-kind = 1
-
-[node name="Drumstick8" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-120, -12600)
-kind = 15
-
-[node name="Broccoli7" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-120, -12750)
-kind = 9
-
-[node name="Cake5" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-310, -12790)
-kind = 2
+[node name="Tv5" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(244, -12810)
+kind = 6
 
 [node name="Fish12" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-233, -13000)
+position = Vector2(250, -13140)
 kind = 14
+
+[node name="Rice7" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-250, -13440)
+kind = 17
 
 [node name="Fish13" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(0, -13000)
+position = Vector2(250, -13740)
 kind = 14
 
-[node name="Rice10" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(233, -13000)
-kind = 17
-
-[node name="Burger10" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-233, -13200)
-kind = 0
-
-[node name="Corn4" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(0, -13200)
-kind = 18
-
-[node name="Carrot5" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(233, -13200)
-kind = 8
-
-[node name="Drumstick9" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-233, -13400)
-kind = 15
-
-[node name="Drumstick10" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(0, -13400)
-kind = 15
-
-[node name="Corn5" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(233, -13400)
-kind = 18
-
-[node name="Fries8" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-233, -13600)
-kind = 1
-
-[node name="Rice11" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(0, -13600)
-kind = 17
-
-[node name="Carrot6" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(233, -13600)
-kind = 8
-
-[node name="Drumstick11" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-233, -13800)
-kind = 15
-
-[node name="Fish14" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(0, -13800)
-kind = 14
-
-[node name="Corn6" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(233, -13800)
-kind = 18
-
-[node name="Drumstick12" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-250, -14360)
-kind = 15
-
-[node name="Rice12" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(250, -14660)
-kind = 17
-
-[node name="Broccoli8" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-250, -14960)
+[node name="Broccoli6" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-233, -14040)
 kind = 9
 
-[node name="Rice13" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(0, -15420)
+[node name="Fish14" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(0, -14040)
+kind = 14
+
+[node name="Drumstick8" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(233, -14040)
+kind = 15
+
+[node name="Burger9" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-233, -14240)
+kind = 0
+
+[node name="Rice8" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(0, -14240)
+kind = 17
+
+[node name="Cake5" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(233, -14240)
+kind = 2
+
+[node name="Carrot5" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-233, -14440)
+kind = 8
+
+[node name="Fish15" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(0, -14440)
+kind = 14
+
+[node name="Fish16" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(233, -14440)
+kind = 14
+
+[node name="Fries4" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-233, -14640)
+kind = 1
+
+[node name="Rice9" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(0, -14640)
 kind = 17
 
 [node name="Cake6" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-250, -15420)
+position = Vector2(233, -14640)
 kind = 2
 
-[node name="Rice14" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(0, -15880)
-kind = 17
+[node name="Broccoli7" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-233, -14840)
+kind = 9
 
-[node name="Burger11" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(250, -15880)
-kind = 0
+[node name="Fish17" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(0, -14840)
+kind = 14
 
-[node name="Drumstick13" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-220, -16450)
+[node name="Drumstick9" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(233, -14840)
 kind = 15
 
-[node name="Cake7" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(220, -16450)
-kind = 2
+[node name="Broccoli8" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-114, -15410)
+kind = 9
+
+[node name="Drumstick10" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(178, -15730)
+kind = 15
+
+[node name="Corn4" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(0, -16160)
+kind = 18
+
+[node name="Fries5" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(250, -16160)
+kind = 1
+
+[node name="Broccoli9" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(0, -16620)
+kind = 9
+
+[node name="Fries6" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-250, -16620)
+kind = 1
+
+[node name="Drumstick11" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-250, -17160)
+kind = 15
+
+[node name="Rice10" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(250, -17460)
+kind = 17
+
+[node name="Broccoli10" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-250, -17760)
+kind = 9
+
+[node name="Burger10" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-61, -18260)
+kind = 0
+
+[node name="Tv6" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-222, -18340)
+kind = 6
+
+[node name="Fries7" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-177, -18420)
+kind = 1
+
+[node name="Tv7" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(162, -18500)
+kind = 6
+
+[node name="Burger11" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(74, -18580)
+kind = 0
 
 [node name="Burger12" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(74, -16910)
+position = Vector2(108, -18660)
 kind = 0
 
 [node name="Burger13" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(108, -16990)
+position = Vector2(5, -18740)
 kind = 0
 
-[node name="Burger14" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(5, -17070)
-kind = 0
-
-[node name="Burger15" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-175, -17150)
-kind = 0
-
-[node name="Fries9" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-25, -17230)
-kind = 1
-
-[node name="Fries10" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(258, -17310)
-kind = 1
-
-[node name="Tv5" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-160, -17390)
-kind = 6
-
-[node name="Drumstick14" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(250, -17710)
-kind = 15
-
-[node name="Broccoli9" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-250, -18010)
-kind = 9
-
-[node name="Fish15" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(250, -18310)
+[node name="Fish18" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-190, -18940)
 kind = 14
 
-[node name="Broccoli10" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-190, -18610)
-kind = 9
-
-[node name="Football1" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(190, -18660)
+[node name="Football5" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(190, -18990)
 kind = 12
 
-[node name="Fish16" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(190, -18780)
-kind = 14
-
-[node name="Water1" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-190, -18830)
-kind = 10
-
-[node name="Corn7" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-190, -18950)
-kind = 18
-
-[node name="Football2" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(190, -19000)
-kind = 12
-
-[node name="Broccoli11" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(190, -19120)
-kind = 9
-
-[node name="Water2" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-190, -19170)
-kind = 10
-
-[node name="Rice15" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-190, -19290)
+[node name="Rice11" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(190, -19110)
 kind = 17
 
-[node name="Football3" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(190, -19340)
+[node name="Water4" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-190, -19160)
+kind = 10
+
+[node name="Drumstick12" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-190, -19280)
+kind = 15
+
+[node name="Football6" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(190, -19330)
 kind = 12
 
-[node name="Fish17" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(190, -19460)
+[node name="Drumstick13" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(190, -19450)
+kind = 15
+
+[node name="Water5" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-190, -19500)
+kind = 10
+
+[node name="Fish19" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-190, -19620)
 kind = 14
 
-[node name="Water3" parent="Items" instance=ExtResource("3_item")]
-position = Vector2(-190, -19510)
+[node name="Football7" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(190, -19670)
+kind = 12
+
+[node name="Carrot6" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(190, -19790)
+kind = 8
+
+[node name="Water6" parent="Items" instance=ExtResource("3_item")]
+position = Vector2(-190, -19840)
 kind = 10
 
 [node name="PowerUps" type="Node2D" parent="."]
@@ -485,14 +490,20 @@ position = Vector2(200, -5150)
 kind = 1
 
 [node name="SugarCrash1" parent="PowerUps" instance=ExtResource("4_power")]
-position = Vector2(-200, -10870)
+position = Vector2(200, -11460)
 kind = 2
 
 [node name="Golden1" parent="PowerUps" instance=ExtResource("4_power")]
-position = Vector2(0, -16110)
+position = Vector2(0, -17460)
 kind = 0
 
 [node name="Obstacles" type="Node2D" parent="."]
+
+[node name="Bumper1" parent="Obstacles" instance=ExtResource("6_bumper")]
+position = Vector2(200, -15280)
+
+[node name="Bumper2" parent="Obstacles" instance=ExtResource("6_bumper")]
+position = Vector2(-200, -15600)
 
 [node name="Slider1" parent="Obstacles" instance=ExtResource("5_wall")]
 position = Vector2(-175, -1650)
@@ -588,92 +599,72 @@ size = Vector2(400, 24)
 position = Vector2(150, -9490)
 size = Vector2(400, 24)
 
-[node name="Slider19" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(-175, -10890)
-size = Vector2(160, 24)
-slide = 75.0
-slide_time = 3.2
+[node name="Wall19" parent="Obstacles" instance=ExtResource("5_wall")]
+position = Vector2(0, -11650)
+size = Vector2(220, 24)
 
-[node name="Slider20" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(175, -10890)
-size = Vector2(160, 24)
-slide = 75.0
-slide_time = 3.2
+[node name="Wall20" parent="Obstacles" instance=ExtResource("5_wall")]
+position = Vector2(-150, -13020)
+size = Vector2(400, 24)
 
 [node name="Wall21" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(-290, -12430)
-size = Vector2(120, 24)
+position = Vector2(150, -13320)
+size = Vector2(400, 24)
 
 [node name="Wall22" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(170, -12430)
-size = Vector2(360, 24)
+position = Vector2(-150, -13620)
+size = Vector2(400, 24)
 
 [node name="Wall23" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(-117, -13165)
+position = Vector2(-117, -14205)
 size = Vector2(24, 490)
 
 [node name="Wall24" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(117, -13165)
+position = Vector2(117, -14205)
 size = Vector2(24, 490)
 
 [node name="Wall25" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(-117, -13815)
+position = Vector2(-117, -14855)
 size = Vector2(24, 450)
 
 [node name="Wall26" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(117, -13815)
+position = Vector2(117, -14855)
 size = Vector2(24, 450)
 
-[node name="Wall27" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(150, -14240)
-size = Vector2(400, 24)
+[node name="Slider27" parent="Obstacles" instance=ExtResource("5_wall")]
+position = Vector2(-175, -16000)
+size = Vector2(160, 24)
+slide = 75.0
+slide_time = 3.2
 
-[node name="Wall28" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(-150, -14540)
-size = Vector2(400, 24)
+[node name="Slider28" parent="Obstacles" instance=ExtResource("5_wall")]
+position = Vector2(175, -16000)
+size = Vector2(160, 24)
+slide = 75.0
+slide_time = 3.2
 
-[node name="Wall29" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(150, -14840)
-size = Vector2(400, 24)
+[node name="Slider29" parent="Obstacles" instance=ExtResource("5_wall")]
+position = Vector2(-175, -16460)
+size = Vector2(160, 24)
+slide = -75.0
+slide_time = 3.2
 
 [node name="Slider30" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(-175, -15260)
-size = Vector2(160, 24)
-slide = 75.0
-slide_time = 3.2
-
-[node name="Slider31" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(175, -15260)
-size = Vector2(160, 24)
-slide = 75.0
-slide_time = 3.2
-
-[node name="Slider32" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(-175, -15720)
+position = Vector2(175, -16460)
 size = Vector2(160, 24)
 slide = -75.0
 slide_time = 3.2
 
-[node name="Slider33" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(175, -15720)
-size = Vector2(160, 24)
-slide = -75.0
-slide_time = 3.2
-
-[node name="Wall34" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(0, -16300)
-size = Vector2(220, 24)
-
-[node name="Wall35" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(-150, -17590)
+[node name="Wall31" parent="Obstacles" instance=ExtResource("5_wall")]
+position = Vector2(150, -17040)
 size = Vector2(400, 24)
 
-[node name="Wall36" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(150, -17890)
+[node name="Wall32" parent="Obstacles" instance=ExtResource("5_wall")]
+position = Vector2(-150, -17340)
 size = Vector2(400, 24)
 
-[node name="Wall37" parent="Obstacles" instance=ExtResource("5_wall")]
-position = Vector2(-150, -18190)
+[node name="Wall33" parent="Obstacles" instance=ExtResource("5_wall")]
+position = Vector2(150, -17640)
 size = Vector2(400, 24)
 
 [node name="Spawns" type="Node2D" parent="."]
@@ -699,4 +690,4 @@ seat = 4
 
 [node name="Gate" type="Node2D" parent="."]
 script = ExtResource("8_gate")
-position = Vector2(0, -20180)
+position = Vector2(0, -20510)

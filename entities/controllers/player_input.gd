@@ -56,6 +56,11 @@ func ok_pressed() -> bool:
 	return _just_pressed("menu_ok", profile.push, profile.pad_push)
 
 
+## For such a menu: true on the frame they press their dash button (B, or the dash key).
+func alt_pressed() -> bool:
+	return _just_pressed("menu_alt", profile.dash, profile.pad_dash)
+
+
 func _pad() -> int:
 	var pads := Input.get_connected_joypads()
 	if pad_device >= 0:

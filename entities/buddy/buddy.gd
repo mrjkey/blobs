@@ -3,10 +3,10 @@ extends Node2D
 ## The one the helpers look after in Don't Get Fat!: a big friendly blob
 ## walking along at the bottom of the screen. Caught items fly to it and change
 ## its `weight` (HealthItem calls feed()), and its size follows the weight
-## (FatSettings.radius_at). What it eats also fills its `plate` (servings of
-## protein, grains, fruit and veg) and counts its `treats`. The mode sets what
-## the run's upgrades change here: lighter treats, workouts that build muscle
-## (raising the top of the window, top()) or that stop at the window. It holds the
+## (FatSettings.radius_at). What a catch really does (the plate, the treat
+## meter, workouts, muscle, rest, the run's upgrades) is up to its `body`, a
+## FatBody the mode gives it; muscle raises the top of the window (top()) and
+## shows as bigger arms and a headband that changes colour, rest as z's. It holds the
 ## team's power-ups (PowerUp calls boost()): while golden, everything caught
 ## takes weight off; sneakers and a sugar crash change how fast the blobs run
 ## (the mode reads speed_factor()). Its tag shows the weight against the
@@ -21,6 +21,9 @@ const BAD_COLOR := Color(1.0, 0.4, 0.25)
 const LIGHT_COLOR := Color(0.55, 0.8, 1.0) # under the window
 const GOLD_COLOR := Color(1.0, 0.82, 0.2)
 const SWEAT_COLOR := Color(0.5, 0.8, 1.0)
+const MUSCLE_COLOR := Color(1.0, 0.6, 0.85)
+## The headband's colour by muscle: from this many points up.
+const BAND_TIERS := [[60.0, Color(0.75, 0.4, 1.0)], [30.0, Color(1.0, 0.8, 0.2)], [10.0, Color(0.3, 0.75, 1.0)]]
 const POPUP_LIFE := 1.1
 
 @export var settings: FatSettings = preload("res://modes/dont_get_fat/fat_settings.tres")
@@ -28,14 +31,7 @@ const POPUP_LIFE := 1.1
 var weight := 75.0
 var low := 0.0 # the level's window in kg (0 to 0 = none)
 var high := 0.0
-var plate: Array[int] = [0, 0, 0] # servings eaten, by HealthItem.Group: protein, grains, veg
-var treats := 0 # treats eaten (not while golden)
-var free_treats := 0 # the next this many treats weigh nothing and don't count (Iron stomach)
-var treat_scale := 1.0 # treats' kg, times this (Insulin boost)
-var fit_per_rep := 0.0 # each workout caught raises the top of the window this much (Getting fit)...
-var fit_max := 0.0 # ...up to this much
-var muscle := 0.0 # how much it's raised so far
-var reps_floor := false # workouts never take it below `low` (Healthy reps)
+var body := FatBody.new() # what it's eaten and built (the mode gives it one per level)
 var walking := true
 var boosts := {} # power-up -> seconds left: "golden", "sneakers", "sugar_crash"
 var shown := 75.0 # the weight it's drawn at: catches up with `weight` quickly
@@ -61,34 +57,20 @@ func _ready() -> void:
 	shown = weight
 
 
-## Something caught for it, of HealthItem.Group `group`: `kg` heavier (or
-## lighter), and onto the plate or the treat meter. `golden`: caught while
-## golden, so a treat doesn't count.
-func feed(kg: float, group := -1, golden := false) -> void:
-	var treat := group == HealthItem.Group.TREAT and not golden
-	var free := treat and free_treats > 0
-	if free:
-		free_treats -= 1
-		kg = 0.0
-		treat = false
-	elif treat and kg > 0.0:
-		kg *= treat_scale
-	var to := weight + kg
-	if group == HealthItem.Group.ACTIVE and not golden:
-		muscle = minf(muscle + fit_per_rep, fit_max)
-		if reps_floor and kg < 0.0:
-			to = maxf(to, minf(weight, low))
+## Something caught for it, of HealthItem.Kind `kind` and Group `group`: it
+## would add `kg` (`golden`: caught while golden), and fills `servings` of the
+## plate. Its body says what it really does.
+func feed(kg: float, group := -1, golden := false, kind := -1, servings := 1) -> void:
+	var result := body.eat(self, kind, group, kg, golden, servings)
+	var to: float = weight + result[0]
 	kg = to - weight
 	weight = clampf(to, settings.min_weight, settings.max_weight)
-	if free:
-		_popups.append(["FREE!", GOLD_COLOR, 0.0])
-	elif absf(kg) >= 0.05:
-		var col: Color = GOLD_COLOR if golden else (HealthItem.GROUP_COLORS[group] if group >= 0 else Color.WHITE)
+	var note: String = result[1]
+	var col: Color = GOLD_COLOR if golden else (HealthItem.GROUP_COLORS[group] if group >= 0 else Color.WHITE)
+	if absf(kg) >= 0.05:
 		_popups.append([("+" if kg > 0.0 else "") + String.num(kg, 1) + " kg", col, 0.0])
-	if group >= 0 and group < plate.size():
-		plate[group] += 1
-	if treat:
-		treats += 1
+	if note != "":
+		_popups.append([note, MUSCLE_COLOR if note.ends_with("MUSCLE") else col.lightened(0.3), -0.25])
 	var good := golden or group not in [HealthItem.Group.TREAT, HealthItem.Group.LAZY]
 	_swell_vel += -3.0 if kg <= 0.0 else 6.0
 	_mood = 1.0 if good else -1.0
@@ -107,19 +89,21 @@ func golden() -> bool:
 	return boosted("golden")
 
 
-## The blobs' speed, times this (sneakers and the sugar crash).
+## The blobs' speed, times this (sneakers, the sugar crash, Runner's high).
 func speed_factor() -> float:
 	var f := 1.0
 	if boosted("sneakers"):
 		f *= settings.sneakers_speed
 	if boosted("sugar_crash"):
 		f *= settings.crash_speed
+	if boosted("runners_high"):
+		f *= 1.25
 	return f
 
 
-## The top of the window: the level's, plus the muscle it's built.
+## The top of the window: the level's, plus what its muscle adds.
 func top() -> float:
-	return high + muscle
+	return high + body.muscle_room()
 
 
 ## Light blue under the window, green in it, red over it.
@@ -176,9 +160,10 @@ func _draw() -> void:
 	for s: float in [-1.0, 1.0]:
 		var foot := c + Vector2(s * r * 0.45, r * 0.78 + s * swing * r * 0.12)
 		st.body(self, _ellipse(foot, r * 0.22, r * 0.16), col.darkened(0.15))
+	var buff := minf(body.muscle / 60.0, 1.0) # 0 -> 1: arms grow with muscle
 	for s: float in [-1.0, 1.0]:
-		var hand := c + Vector2(s * r * 1.12, -s * swing * r * 0.15)
-		st.disc(self, hand, r * 0.17, col, 0.0, 0.95)
+		var hand := c + Vector2(s * r * (1.12 + 0.12 * buff), -s * swing * r * 0.15)
+		st.disc(self, hand, r * 0.17 * (1.0 + 0.7 * buff), col, 0.0, 0.95)
 
 	var rx := r * (1.0 + 0.12 * heavy) # FatSettings.half_width_at(), swollen
 	st.body(self, _ellipse(c, rx, r * 0.95), col, 0.0, 1.0, 1.5, 3.5)
@@ -186,7 +171,12 @@ func _draw() -> void:
 		draw_colored_polygon(_ellipse(c + Vector2(0.0, r * 0.32), rx * 0.55 * (0.6 + 0.4 * heavy), r * 0.42 * (0.6 + 0.4 * heavy)),
 			st.fill_color(col.lightened(0.18)))
 	# Sweatband round the front of its head.
-	st.ring(self, c, r * 0.8, theme.value("buddy.band", BAND_COLOR), r * 0.13, 1.2, -1.0, -PI + 0.55, -0.55)
+	var band: Color = theme.value("buddy.band", BAND_COLOR)
+	for tier: Array in BAND_TIERS:
+		if body.muscle >= tier[0]:
+			band = tier[1]
+			break
+	st.ring(self, c, r * 0.8, band, r * 0.13, 1.2, -1.0, -PI + 0.55, -0.55)
 
 	_draw_face(st, c, r, heavy)
 	if high > 0.0 and weight > top():
@@ -196,6 +186,11 @@ func _draw() -> void:
 		st.ring(self, c, r * 1.25, GOLD_COLOR, 4.0, 1.5, 0.7 + 0.3 * sin(t * 12.0))
 		for i in 6:
 			st.dot(self, c + Vector2.from_angle(t * 2.0 + TAU * i / 6.0) * r * 1.25, 5.0, GOLD_COLOR.lightened(0.4), 2.0)
+	if body.rest > 0: # a z for each point of rest, up to three
+		var font := ThemeDB.fallback_font
+		for i in mini(body.rest, 3):
+			draw_string(font, c + Vector2(-r * 0.9 - i * 16.0, -r * 0.7 - i * 18.0), "z", HORIZONTAL_ALIGNMENT_LEFT, -1,
+				22 + i * 6, st.color(Color(0.6, 0.78, 1.0), 1.4))
 	_draw_tag(st, c, r)
 	_draw_popups(st, c, r)
 
@@ -254,7 +249,7 @@ func _draw_popups(st: ThemeStyle, c: Vector2, r: float) -> void:
 		var age: float = p[2]
 		var y := -r - 30.0 - age * 70.0
 		var a := 1.0 - pow(age / POPUP_LIFE, 2.0)
-		draw_string(font, c + Vector2(-80.0, y), p[0], HORIZONTAL_ALIGNMENT_CENTER, 160.0, 34,
+		draw_string(font, c + Vector2(-140.0, y), p[0], HORIZONTAL_ALIGNMENT_CENTER, 280.0, 34 if p[0].ends_with("kg") else 26,
 			st.color(p[1], 1.8, a))
 
 

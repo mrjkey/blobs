@@ -64,6 +64,8 @@ func _caught(b: Blob) -> void:
 		Kind.GOLDEN:
 			if buddy != null:
 				buddy.boost("golden", settings.golden_time + 3.0 * FatRun.count("golden_hour"))
+				for i in 3: # Chef's special: a serving of everything
+					buddy.body.plate[i] += FatRun.count("chefs_special")
 		Kind.SNEAKERS:
 			if buddy != null:
 				buddy.boost("sneakers", settings.sneakers_time + 3.0 * FatRun.count("fresh_sneakers"))

@@ -20,7 +20,7 @@ in `themes/` (see Themes below).
 | `ui/` | `menus/` (`MenuFrame`: the theme's menu look, background and stick steps, first in every menu; `StickRepeat`; main menu, `lobby/` (game and player select, `GameTabs`, `LobbyCard`), settings, `pause/` (`PauseMenu`); `options/`: `OptionList`, `OptionRow`, shared by the settings screen, the lobby's GAME list and the lab; `prompts/`: `ButtonGlyph`, `PromptBar`, button prompts drawn as glyphs), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`) |
 | `sandbox/` | Test bench scene for trying components, its props, and `lab/` (the Tab menu) |
 | `docs/` | This file; `STATIC_LEVELS.md` (maps), `DONT_GET_FAT.md` (the co-op mode), `IDEAS.md` |
-| `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md); `tools/bake_track.gd` bakes a generated treadmill track into a map |
+| `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md); `tools/bake_track.gd` bakes a generated treadmill track into a map; `tools/make_fat_levels.py` lays out Don't Get Fat!'s levels (DONT_GET_FAT.md) |
 
 Where a new thing goes: something that acts on its own (an enemy, a new kind of
 blob) under `entities/`; something placed in a level under `level/`: a solid

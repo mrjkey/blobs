@@ -2,22 +2,28 @@ class_name FatHud
 extends Control
 ## Don't Get Fat!'s two things to read during play, in the space beside the
 ## belt (right of the track): the scale (the buddy's weight against the
-## level's window, its middle third in yellow for the Bull's-eye star) and the plate (servings of protein, grains, and fruit and
-## veg against the line that fills each third) with the treat meter under it
-## (one slot per treat the Light on treats star allows, then the star, which
-## goes dark once the meter overflows). Then the team's running power-ups.
-## The mode makes one, puts it in the Hud and fills in the fields every frame.
+## level's window, the part its muscle added in darker green, the middle third
+## in yellow for the Bull's-eye star, glowing while the buddy is in it) and
+## the plate (servings of protein, grains, and fruit and veg against the line
+## that fills each third) with the treat meter under it (one slot per treat
+## the Light on treats star allows, then the star, which goes dark once the
+## meter overflows). Then the body (muscle, rest) and the team's running
+## power-ups. The mode makes one, puts it in the Hud and fills in the fields
+## every frame.
 
 const PANEL_WIDTH := 330.0
 const INK := Color(0.92, 0.93, 1.0)
 const DIM := Color(0.62, 0.64, 0.78)
 const SHADE := Color(0.03, 0.03, 0.08, 0.72)
 const STAR_COLOR := Color(1.0, 0.85, 0.25)
+const MUSCLE_COLOR := Color(0.12, 0.55, 0.3) # the part of the window muscle added
 
 var buddy: Buddy
 var track_half := 350.0 # half the track's width, to find its right edge on screen
 var low := 72.0
-var high := 78.0
+var high := 78.0 # the top, with the muscle's part
+var high_base := 78.0 # the top without it
+var in_zone := false # the buddy's in the Bull's-eye
 var plate_on := true
 var target := 4 # servings per third
 var treat_slots := 3
@@ -40,12 +46,12 @@ func _process(delta: float) -> void:
 	_t += delta
 	if buddy != null:
 		for i in 3:
-			if buddy.plate[i] > _seen[i]:
+			if buddy.body.plate[i] > _seen[i]:
 				_flash[i] = 1.0
-			_seen[i] = buddy.plate[i]
-		if buddy.treats > _treats_seen:
+			_seen[i] = buddy.body.plate[i]
+		if buddy.body.treats > _treats_seen:
 			_treat_flash = 1.0
-		_treats_seen = buddy.treats
+		_treats_seen = buddy.body.treats
 	for i in 3:
 		_flash[i] = maxf(_flash[i] - delta * 2.5, 0.0)
 	_treat_flash = maxf(_treat_flash - delta * 2.5, 0.0)
@@ -74,6 +80,7 @@ func _draw() -> void:
 	if plate_on:
 		y = _draw_plate(font, x, y + 18.0, w)
 		y = _draw_treats(font, x, y + 12.0, w)
+	y = _draw_body(font, x, y + 12.0, w)
 	for b: Array in boosts:
 		y += 34.0
 		draw_string(font, Vector2(x, y), b[0], HORIZONTAL_ALIGNMENT_LEFT, w, 22, b[1])
@@ -92,6 +99,9 @@ func _draw_scale(font: Font, x: float, y: float, w: float) -> float:
 	var h := 116.0
 	_box(Rect2(x - 14.0, y - 8.0, w + 28.0, h))
 	draw_string(font, Vector2(x, y + 22.0), "WEIGHT", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, DIM)
+	if in_zone:
+		draw_string(font, Vector2(x + 92.0, y + 22.0), "IN THE ZONE", HORIZONTAL_ALIGNMENT_LEFT, -1, 18,
+			Color(STAR_COLOR, 0.75 + 0.25 * sin(_t * 8.0)))
 	var kg := buddy.shown
 	var col := buddy.window_color(buddy.weight)
 	draw_string(font, Vector2(x, y + 24.0), "%.1f kg" % buddy.weight, HORIZONTAL_ALIGNMENT_RIGHT, w, 30, col)
@@ -102,9 +112,15 @@ func _draw_scale(font: Font, x: float, y: float, w: float) -> float:
 	draw_rect(bar, Color(1, 1, 1, 0.1))
 	var band := Rect2(_on_bar(bar, low, lo, hi), bar.position.y, _on_bar(bar, high, lo, hi) - _on_bar(bar, low, lo, hi), bar.size.y)
 	draw_rect(band, Color(Buddy.GOOD_COLOR, 0.55))
+	if high > high_base + 0.05:
+		var mx0 := _on_bar(bar, high_base, lo, hi)
+		draw_rect(Rect2(mx0, bar.position.y, band.end.x - mx0, bar.size.y), Color(MUSCLE_COLOR, 0.9))
 	var third := (high - low) / 3.0 # the Bull's-eye: the middle third of the window
 	var bull_x := _on_bar(bar, low + third, lo, hi)
-	draw_rect(Rect2(bull_x, bar.position.y, _on_bar(bar, high - third, lo, hi) - bull_x, bar.size.y), Color(STAR_COLOR, 0.85))
+	var bull := Rect2(bull_x, bar.position.y, _on_bar(bar, high - third, lo, hi) - bull_x, bar.size.y)
+	if in_zone:
+		draw_rect(bull.grow(4.0 + 2.0 * sin(_t * 8.0)), Color(STAR_COLOR, 0.35))
+	draw_rect(bull, Color(STAR_COLOR, 0.85))
 	draw_rect(bar, Color(1, 1, 1, 0.35), false, 2.0)
 	var mx := _on_bar(bar, kg, lo, hi)
 	draw_colored_polygon(PackedVector2Array([Vector2(mx - 9.0, bar.position.y - 12.0), Vector2(mx + 9.0, bar.position.y - 12.0),
@@ -142,7 +158,7 @@ func _draw_plate(font: Font, x: float, y: float, w: float) -> float:
 	for i in 3:
 		var a0 := -PI * 0.5 + TAU * i / 3.0
 		var col: Color = HealthItem.GROUP_COLORS[i]
-		var servings: int = buddy.plate[i]
+		var servings: int = buddy.body.plate[i]
 		var full := servings >= target
 		var fill := minf(float(servings) / maxf(target, 1), 1.25) * full_r
 		var k := 1.0 + 0.5 * _flash[i]
@@ -166,10 +182,10 @@ func _draw_plate(font: Font, x: float, y: float, w: float) -> float:
 	for i in 3:
 		var col: Color = HealthItem.GROUP_COLORS[i]
 		var lx := x + col_w * i
-		var done: bool = buddy.plate[i] >= target
+		var done: bool = buddy.body.plate[i] >= target
 		draw_circle(Vector2(lx + 7.0, ly - 5.0), 6.0, col)
 		draw_string(font, Vector2(lx + 18.0, ly), ["PROTEIN", "GRAINS", "VEG"][i], HORIZONTAL_ALIGNMENT_LEFT, col_w - 18.0, 13, DIM)
-		draw_string(font, Vector2(lx + 18.0, ly + 22.0), "%d / %d" % [mini(buddy.plate[i], 99), target],
+		draw_string(font, Vector2(lx + 18.0, ly + 22.0), "%d / %d" % [mini(buddy.body.plate[i], 99), target],
 			HORIZONTAL_ALIGNMENT_LEFT, col_w - 18.0, 19, INK if done else DIM)
 	return y + h
 
@@ -179,7 +195,7 @@ func _draw_treats(font: Font, x: float, y: float, w: float) -> float:
 	var h := 64.0
 	_box(Rect2(x - 14.0, y - 8.0, w + 28.0, h))
 	draw_string(font, Vector2(x, y + 32.0), "TREATS", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, DIM)
-	var over := buddy.treats > treat_slots
+	var over := buddy.body.treats > treat_slots
 	var shake := sin(_t * 50.0) * 3.0 * _treat_flash if over else 0.0
 	var sx := x + 100.0
 	var cy := y + 24.0
@@ -188,14 +204,29 @@ func _draw_treats(font: Font, x: float, y: float, w: float) -> float:
 	var red: Color = HealthItem.GROUP_COLORS[HealthItem.Group.TREAT]
 	for i in treat_slots:
 		var c := Vector2(sx + i * gap + shake, cy)
-		if i < buddy.treats:
+		if i < buddy.body.treats:
 			draw_circle(c, r, red.lightened(0.3 * _treat_flash))
 		draw_arc(c, r, 0.0, TAU, 20, Color(1, 1, 1, 0.7), 2.0, true)
 	if over:
-		draw_string(font, Vector2(sx + treat_slots * gap - 8.0, cy + 8.0), "+%d" % (buddy.treats - treat_slots),
+		draw_string(font, Vector2(sx + treat_slots * gap - 8.0, cy + 8.0), "+%d" % (buddy.body.treats - treat_slots),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 20, red)
 	var star := Vector2(x + w - 18.0, cy)
 	_star(star, 17.0, Color(0.3, 0.3, 0.36) if over else STAR_COLOR)
+	return y + h
+
+
+## MUSCLE (and what it adds to the window), then REST.
+func _draw_body(font: Font, x: float, y: float, w: float) -> float:
+	var body := buddy.body
+	var h := 52.0
+	_box(Rect2(x - 14.0, y - 8.0, w + 28.0, h))
+	draw_string(font, Vector2(x, y + 26.0), "MUSCLE", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, DIM)
+	draw_string(font, Vector2(x + 96.0, y + 26.0), "%d" % floori(body.muscle), HORIZONTAL_ALIGNMENT_LEFT, -1, 24, INK)
+	if body.muscle_room() > 0.05:
+		draw_string(font, Vector2(x + 140.0, y + 26.0), "+%.1f kg" % body.muscle_room(), HORIZONTAL_ALIGNMENT_LEFT, -1, 16,
+			Color(Buddy.GOOD_COLOR, 0.9))
+	draw_string(font, Vector2(x, y + 26.0), "REST %d" % body.rest, HORIZONTAL_ALIGNMENT_RIGHT, w, 20,
+		Color(0.6, 0.78, 1.0) if body.rest > 0 else DIM)
 	return y + h
 
 

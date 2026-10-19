@@ -42,6 +42,7 @@ const SWAT_TIME := 0.5 # a swatted item spins away and fades over this long
 		kind = v
 		queue_redraw()
 
+var servings := 1 # how much of the plate it fills (Teamwork can make it 2)
 var _kg := 0.0 # what it does to the buddy, settled when caught
 var _golden := false # caught while the buddy was golden
 var _from := Vector2.ZERO # where it was caught
@@ -123,7 +124,7 @@ func _carried(delta: float) -> void:
 		return
 	var t := age / settings.fly_time
 	if t >= 1.0:
-		_buddy.feed(_kg, group(), _golden)
+		_buddy.feed(_kg, group(), _golden, kind, servings)
 		Juice.burst(_buddy.mouth(), GOLD_COLOR if _golden else color(), 8, 180.0)
 		queue_free()
 		return

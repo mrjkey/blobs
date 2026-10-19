@@ -3,7 +3,9 @@ class_name FatRules
 extends Resource
 ## One Don't Get Fat! level's numbers, in its map's `rules` (a .tres next to
 ## the map, so it can be tuned while the game runs). Harder levels: a faster
-## belt, a narrower window, a fuller plate, fewer treat slots.
+## belt, a narrower window, a fuller plate, fewer treat slots. The feeder
+## drops items onto the belt at a steady pace on top of the level's own
+## layout: turn a rate up or down for more or less of something.
 
 @export var title := "" # shown in the status line and on the report card, e.g. "BREAKFAST"
 @export var start_weight := 64.0 # kg when the level starts (below the window: the buddy is hungry)
@@ -18,6 +20,15 @@ extends Resource
 @export var plate := true # false: no plate or treat meter (the warm-up level)
 @export var plate_target := 4 # servings of each food group that fill its third to the line
 @export var treat_slots := 3 # treats the Light on treats star allows
+
+@export_group("The feeder")
+## Seconds between drops of each, give or take a third (0 = none). They come
+## down just above the screen, clear of walls, until near the gate.
+@export var feed_workouts := 0.0
+@export var feed_beds := 0.0
+@export var feed_water := 0.0
+@export var feed_food := 0.0 # plate food, any third
+@export var feed_treats := 0.0
 
 
 ## The middle of the window: dead centre for the Bull's-eye star.
