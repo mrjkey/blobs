@@ -4,3 +4,11 @@
 
 [resource]
 script = ExtResource("1_script")
+title = "BREAKFAST"
+start_weight = 71.0
+window_low = 72.0
+window_high = 78.0
+scroll_start = 280.0
+scroll_end = 330.0
+plate_target = 4
+treat_slots = 5

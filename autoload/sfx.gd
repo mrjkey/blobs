@@ -36,6 +36,7 @@ func _ready() -> void:
 	_sounds["good"] = _tone(0.16, 700.0, 1500.0, 0.0, 0.0, 4.0)
 	_sounds["junk"] = _tone(0.26, 260.0, 90.0, 0.45, 0.08, 4.0)
 	_sounds["power"] = _tone(0.5, 380.0, 1700.0, 0.12, 0.0, 2.0)
+	_sounds["chime"] = _tone(0.35, 1320.0, 1980.0, 0.08, 0.0, 4.0)
 	for i in VOICES:
 		var p := AudioStreamPlayer.new()
 		add_child(p)
@@ -46,7 +47,7 @@ func _ready() -> void:
 ## so a pile-up doesn't turn into a buzz.
 func play(sound: String, pitch: float = 1.0, volume_db: float = 0.0, min_gap: float = 0.03) -> void:
 	var now := Time.get_ticks_msec() / 1000.0
-	if now - float(_last_played.get(sound, -1.0)) < min_gap:
+	if not _sounds.has(sound) or now - float(_last_played.get(sound, -1.0)) < min_gap:
 		return
 	_last_played[sound] = now
 	var p := _players[_next]

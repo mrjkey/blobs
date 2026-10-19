@@ -6,21 +6,21 @@ extends Node2D
 ## side to side with `sway`. The first living blob to touch it catches it:
 ## _caught() says what that does, and _carried() runs every frame after (a
 ## HealthItem flies to the buddy). Once it's past the helpers' zone
-## (BeltBounds) it fades away untouched. Group "magnetic": a Magnet moves
-## it with pull(). @tool so maps show it in the editor.
+## (BeltBounds) it fades away untouched. Group "on_belt" until it's caught.
+## @tool so maps show it in the editor.
 
 @export var sway := 0.0 # drifts this many px either way (0 = stays put, < 0 = starts the other way)
 @export var sway_time := 3.0 # seconds per sway, there and back
 @export var settings: FatSettings = preload("res://modes/dont_get_fat/fat_settings.tres")
 
-var home := Vector2.ZERO # where it is without the sway (magnets move this)
+var home := Vector2.ZERO # where it is without the sway
 var age := 0.0
 var taken := false # caught: no more catching, pulling or fading
 var _fade := 1.0
 
 
 func _enter_tree() -> void:
-	add_to_group("magnetic")
+	add_to_group("on_belt")
 
 
 func _ready() -> void:
@@ -48,15 +48,9 @@ func _physics_process(delta: float) -> void:
 	for b: Blob in get_tree().get_nodes_in_group("blobs"):
 		if b.alive and b.global_position.distance_to(global_position) < b.radius + settings.catch_radius:
 			taken = true
-			remove_from_group("magnetic")
+			remove_from_group("on_belt")
 			_caught(b)
 			return
-
-
-## Moved up to `amount` px toward `to` (a Magnet).
-func pull(to: Vector2, amount: float) -> void:
-	if not taken:
-		home += (to - global_position).limit_length(amount)
 
 
 ## Override: what catching it does. Free it here, or leave it for _carried().

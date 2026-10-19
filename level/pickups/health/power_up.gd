@@ -2,27 +2,52 @@
 class_name PowerUp
 extends BeltPickup
 ## A bubble on Don't Get Fat!'s belt that works the moment a blob touches it:
-##   MAGNET (mixed): that blob pulls in everything near it, good and bad (a
-##     Magnet on the blob).
-##   GOLDEN APPLE (good): for a while everything caught counts as good.
+##   GOLDEN APPLE (good): for a while everything caught takes weight off.
 ##   SNEAKERS (good): every blob runs faster for a while.
 ##   SUGAR CRASH (bad): every blob is sluggish for a while.
-## The buddy holds the last three for the team (Buddy.boost()); the times are
-## in FatSettings. The mode hears `collected` to show what it was. Drawn for
-## the classic look, with its name under it.
+## The buddy holds them for the team (Buddy.boost()); the times are
+## in FatSettings, lengthened or shortened by the run's upgrades (FatRun).
+## The mode hears `collected` to show what it was. So players spot it among
+## the food, it chimes as it comes on screen and then floats:
+## it comes down slower than the belt (FatSettings.power_float). Drawn for
+## the classic look as a glowing bubble, with its name under it.
 
 signal collected(power_up: PowerUp, blob: Blob)
 
-enum Kind { MAGNET, GOLDEN, SNEAKERS, SUGAR_CRASH }
+enum Kind { GOLDEN, SNEAKERS, SUGAR_CRASH }
 
-const NAMES := ["MAGNET", "GOLDEN APPLE", "SNEAKERS", "SUGAR CRASH"]
-const COLORS: Array[Color] = [Color(0.35, 0.6, 1.0), Color(1.0, 0.8, 0.2), Color(0.3, 0.85, 0.4), Color(0.75, 0.35, 0.95)]
+const NAMES := ["GOLDEN APPLE", "SNEAKERS", "SUGAR CRASH"]
+const COLORS: Array[Color] = [Color(1.0, 0.8, 0.2), Color(0.3, 0.85, 0.4), Color(0.75, 0.35, 0.95)]
 
-@export var kind := Kind.MAGNET:
+@export var kind := Kind.GOLDEN:
 	set(v):
 		kind = v
 		queue_redraw()
-@export var magnet_scene: PackedScene = preload("res://level/pickups/health/magnet.tscn")
+
+var _seen := false # it has come on screen (and chimed)
+var _belt_y := NAN # where the belt was last frame
+
+
+func _physics_process(delta: float) -> void:
+	if not Engine.is_editor_hint() and not taken:
+		_float()
+	super(delta)
+
+
+## Once on screen, ride up with the belt (BeltBounds moves with it) by
+## `power_float` of its speed.
+func _float() -> void:
+	var bounds := get_tree().get_first_node_in_group("belt_bounds") as BeltBounds
+	var view := GameCamera.view_of(self)
+	if bounds == null or not view.has_area():
+		return
+	var belt := bounds.global_position.y
+	if not _seen and global_position.y > view.position.y - settings.item_size:
+		_seen = true
+		Sfx.play("chime", 0.7 if kind == Kind.SUGAR_CRASH else 1.0)
+	if _seen and not is_nan(_belt_y):
+		home.y += (belt - _belt_y) * settings.power_float
+	_belt_y = belt
 
 
 func title() -> String:
@@ -36,23 +61,15 @@ func color() -> Color:
 func _caught(b: Blob) -> void:
 	var buddy := get_tree().get_first_node_in_group("buddy") as Buddy
 	match kind:
-		Kind.MAGNET:
-			var magnet := b.get_node_or_null("Magnet") as Magnet
-			if magnet != null:
-				magnet.restart()
-			else:
-				magnet = magnet_scene.instantiate()
-				magnet.name = "Magnet"
-				b.add_child(magnet)
 		Kind.GOLDEN:
 			if buddy != null:
-				buddy.boost("golden", settings.golden_time)
+				buddy.boost("golden", settings.golden_time + 3.0 * FatRun.count("golden_hour"))
 		Kind.SNEAKERS:
 			if buddy != null:
-				buddy.boost("sneakers", settings.sneakers_time)
+				buddy.boost("sneakers", settings.sneakers_time + 3.0 * FatRun.count("fresh_sneakers"))
 		Kind.SUGAR_CRASH:
 			if buddy != null:
-				buddy.boost("sugar_crash", settings.crash_time)
+				buddy.boost("sugar_crash", settings.crash_time * pow(0.5, FatRun.count("sugar_proof")))
 	Juice.burst(global_position, color(), 22, 340.0)
 	Juice.shockwave(global_position, 10.0, 110.0, color().lightened(0.3), 0.3)
 	Sfx.play("power", 0.6 if kind == Kind.SUGAR_CRASH else 1.0)
@@ -69,14 +86,15 @@ func _draw() -> void:
 	var s := settings.item_size
 	var col := color()
 	var pulse := 0.0 if Engine.is_editor_hint() else sin(age * 5.0)
-	var r := s * (1.15 + 0.06 * pulse)
+	var r := s * (1.3 + 0.07 * pulse)
+	for i in 3: # the glow
+		draw_circle(Vector2.ZERO, r * (2.1 - 0.3 * i) + 4.0 * pulse, Color(col, 0.07 + 0.03 * i))
 	draw_circle(Vector2.ZERO, r, st.color(col, 1.0, 0.25))
 	st.ring(self, Vector2.ZERO, r, col, 4.0, 1.4)
 	for i in 4:
 		var a := age * 1.5 + TAU * i / 4.0
 		st.dot(self, Vector2.from_angle(a) * (r + 8.0), 3.0, col.lightened(0.5), 2.0)
 	match kind:
-		Kind.MAGNET: _draw_magnet(st, s)
 		Kind.GOLDEN: _draw_golden(st, s)
 		Kind.SNEAKERS: _draw_sneaker(st, s)
 		Kind.SUGAR_CRASH: _draw_candy(st, s)
@@ -84,19 +102,6 @@ func _draw() -> void:
 		draw_circle(Vector2(-r, -r) * 0.45, r * 0.16, Color(1, 1, 1, 0.5))
 	draw_string(ThemeDB.fallback_font, Vector2(-80.0, r + 24.0), title(), HORIZONTAL_ALIGNMENT_CENTER, 160.0, 17,
 		st.color(col.lightened(0.3), 1.5))
-
-
-static func draw_magnet_icon(ci: CanvasItem, st: ThemeStyle, at: Vector2, s: float) -> void:
-	var red := Color(0.9, 0.2, 0.2)
-	ci.draw_arc(at + Vector2(0.0, 0.05 * s), 0.38 * s, 0.0, PI, 16, st.color(red), 0.24 * s, true)
-	for sx: float in [-1.0, 1.0]:
-		ci.draw_line(at + Vector2(sx * 0.38 * s, 0.07 * s), at + Vector2(sx * 0.38 * s, -0.15 * s), st.color(red), 0.24 * s, true)
-		ci.draw_line(at + Vector2(sx * 0.38 * s, -0.15 * s), at + Vector2(sx * 0.38 * s, -0.42 * s),
-			st.color(Color(0.85, 0.85, 0.9)), 0.24 * s, true)
-
-
-func _draw_magnet(st: ThemeStyle, s: float) -> void:
-	draw_magnet_icon(self, st, Vector2.ZERO, s)
 
 
 func _draw_golden(st: ThemeStyle, s: float) -> void:

@@ -4,8 +4,9 @@ extends Node2D
 ## A rectangular wall centred on this node. Solid and slightly bouncy, or, as a
 ## pink `kicker`, a pinball wall that flings blobs away at `settings.kicker_speed`.
 ## A `ghost_proof` wall stops ghost dashes too, like the arena's own walls,
-## and is drawn hatched so players can tell. Colours from the theme:
-## wall.color, wall.kicker.
+## and is drawn hatched so players can tell. With `slide` it slides side to
+## side that many px either way, `slide_time` seconds there and back (Don't
+## Get Fat!'s moving walls). Colours from the theme: wall.color, wall.kicker.
 
 const COLOR := Color(0.55, 0.6, 0.8)
 const KICKER_COLOR := Color(1.0, 0.45, 0.7)
@@ -22,13 +23,21 @@ const KICKER_COLOR := Color(1.0, 0.45, 0.7)
 	set(v):
 		ghost_proof = v
 		queue_redraw()
+@export var slide := 0.0 # px either way it slides side to side (0 = it stays put; < 0 starts the other way)
+@export var slide_time := 3.0 # seconds per slide, there and back
 @export var settings: TrackSettings = preload("res://level/arenas/track/track_settings.tres")
 
 var flash := 0.0
+var _home := Vector2.ZERO
+var _age := 0.0
 
 
 func _enter_tree() -> void:
 	add_to_group("blob_colliders")
+
+
+func _ready() -> void:
+	_home = position
 
 
 ## The wall in world space.
@@ -79,6 +88,9 @@ func collide(b: Blob, feel: PhysicsFeel) -> void:
 
 func _physics_process(delta: float) -> void:
 	flash = maxf(flash - delta * 4.0, 0.0)
+	if slide != 0.0 and not Engine.is_editor_hint():
+		_age += delta
+		position = _home + Vector2(sin(_age * TAU / maxf(slide_time, 0.1)) * slide, 0.0)
 
 
 func _process(_delta: float) -> void:

@@ -45,6 +45,17 @@ func _physics_process(_delta: float) -> void:
 		blob.request_shield()
 
 
+## For a menu over the game that this player drives (Don't Get Fat!'s upgrade
+## cards): where they're steering, keys and gamepad together, length <= 1.
+func steer() -> Vector2:
+	return _move()
+
+
+## For such a menu: true on the frame they press their push button (A, or the push key).
+func ok_pressed() -> bool:
+	return _just_pressed("menu_ok", profile.push, profile.pad_push)
+
+
 func _pad() -> int:
 	var pads := Input.get_connected_joypads()
 	if pad_device >= 0:

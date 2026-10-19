@@ -4,7 +4,7 @@ extends Resource
 ## Don't Get Fat! knobs shared by every level: the view, the buddy's size,
 ## what each item does to its weight, and the power-ups. Shared through
 ## modes/dont_get_fat/fat_settings.tres. What changes from level to level (start
-## weight, the gate's limit, the belt's speed) is in each map's FatRules.
+## weight, the window, the plate, the belt's speed) is in each map's FatRules.
 ## @tool so the Gate can size its opening in the editor.
 
 @export_group("Belt and camera")
@@ -22,22 +22,26 @@ extends Resource
 @export var size_exp := 1.25 # radius = buddy_radius * (weight / base_weight)^this
 @export var min_weight := 50.0 # it never gets lighter than this...
 @export var max_weight := 140.0 # ...or heavier than this
+@export var burn := 0.08 # kg it burns every second on its own: its metabolism (the run's Fast metabolism adds to it)
 
 @export_group("Items")
 @export var item_size := 28.0 # drawing scale of an item (about its radius)
 @export var catch_radius := 22.0 # a blob catches an item when their centres are this much closer than the blob's radius
 @export var fly_time := 0.4 # a caught item takes this long to reach the buddy
-## kg each kind adds to the buddy: + for junk, - for the good stuff.
+## kg each kind adds to the buddy. All food adds weight (treats a lot, the
+## plate's food a little); activity and water take it off; lazing about adds it.
 @export var weights := {
-	"burger": 4.0, "fries": 3.0, "cake": 4.0, "donut": 3.0, "soda": 2.0, "bed": 3.0, "tv": 2.0,
-	"apple": -2.0, "carrot": -2.0, "broccoli": -2.0, "water": -1.0, "dumbbell": -3.0, "football": -3.0,
+	"burger": 3.0, "fries": 2.5, "cake": 3.0, "donut": 2.5, "soda": 2.0,
+	"bed": 1.5, "tv": 1.5,
+	"egg": 0.5, "fish": 0.5, "drumstick": 0.6,
+	"bread": 0.5, "rice": 0.5, "corn": 0.4,
+	"apple": 0.3, "carrot": 0.3, "broccoli": 0.3, "banana": 0.4,
+	"water": -0.5, "dumbbell": -2.5, "football": -2.5,
 }
 
 @export_group("Power-ups")
-@export var magnet_time := 6.0
-@export var magnet_radius := 300.0 # items this close to the blob with the magnet get pulled in
-@export var magnet_pull := 650.0 # px/s at point blank, less further out
-@export var golden_time := 5.0 # everything caught counts as good this long
+@export var power_float := 0.4 # once on screen, power-ups ride up with the belt at this share of its speed, so they come down slower than the food (0 = with the food)
+@export var golden_time := 5.0 # everything caught takes weight off this long (treats don't count on the meter)
 @export var sneakers_time := 6.0
 @export var sneakers_speed := 1.35 # blobs' speed, times this
 @export var crash_time := 5.0 # sugar crash

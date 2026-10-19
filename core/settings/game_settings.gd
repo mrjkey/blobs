@@ -121,8 +121,14 @@ const OPTIONS := [
 		["generated", "ENDLESS", "A new random track every run, for as long as you last."],
 		["course_1", "COURSE 1", "A hand-made course with a finish line: the first blob across wins."],
 	]},
-	{key = "fat_level", label = "LEVEL", default_id = "fat_1", only = "lobby", choices = [
-		["fat_1", "LEVEL 1", "Warm-up: plenty of good stuff, junk you can see coming, a few bouncy walls."],
+	{key = "fat_level", label = "LEVEL", default_id = "run", only = "lobby", choices = [
+		["run", "THE RUN", "Levels 1 to 5 in a row. Stars earn upgrade picks between levels; fail a level and the run is over."],
+		["fat_0", "WARM-UP", "Level 0: learn the ropes. Catch food, dodge treats, land in the window."],
+		["fat_1", "LEVEL 1", "Breakfast: the plate. Fill all three thirds, dodge the walls, stop in the window."],
+		["fat_2", "LEVEL 2", "Lunch rush: walls split the belt into lanes. Pick the right one."],
+		["fat_3", "LEVEL 3", "Snack attack: power-up bubbles, good and bad."],
+		["fat_4", "LEVEL 4", "Dinner: pairs of walls that slide together and close in."],
+		["fat_5", "LEVEL 5", "Dessert: the belt surges in rush sections."],
 	]},
 	{key = "cpu_level", label = "CPU LEVEL", default_id = "normal", only = "lobby", choices = [
 		["idle", "IDLE", "Computers stand still: training dummies."],
@@ -218,8 +224,11 @@ static func track_map() -> String:
 
 
 ## The Don't Get Fat! level the lobby's LEVEL option picked (a map's scene path, like track_map()).
+## THE RUN starts at level 1 (FatRun takes it from there).
 static func fat_level() -> String:
 	var id := choice("fat_level")
+	if id == "run":
+		id = "fat_1"
 	return "res://level/maps/%s/%s.tscn" % [id, id]
 
 

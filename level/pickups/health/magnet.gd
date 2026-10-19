@@ -21,7 +21,7 @@ func _ready() -> void:
 
 ## Full time again (another magnet caught while this one runs).
 func restart() -> void:
-	time_left = settings.magnet_time
+	time_left = settings.magnet_time + 3.0 * FatRun.count("strong_magnet")
 
 
 func _physics_process(delta: float) -> void:

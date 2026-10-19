@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="FatRules" format=3]
+
+[ext_resource type="Script" path="res://modes/dont_get_fat/fat_rules.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+title = "DESSERT"
+start_weight = 68.0
+window_low = 74.0
+window_high = 76.0
+scroll_start = 320.0
+scroll_end = 380.0
+rush_speed = 1.4
+plate_target = 8
+treat_slots = 5

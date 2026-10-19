@@ -3,16 +3,22 @@ extends Node2D
 ## The one the helpers look after in Don't Get Fat!: a big friendly blob
 ## walking along at the bottom of the screen. Caught items fly to it and change
 ## its `weight` (HealthItem calls feed()), and its size follows the weight
-## (FatSettings.radius_at). It also holds the team's power-ups (PowerUp calls
-## boost()): while golden, everything caught counts as good; sneakers and a
-## sugar crash change how fast the blobs run (the mode reads speed_factor()).
-## Over `limit` it sweats and its tag turns red: it won't fit through the gate.
-## Group "buddy" (at most one). Colours from the theme: buddy.color, buddy.band.
+## (FatSettings.radius_at). What it eats also fills its `plate` (servings of
+## protein, grains, fruit and veg) and counts its `treats`. The mode sets what
+## the run's upgrades change here: lighter treats, workouts that build muscle
+## (raising the top of the window, top()) or that stop at the window. It holds the
+## team's power-ups (PowerUp calls boost()): while golden, everything caught
+## takes weight off; sneakers and a sugar crash change how fast the blobs run
+## (the mode reads speed_factor()). Its tag shows the weight against the
+## level's window (`low` to top()): light blue under it, green in it, red over
+## it, when it also sweats: it won't fit through the gate. Group "buddy" (at
+## most one). Colours from the theme: buddy.color, buddy.band.
 
 const COLOR := Color(1.0, 0.74, 0.55)
 const BAND_COLOR := Color(0.95, 0.25, 0.3)
 const GOOD_COLOR := Color(0.3, 0.85, 0.4)
 const BAD_COLOR := Color(1.0, 0.4, 0.25)
+const LIGHT_COLOR := Color(0.55, 0.8, 1.0) # under the window
 const GOLD_COLOR := Color(1.0, 0.82, 0.2)
 const SWEAT_COLOR := Color(0.5, 0.8, 1.0)
 const POPUP_LIFE := 1.1
@@ -20,7 +26,16 @@ const POPUP_LIFE := 1.1
 @export var settings: FatSettings = preload("res://modes/dont_get_fat/fat_settings.tres")
 
 var weight := 75.0
-var limit := 0.0 # the gate's limit in kg (0 = none)
+var low := 0.0 # the level's window in kg (0 to 0 = none)
+var high := 0.0
+var plate: Array[int] = [0, 0, 0] # servings eaten, by HealthItem.Group: protein, grains, veg
+var treats := 0 # treats eaten (not while golden)
+var free_treats := 0 # the next this many treats weigh nothing and don't count (Iron stomach)
+var treat_scale := 1.0 # treats' kg, times this (Insulin boost)
+var fit_per_rep := 0.0 # each workout caught raises the top of the window this much (Getting fit)...
+var fit_max := 0.0 # ...up to this much
+var muscle := 0.0 # how much it's raised so far
+var reps_floor := false # workouts never take it below `low` (Healthy reps)
 var walking := true
 var boosts := {} # power-up -> seconds left: "golden", "sneakers", "sugar_crash"
 var shown := 75.0 # the weight it's drawn at: catches up with `weight` quickly
@@ -46,12 +61,36 @@ func _ready() -> void:
 	shown = weight
 
 
-## Something caught for it: `kg` heavier (junk) or lighter (the good stuff).
-func feed(kg: float) -> void:
-	weight = clampf(weight + kg, settings.min_weight, settings.max_weight)
-	var good := kg <= 0.0
-	_popups.append([("+" if kg > 0.0 else "") + String.num(kg, 1) + " kg", GOOD_COLOR if good else BAD_COLOR, 0.0])
-	_swell_vel += -3.0 if good else 6.0
+## Something caught for it, of HealthItem.Group `group`: `kg` heavier (or
+## lighter), and onto the plate or the treat meter. `golden`: caught while
+## golden, so a treat doesn't count.
+func feed(kg: float, group := -1, golden := false) -> void:
+	var treat := group == HealthItem.Group.TREAT and not golden
+	var free := treat and free_treats > 0
+	if free:
+		free_treats -= 1
+		kg = 0.0
+		treat = false
+	elif treat and kg > 0.0:
+		kg *= treat_scale
+	var to := weight + kg
+	if group == HealthItem.Group.ACTIVE and not golden:
+		muscle = minf(muscle + fit_per_rep, fit_max)
+		if reps_floor and kg < 0.0:
+			to = maxf(to, minf(weight, low))
+	kg = to - weight
+	weight = clampf(to, settings.min_weight, settings.max_weight)
+	if free:
+		_popups.append(["FREE!", GOLD_COLOR, 0.0])
+	elif absf(kg) >= 0.05:
+		var col: Color = GOLD_COLOR if golden else (HealthItem.GROUP_COLORS[group] if group >= 0 else Color.WHITE)
+		_popups.append([("+" if kg > 0.0 else "") + String.num(kg, 1) + " kg", col, 0.0])
+	if group >= 0 and group < plate.size():
+		plate[group] += 1
+	if treat:
+		treats += 1
+	var good := golden or group not in [HealthItem.Group.TREAT, HealthItem.Group.LAZY]
+	_swell_vel += -3.0 if kg <= 0.0 else 6.0
 	_mood = 1.0 if good else -1.0
 
 
@@ -76,6 +115,16 @@ func speed_factor() -> float:
 	if boosted("sugar_crash"):
 		f *= settings.crash_speed
 	return f
+
+
+## The top of the window: the level's, plus the muscle it's built.
+func top() -> float:
+	return high + muscle
+
+
+## Light blue under the window, green in it, red over it.
+func window_color(kg: float) -> Color:
+	return LIGHT_COLOR if kg < low else (GOOD_COLOR if kg <= top() else BAD_COLOR)
 
 
 ## Where caught items fly to.
@@ -140,7 +189,7 @@ func _draw() -> void:
 	st.ring(self, c, r * 0.8, theme.value("buddy.band", BAND_COLOR), r * 0.13, 1.2, -1.0, -PI + 0.55, -0.55)
 
 	_draw_face(st, c, r, heavy)
-	if limit > 0.0 and weight > limit:
+	if high > 0.0 and weight > top():
 		_draw_sweat(st, c, r)
 	if golden():
 		var t := Time.get_ticks_msec() / 1000.0
@@ -186,13 +235,13 @@ func _draw_sweat(st: ThemeStyle, c: Vector2, r: float) -> void:
 			p + Vector2(-5.0, 0.0)]), st.color(SWEAT_COLOR, 1.5, 1.0 - k))
 
 
-## Its weight beside it, green while it's under the limit and red over it.
+## Its weight beside it: light blue under the window, green in it, red over it.
 func _draw_tag(st: ThemeStyle, c: Vector2, r: float) -> void:
 	var font := ThemeDB.fallback_font
 	var text := "%d kg" % roundi(shown)
 	var col := Color.WHITE
-	if limit > 0.0:
-		col = GOOD_COLOR if weight <= limit - 3.0 else (GOLD_COLOR if weight <= limit else BAD_COLOR)
+	if high > 0.0:
+		col = window_color(weight)
 	var size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 30)
 	var at := c + Vector2(r * 1.3 + 24.0, -size.y * 0.5)
 	draw_rect(Rect2(at - Vector2(10.0, 4.0), size + Vector2(20.0, 8.0)), Color(0.0, 0.0, 0.05, 0.6))

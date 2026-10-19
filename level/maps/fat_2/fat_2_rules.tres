@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FatRules" format=3]
+
+[ext_resource type="Script" path="res://modes/dont_get_fat/fat_rules.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+title = "LUNCH RUSH"
+start_weight = 71.0
+window_low = 72.0
+window_high = 78.0
+scroll_start = 300.0
+scroll_end = 360.0
+plate_target = 5
+treat_slots = 5

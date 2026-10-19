@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FatRules" format=3]
+
+[ext_resource type="Script" path="res://modes/dont_get_fat/fat_rules.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+title = "WARM-UP"
+start_weight = 66.5
+window_low = 66.0
+window_high = 76.0
+scroll_start = 210.0
+scroll_end = 250.0
+plate = false
+treat_slots = 3

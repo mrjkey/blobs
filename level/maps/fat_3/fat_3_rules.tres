@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FatRules" format=3]
+
+[ext_resource type="Script" path="res://modes/dont_get_fat/fat_rules.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+title = "SNACK ATTACK"
+start_weight = 70.0
+window_low = 73.0
+window_high = 77.0
+scroll_start = 320.0
+scroll_end = 380.0
+plate_target = 6
+treat_slots = 5
