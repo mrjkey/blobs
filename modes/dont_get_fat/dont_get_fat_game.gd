@@ -15,10 +15,10 @@ extends GameMode
 ## own. The upgrades (FatRun.CARDS) are applied here, on the Buddy and on the
 ## blobs; More workouts and Extra helpings drop extra items onto the belt.
 ## Blobs can move, dash and swat (`move_rules`); a swat knocks junk off the
-## belt. They ride along with the belt, in the helpers' zone (BeltBounds),
-## whose bottom edge is a laser while the belt runs: a blob pushed into it by
-## a wall (or that wanders into it) pops, and comes back RESPAWN_TIME later
-## near the top of the zone. The numbers are in
+## belt. They stay in the helpers' zone (BeltBounds), whose bottom edge is a
+## laser while the belt runs: running into it just bumps a blob back, but a
+## wall that shoves one through it pops it, and it comes back RESPAWN_TIME
+## later near the top of the zone. The numbers are in
 ## FatSettings and each map's FatRules. What players read during play is in
 ## FatHud, beside the belt.
 ##
@@ -144,7 +144,7 @@ func _spawn_blobs() -> void:
 		_add_blob(i, at)
 	var goal := "Fill the plate and get your buddy through the door at %d–%d kg" % [roundi(low), roundi(high)] if rules.plate \
 		else "Catch food to get your buddy to %d–%d kg: too light or too heavy and the door won't let it through" % [roundi(low), roundi(high)]
-	hud.set_hint(goal + "\nDASH: B / Shift   ·   SWAT junk: X / J   ·   Don't touch the laser   ·   Start or Esc: pause")
+	hud.set_hint(goal + "\nDASH: B / Shift   ·   SWAT junk: X / J   ·   Don't get pushed into the laser   ·   Start or Esc: pause")
 
 
 ## The blob for `slots[i]` at `at`, with this mode's moves and the run's blob upgrades.
@@ -226,8 +226,6 @@ func _physics_process(delta: float) -> void:
 			_walk_left -= step
 		belt_y -= step
 		distance += step
-		for b in living_blobs(): # blobs ride along: only walls and bumpers push them back toward the laser
-			b.global_position.y -= step
 		if state == State.PLAYING:
 			_tick_respawns(delta)
 			var gain := rules.drift - settings.burn - 0.04 * FatRun.count("metabolism")

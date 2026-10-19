@@ -2,7 +2,7 @@ class_name FatHud
 extends Control
 ## Don't Get Fat!'s two things to read during play, in the space beside the
 ## belt (right of the track): the scale (the buddy's weight against the
-## level's window) and the plate (servings of protein, grains, and fruit and
+## level's window, its middle third in yellow for the Bull's-eye star) and the plate (servings of protein, grains, and fruit and
 ## veg against the line that fills each third) with the treat meter under it
 ## (one slot per treat the Light on treats star allows, then the star, which
 ## goes dark once the meter overflows). Then the team's running power-ups.
@@ -87,7 +87,7 @@ func _box(rect: Rect2) -> void:
 
 
 ## WEIGHT, then a bar from a bit under the window to a bit over it: the window
-## in green, a marker with the buddy's weight.
+## in green with the Bull's-eye in yellow, a marker with the buddy's weight.
 func _draw_scale(font: Font, x: float, y: float, w: float) -> float:
 	var h := 116.0
 	_box(Rect2(x - 14.0, y - 8.0, w + 28.0, h))
@@ -95,12 +95,16 @@ func _draw_scale(font: Font, x: float, y: float, w: float) -> float:
 	var kg := buddy.shown
 	var col := buddy.window_color(buddy.weight)
 	draw_string(font, Vector2(x, y + 24.0), "%.1f kg" % buddy.weight, HORIZONTAL_ALIGNMENT_RIGHT, w, 30, col)
-	var lo := low - 12.0
-	var hi := high + 12.0
+	var margin := maxf(high - low, 5.0) # zoomed in on the window, so the Bull's-eye is easy to see
+	var lo := low - margin
+	var hi := high + margin
 	var bar := Rect2(x, y + 50.0, w, 18.0)
 	draw_rect(bar, Color(1, 1, 1, 0.1))
 	var band := Rect2(_on_bar(bar, low, lo, hi), bar.position.y, _on_bar(bar, high, lo, hi) - _on_bar(bar, low, lo, hi), bar.size.y)
 	draw_rect(band, Color(Buddy.GOOD_COLOR, 0.55))
+	var third := (high - low) / 3.0 # the Bull's-eye: the middle third of the window
+	var bull_x := _on_bar(bar, low + third, lo, hi)
+	draw_rect(Rect2(bull_x, bar.position.y, _on_bar(bar, high - third, lo, hi) - bull_x, bar.size.y), Color(STAR_COLOR, 0.85))
 	draw_rect(bar, Color(1, 1, 1, 0.35), false, 2.0)
 	var mx := _on_bar(bar, kg, lo, hi)
 	draw_colored_polygon(PackedVector2Array([Vector2(mx - 9.0, bar.position.y - 12.0), Vector2(mx + 9.0, bar.position.y - 12.0),

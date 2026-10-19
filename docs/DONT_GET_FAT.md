@@ -17,11 +17,11 @@ neon. Don't spend time on neon for this mode until we decide to.
 - At the bottom of the screen walks the **buddy**, the character the players
   look after. It burns a little weight all the time (`FatSettings.burn`,
   0.08 kg/s), so it has to keep eating. The players' blobs are its helpers.
-  They ride along with the belt, so a blob left alone stays put on screen,
-  in the helpers' zone. The zone's bottom edge is a laser while the belt
-  runs: a blob that touches it (usually pushed there by a wall coming down)
-  pops and comes back 3 s later near the top of the zone, safe from the
-  laser for 1.5 s.
+  They stay in the helpers' zone; the belt carries everything else past
+  them, so a blob left alone drifts back to the zone's bottom edge. That edge
+  is a laser while the belt runs: running into it only bumps a blob back up,
+  but a wall that shoves a blob through it pops the blob, which comes back
+  3 s later near the top of the zone, safe from the laser for 1.5 s.
   They can move, dash (B / Shift) and swat (X / J): a swat knocks junk
   (treats, lazing) off the belt. Walls, sliding walls, kickers and bumpers
   are in the way from level 1.
@@ -59,7 +59,7 @@ neon. Don't spend time on neon for this mode until we decide to.
   | SUGAR CRASH | bad | Every blob is sluggish for 5 s |
 
 - **What players read during play** (`FatHud`, right of the track): the
-  scale (the weight, the window in green), the plate with a tick on each full
+  scale (the weight, the window in green, its middle third in yellow: the Bull's-eye), the plate with a tick on each full
   third and its servings, the treat meter with its star, and the running
   power-ups. In the last fifth of a level, a third that's still short pulses.
 
