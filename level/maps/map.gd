@@ -6,7 +6,8 @@ extends Node2D
 ## hand, plus markers: SpawnPoint, FoodSpot, FinishLine. A treadmill map's
 ## (0, 0) is the middle of the belt when the run starts; the finish is up
 ## (negative y). The treadmill loads one instead of generating its track (the
-## lobby's TRACK option, or TreadmillGame.map_path).
+## lobby's TRACK option, or TreadmillGame.map_path); Don't Get Fat! plays its
+## levels as maps too, with their numbers in `rules`.
 ##
 ## In the editor it draws the track bed (floor, side walls) from below the
 ## start up past the finish, and a ruler every RULER_STEP px marked in the
@@ -16,6 +17,7 @@ extends Node2D
 const RULER_STEP := 500.0
 
 @export var settings: TrackSettings = preload("res://level/arenas/track/track_settings.tres")
+@export var rules: Resource # the mode's own numbers for this map, if it has any (Don't Get Fat!: a FatRules)
 
 
 ## The spawn points, by seat.

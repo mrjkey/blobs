@@ -119,6 +119,9 @@ const OPTIONS := [
 		["generated", "ENDLESS", "A new random track every run, for as long as you last."],
 		["course_1", "COURSE 1", "A hand-made course with a finish line: the first blob across wins."],
 	]},
+	{key = "fat_level", label = "LEVEL", default_id = "fat_1", only = "lobby", choices = [
+		["fat_1", "LEVEL 1", "Warm-up: plenty of good stuff, junk you can see coming, a few bouncy walls."],
+	]},
 	{key = "props", label = "PROPS", default_id = "walls", only = "lab", choices = [
 		["walls", "WALLS + BUMPERS", "A wall, a kicker wall and two bumpers to dash into (or through)."],
 		["none", "EMPTY ROOM", "Just the room."],
@@ -203,6 +206,12 @@ static func food_amount() -> float:
 static func track_map() -> String:
 	var id := choice("track_map")
 	return "" if id == "generated" or id == "" else "res://level/maps/%s/%s.tscn" % [id, id]
+
+
+## The Don't Get Fat! level the lobby's LEVEL option picked (a map's scene path, like track_map()).
+static func fat_level() -> String:
+	var id := choice("fat_level")
+	return "res://level/maps/%s/%s.tscn" % [id, id]
 
 
 ## The treadmill's belt height, as a multiple of TrackSettings.belt_height (TRACK VIEW).

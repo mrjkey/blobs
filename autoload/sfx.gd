@@ -33,6 +33,9 @@ func _ready() -> void:
 	_sounds["reflect"] = _tone(0.35, 1700.0, 2300.0, 0.08, 0.05, 6.0)
 	_sounds["warn"] = _tone(0.08, 880.0, 880.0, 0.0, 0.0, 3.0)
 	_sounds["burst"] = _tone(0.18, 1300.0, 180.0, 0.0, 0.5, 6.0)
+	_sounds["good"] = _tone(0.16, 700.0, 1500.0, 0.0, 0.0, 4.0)
+	_sounds["junk"] = _tone(0.26, 260.0, 90.0, 0.45, 0.08, 4.0)
+	_sounds["power"] = _tone(0.5, 380.0, 1700.0, 0.12, 0.0, 2.0)
 	for i in VOICES:
 		var p := AudioStreamPlayer.new()
 		add_child(p)

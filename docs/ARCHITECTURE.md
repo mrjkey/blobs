@@ -13,13 +13,13 @@ in `themes/` (see Themes below).
 |---|---|
 | `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings and gameplay settings, the chosen theme), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres`, `Sfx` (synthesised sound kit) |
 | `core/` | Machinery every mode composes: `settings/` (`GameSettings`: the player's gameplay options), `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock) |
-| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `ball/` (`Ball`, `BallBody`: the football, a Blob with no moves), `slash/` (`Slash`: one blade swing, spawned on the blob), `shots/` (`Shot`, `Spit`: things blobs fire that fly on their own), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`) |
-| `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`, `pitch/`: the floors and walls a mode plays on, with their own rules like ring-out, the kill lasers or goals), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`), `maps/` (hand-made levels: `Map`, `SpawnPoint`, `FoodSpot`, `FinishLine`, and one folder per map) |
+| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `ball/` (`Ball`, `BallBody`: the football, a Blob with no moves), `slash/` (`Slash`: one blade swing, spawned on the blob), `shots/` (`Shot`, `Spit`: things blobs fire that fly on their own), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`), `buddy/` (`Buddy`: the character Don't Get Fat!'s blobs look after) |
+| `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`, `pitch/`: the floors and walls a mode plays on, with their own rules like ring-out, the kill lasers or goals), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`; `health/`: `BeltPickup`, `HealthItem`, `PowerUp`, `Magnet` for Don't Get Fat!), `maps/` (hand-made levels: `Map`, `SpawnPoint`, `FoodSpot`, `FinishLine`, `Gate`, and one folder per map) |
 | `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style and backdrop |
-| `modes/` | One folder per game mode (`treadmill/`, `ring/`, `football/`): the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
+| `modes/` | One folder per game mode (`treadmill/`, `ring/`, `football/`, `dont_get_fat/`): the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
 | `ui/` | `menus/` (main menu, `lobby/` (game and player select), settings; `options/`: `OptionList`, `OptionRow`, shared by the settings screen and the lab), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`), `themes/menu_theme.tres` |
 | `sandbox/` | Test bench scene for trying components, its props, and `lab/` (the Tab menu) |
-| `docs/` | This file |
+| `docs/` | This file; `STATIC_LEVELS.md` (maps), `DONT_GET_FAT.md` (the co-op mode), `IDEAS.md` |
 | `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md); `tools/bake_track.gd` bakes a generated treadmill track into a map |
 
 Where a new thing goes: something that acts on its own (an enemy, a new kind of
@@ -59,9 +59,12 @@ finds what it needs:
   - `grid`: the neon backdrop's `NeonGrid`; call `impulse(world_pos, strength, radius)` on the group to ripple it, `follow_y(y)` to scroll it.
   - `kill_lasers`: at most one `KillLasers` (the treadmill's belt: two lines `belt_height()` apart, centred on the node); `kill_top()` / `kill_bottom()` for treadmill bots and the generator.
   - `finish`: a map's `FinishLine`; treadmill bots race for it once it's inside the belt.
+  - `buddy`: at most one `Buddy` (Don't Get Fat!). `HealthItem`s fly to it and `feed()` it; `PowerUp`s `boost()` it.
+  - `magnetic`: every `BeltPickup` not yet caught; a `Magnet` moves them with `pull(to, amount)`.
+  - `belt_bounds`: at most one `BeltBounds`; pickups fade out past its `bottom_y()`.
 - **Signals** for reporting upward: `Blob.pushed`, `Blob.dashed`, `Blob.slashed`, `Blob.spat`,
   `Blob.blocked`, `Blob.reflected`, `Blob.ate_food`, `Blob.died`,
-  `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Pitch.goal_scored`, `Juice.impact`. The
+  `BlobPhysics.blob_contact`, `RingArena.blob_ringed_out`, `Pitch.goal_scored`, `HealthItem.caught`, `PowerUp.collected`, `Juice.impact`. The
   mode script connects to them. Anything that knocks a blob out calls
   `blob.die()`; the mode only listens to `Blob.died`.
 - **Autoloads** for feedback anything can trigger: `Juice.shake()`,
@@ -92,12 +95,14 @@ a colour index into `GameTheme.palette()`.
   title, scene path, min/max/default seats, max humans, teams, options), and
   that game's options; the last game picked is kept in `Session.next_mode`.
   Players join from any device, pick a colour, take a seat (which also picks
-  their team), set the CPUs' levels and open or close seats; the lobby writes
+  their team), set the CPUs' levels and open or close seats (a mode whose
+  `ModeInfo` has `bots` off is for humans only: free seats stay empty and
+  someone has to join to start); the lobby writes
   `Session.lineup` + `Session.lineup_mode` and starts the mode. Esc in the game
   goes back to the lobby with the same seats.
 - **Started on its own (F6).** `GameMode.lineup()` makes
   `PlayerSlot.default_lineup(info)`: P1 on the keyboard, each connected
-  gamepad takes the next seat, CPUs (normal) fill the rest. With one human
+  gamepad takes the next seat, CPUs (normal) fill the rest (not without `bots`). With one human
   seat, P1 uses the keyboard and the first gamepad.
 - **In the mode.** `GameMode` resolves `slots` before `_spawn_blobs()`; the
   mode places a blob per slot with `spawn_slot(i, pos)`, which makes the
@@ -117,7 +122,8 @@ a colour index into `GameTheme.palette()`.
 
 ### Moves and energy
 
-Which moves a blob has comes from `blob.rules`, a `MoveRules`: the dash
+Which moves a blob has comes from `blob.rules`, a `MoveRules`: the push (on
+unless a mode turns it off), the dash
 (`NONE`, `BUMP`: solid, stuns what it hits; `GHOST`: passes through blobs,
 pushes and lasers, and with `ghost_obstacles` walls and bumpers too) and
 whether moves cost energy (`OFF`: cooldowns, `DASH`, `ALL`), plus on/off
@@ -142,7 +148,8 @@ pay mass for spit and laser hits (`MoveRules.mass_decay`, `spit_mass`,
 the ring). The FOOD setting scales how much food levels lay out
 (`GameSettings.food_amount()`). Every blob
 shares `GameSettings.rules()`, built from the player's settings, so a change
-in a menu applies at once. The numbers
+in a menu applies at once, unless its mode gives it its own (Don't Get Fat!'s
+blobs get `move_only.tres`: no moves at all). The numbers
 (dash speed and time, bar size, regen, costs) are in `BlobStats`. Anything
 that hits blobs skips `blob.is_ghost()`; obstacles skip
 `blob.phases_obstacles()`; the arena's own walls never do, nor does a
@@ -171,7 +178,7 @@ Set with `process_physics_priority` in each script's `_ready()`:
    - `-6` `LaserDirector`, `-5` `LaserEmitter`s (dodging overrides the bots' `move_dir`)
 2. `0` `BlobPhysics`: substeps of motion, blob-vs-blob, then every `blob_colliders` node
 3. `10` `Blob`: cooldowns, energy, push windup and release, starting a dash
-4. `20` rules that look at where blobs ended up: `RingArena` ring-out, `KillLasers`, `Food` eating
+4. `15` `Magnet` pulls pickups, then `20` rules that look at where blobs ended up: `RingArena` ring-out, `KillLasers`, `Food` eating, `BeltPickup` catching
 
 Drawing runs in `_process` / `_draw`, painted in the theme's style.
 
@@ -215,7 +222,10 @@ So:
 
 The player picks a theme in SETTINGS (THEME: NEON / CLASSIC; neon by
 default). `Session.theme_name` saves it; `GameTheme.current()` returns its
-`GameTheme` resource (`themes/<name>/<name>.tres`; in the editor the default
+`GameTheme` resource. A mode with `ModeInfo.theme` set always plays in that
+theme instead (`Session.theme_override`, set by `GameMode` while it's in the
+tree): Don't Get Fat! is classic only for now. Otherwise `current()` returns
+the player's (`themes/<name>/<name>.tres`; in the editor the default
 one, so `@tool` previews draw too). Switching never changes a scene.
 
 **Every element has one default drawing, in its own `_draw()`.** Themes only

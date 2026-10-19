@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ModeInfo" format=3]
+
+[ext_resource type="Script" path="res://modes/mode_info.gd" id="1_info"]
+
+[resource]
+script = ExtResource("1_info")
+title = "DON'T GET FAT!"
+subtitle = "Together: catch the good stuff, dodge the junk."
+scene = "res://modes/dont_get_fat/dont_get_fat.tscn"
+min_slots = 1
+max_slots = 4
+default_slots = 1
+options = PackedStringArray("fat_level")
+bots = false
+theme = "classic"

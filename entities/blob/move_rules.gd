@@ -22,6 +22,7 @@ enum Energy {
 @export var ghost_obstacles := false # a ghost dash also passes through walls and bumpers (not the arena)
 @export var energy := Energy.OFF
 @export var bots_dash := true
+@export var push := true # the blast that shoves nearby blobs away
 @export var slash := false # a quick blade swing the way the blob faces
 @export var spit := false # a glob fired the way the blob faces
 @export var shield := false # a short bubble that blocks pushes and slashes and sends spit back

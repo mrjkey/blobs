@@ -6,5 +6,6 @@
 script = ExtResource("1_iobdg")
 base_speed = 500.0
 base_accel = 2000.0
+push_impulse = 2000.0
 slime_time = 2.5
 metadata/_custom_type_script = "uid://bmd7bm8g5o2uj"

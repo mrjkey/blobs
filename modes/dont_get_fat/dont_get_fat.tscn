@@ -1,0 +1,49 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://modes/dont_get_fat/dont_get_fat_game.gd" id="1_mode"]
+[ext_resource type="Script" path="res://core/camera/game_camera.gd" id="2_camera"]
+[ext_resource type="Script" path="res://core/physics/blob_physics.gd" id="3_physics"]
+[ext_resource type="PackedScene" path="res://level/arenas/track/side_walls.tscn" id="4_walls"]
+[ext_resource type="Script" path="res://level/arenas/track/belt_bounds.gd" id="5_bounds"]
+[ext_resource type="Script" path="res://entities/buddy/buddy.gd" id="6_buddy"]
+[ext_resource type="PackedScene" path="res://core/fx/fx_layer.tscn" id="7_fx"]
+[ext_resource type="PackedScene" path="res://ui/hud/hud.tscn" id="8_hud"]
+[ext_resource type="Script" path="res://themes/theme_backdrop.gd" id="9_backdrop"]
+[ext_resource type="PackedScene" path="res://core/audio/techno.tscn" id="10_music"]
+[ext_resource type="Resource" path="res://modes/dont_get_fat/dont_get_fat_mode.tres" id="11_info"]
+
+[node name="DontGetFat" type="Node2D" node_paths=PackedStringArray("blobs_node", "hud", "camera", "bounds", "buddy")]
+script = ExtResource("1_mode")
+info = ExtResource("11_info")
+blobs_node = NodePath("Blobs")
+hud = NodePath("Hud")
+go_text = "GO!"
+camera = NodePath("GameCamera")
+bounds = NodePath("BeltBounds")
+buddy = NodePath("Buddy")
+
+[node name="ThemeBackdrop" type="Node2D" parent="."]
+script = ExtResource("9_backdrop")
+
+[node name="Techno" parent="." instance=ExtResource("10_music")]
+
+[node name="GameCamera" type="Camera2D" parent="."]
+script = ExtResource("2_camera")
+view_size = Vector2(1000, 1150)
+
+[node name="SideWalls" parent="." instance=ExtResource("4_walls")]
+
+[node name="BlobPhysics" type="Node" parent="."]
+script = ExtResource("3_physics")
+
+[node name="BeltBounds" type="Node2D" parent="."]
+script = ExtResource("5_bounds")
+
+[node name="Buddy" type="Node2D" parent="."]
+script = ExtResource("6_buddy")
+
+[node name="Blobs" type="Node2D" parent="."]
+
+[node name="FxLayer" parent="." instance=ExtResource("7_fx")]
+
+[node name="Hud" parent="." instance=ExtResource("8_hud")]

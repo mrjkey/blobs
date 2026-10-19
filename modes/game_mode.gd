@@ -20,6 +20,7 @@ enum State { COUNTDOWN, PLAYING, OVER }
 @export var hud: Hud
 @export var countdown_time := 2.4
 @export var hint := "" # controls line shown at the bottom
+@export var go_text := "BUMP!" # flashed when the countdown ends
 @export_file("*.tscn") var menu_path := "res://ui/menus/main_menu.tscn" # Esc, when started on its own
 @export_file("*.tscn") var lobby_path := "res://ui/menus/lobby/lobby.tscn" # Esc, when started from the lobby
 
@@ -33,6 +34,15 @@ var slots: Array[PlayerSlot] = [] # who plays, one blob each
 var humans := 0 # how many of the slots are human
 
 
+## Before any child is ready, so everything in the scene draws in the mode's own theme, if it has one.
+func _enter_tree() -> void:
+	Session.theme_override = info.theme if info != null else ""
+
+
+func _exit_tree() -> void:
+	Session.theme_override = ""
+
+
 func _ready() -> void:
 	slots = lineup()
 	humans = 0
@@ -41,7 +51,7 @@ func _ready() -> void:
 			humans += 1
 	hud.set_hint(hint)
 	_spawn_blobs()
-	await hud.play_countdown(countdown_time)
+	await hud.play_countdown(countdown_time, go_text)
 	if state != State.COUNTDOWN:
 		return
 	state = State.PLAYING

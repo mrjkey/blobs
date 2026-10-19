@@ -8,7 +8,9 @@ extends Resource
 ## `teams` names the teams of a team mode (empty: every blob for itself).
 ## Seats alternate between them: P1 and P3 on the first, P2 and P4 on the
 ## second. `options` are keys of GameSettings.OPTIONS the lobby shows under
-## the mode's name (match length and the like).
+## the mode's name (match length and the like). A mode without `bots` is for
+## humans only: the lobby never fills a seat with a computer. A mode with a
+## `theme` always plays in that look, whatever the THEME setting says.
 
 const MAX_SLOTS := 4
 
@@ -21,6 +23,8 @@ const MAX_SLOTS := 4
 @export_range(1, 4) var max_humans := 4 # 1 = a one-player mode: P1 plays with the keyboard and a gamepad
 @export var teams := PackedStringArray() # e.g. ["BLUE", "RED"]; empty = no teams
 @export var options := PackedStringArray() # GameSettings option keys, set in the lobby
+@export var bots := true # computers can take seats; false = humans only (co-op modes)
+@export var theme := "" # a key of Session.THEMES this mode always plays in (e.g. "classic"); "" = the player's pick
 @export var mass_loss := false # blobs shrink over time, pay mass for spit and lasers, and pop when too small (Blob.loses_mass)
 
 

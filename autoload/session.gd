@@ -33,12 +33,19 @@ var theme_name := "neon":
 		_theme = null
 		_save()
 
-## The GameTheme for theme_name. Use GameTheme.current(), which also works in the editor.
+## A theme the game in progress plays in instead of theme_name (ModeInfo.theme:
+## a mode that only has one look). GameMode sets it while it runs. Not saved.
+var theme_override := "":
+	set(value):
+		theme_override = value if THEMES.has(value) else ""
+		_theme = null
+
+## The GameTheme in use: theme_override, else theme_name. Use GameTheme.current(), which also works in the editor.
 ## (Typed Resource on purpose: this autoload loads first, before the classes a theme uses.)
 var theme: Resource:
 	get:
 		if _theme == null:
-			_theme = load(THEMES[theme_name])
+			_theme = load(THEMES[theme_override if theme_override != "" else theme_name])
 		return _theme
 
 ## Gameplay settings the player picked: option key -> choice id. Read them

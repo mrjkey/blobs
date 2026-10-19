@@ -244,7 +244,7 @@ func _draw_status(st: ThemeStyle, r: float) -> void:
 			var frac := 1.0 - blob.push_cooldown / blob.push_cooldown_full
 			if frac > 0.01:
 				st.ring(self, Vector2.ZERO, ring_r, Color.WHITE, 3.0, 1.2, 0.3, -PI / 2.0, -PI / 2.0 + TAU * frac)
-		else:
+		elif blob.rules.push: # the push is ready
 			st.ring(self, Vector2.ZERO, ring_r, Color.WHITE, 2.0, 1.6, 0.6)
 		if blob.rules.slash or blob.rules.spit:
 			# Where a slash or spit would go: a small notch outside the body.

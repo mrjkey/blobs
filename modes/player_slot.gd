@@ -46,8 +46,8 @@ static func make_human(seat: int, keys: InputProfile, pad := -1) -> PlayerSlot:
 
 ## The lineup for a mode started on its own, with no lobby: P1 on the
 ## keyboard, each connected gamepad takes the next seat (as many as the mode
-## allows humans), computers fill the rest. With only one human seat, P1 plays
-## with the keyboard and the first gamepad.
+## allows humans), computers fill the rest (unless the mode has no `bots`).
+## With only one human seat, P1 plays with the keyboard and the first gamepad.
 static func default_lineup(info: ModeInfo) -> Array[PlayerSlot]:
 	var count := info.default_slots if info != null else 2
 	var max_humans := mini(info.max_humans if info != null else ModeInfo.MAX_SLOTS, count)
@@ -62,7 +62,7 @@ static func default_lineup(info: ModeInfo) -> Array[PlayerSlot]:
 			var p := make_human(out.size() + 1, PAD_ONLY, id)
 			p.color_index = out.size()
 			out.append(p)
-	while out.size() < count:
+	while out.size() < count and (info == null or info.bots):
 		out.append(make_bot(out.size() + 1))
 	recolor_bots(out)
 	return out

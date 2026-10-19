@@ -16,8 +16,9 @@ extends Control
 ##   a CPU card:   up/down its level, A take its seat (to change team), B close the seat
 ##   empty seat:   A open it as a CPU
 ## Once every player is ready the game starts. START (or TAB) starts it right
-## away; with nobody joined, the computers play on their own. B / ESC with
-## nobody joined goes back to the main menu.
+## away; with nobody joined, the computers play on their own. A mode without
+## computers (ModeInfo.bots off) leaves free seats empty and needs a player
+## to start. B / ESC with nobody joined goes back to the main menu.
 
 const READY_DELAY := 0.7 # seconds between everyone being ready and the game starting
 const STICK_ON := 0.6
@@ -49,7 +50,7 @@ func _ready() -> void:
 		cards[i].seat = i + 1
 	if not _restore():
 		for i in info.default_slots:
-			seats[i] = _new_bot(i)
+			seats[i] = _cpu_or_empty(i)
 	_fix_teams()
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	_changed()
@@ -165,7 +166,7 @@ func _act(device: String, action: String) -> void:
 			if p.hand == own:
 				p.ready = not p.ready
 				Sfx.play("pop", 1.3 if p.ready else 0.9)
-			elif at == null:
+			elif at == null and info.bots:
 				seats[p.hand] = _new_bot(p.hand)
 			elif on_cpu:
 				_swap(device, p.hand)
@@ -313,7 +314,7 @@ func _set_mode(next: ModeInfo) -> void:
 		p.ready = false
 	var want := maxi(info.default_slots, info.min_slots)
 	for i in info.max_slots:
-		if seats[i] == null and _open_count() < want:
+		if seats[i] == null and _open_count() < want and info.bots:
 			var cpu: PlayerSlot = old[i]
 			seats[i] = cpu if cpu != null and not cpu.human else _new_bot(i)
 	_fix_teams()
@@ -328,10 +329,15 @@ func _first_seat(test: Callable) -> int:
 
 func _leave(device: String) -> void:
 	var seat: int = players[device].seat
-	seats[seat] = _new_bot(seat)
+	seats[seat] = _cpu_or_empty(seat)
 	players.erase(device)
 	_keyboard_order.erase(device)
 	Sfx.play("pop", 0.7)
+
+
+## A computer for seat `seat`, or nobody in a mode without computers.
+func _cpu_or_empty(seat: int) -> PlayerSlot:
+	return _new_bot(seat) if info.bots else null
 
 
 func _new_bot(seat: int) -> PlayerSlot:
@@ -428,7 +434,7 @@ func _hint_for(device: String, p: Dictionary) -> String:
 	if p.hand == p.seat:
 		return "%s: colour\n%s: %s   %s: leave" % [k.ud, k.ok, "not ready" if p.ready else "ready", k.back]
 	if at == null:
-		return "%s: add a CPU" % k.ok
+		return "%s: add a CPU" % k.ok if info.bots else ""
 	if not at.human:
 		var close := "   %s: remove" % k.back if _can_close(p.hand) else ""
 		return "%s: level\n%s: sit here%s" % [k.ud, k.ok, close]
@@ -475,7 +481,10 @@ func _refresh_status(all_ready: bool) -> void:
 	elif players.is_empty():
 		lines.append("Game:  LEFT / RIGHT%s" % rows)
 		lines.append("Join:  A on a controller   ·   SPACE  (WASD keys)   ·   ENTER  (arrow keys)")
-		lines.append("START / TAB:  let the computers play      B / ESC:  back")
+		if info.bots:
+			lines.append("START / TAB:  let the computers play      B / ESC:  back")
+		else:
+			lines.append("No computer players in this game: join to play      B / ESC:  back")
 	else:
 		var top := "Game and options:  LB / RB  or  Q / E,   Y  or  R  next row" if not info.options.is_empty() \
 			else "Game:  LB / RB  or  Q / E"
@@ -486,6 +495,10 @@ func _refresh_status(all_ready: bool) -> void:
 
 
 func _start() -> void:
+	if not info.bots and players.is_empty():
+		_message = "Join first: this game has no computer players"
+		_changed()
+		return
 	var lineup: Array = []
 	var keyboards := _keyboard_order.size()
 	for s: PlayerSlot in seats:
@@ -514,7 +527,7 @@ func _restore() -> bool:
 			continue
 		var here := s.device.begins_with("keys") or (s.pad_device >= 0 and pads.has(s.pad_device))
 		if s.human and (s.device == "" or not here):
-			seats[i] = _new_bot(i)
+			seats[i] = _cpu_or_empty(i)
 			continue
 		seats[i] = s
 		if s.human:

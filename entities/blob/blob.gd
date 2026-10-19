@@ -125,7 +125,7 @@ func push_reach() -> float:
 
 
 func push_ready() -> bool:
-	return push_cooldown <= 0.0 and windup <= 0.0 and shield_t <= 0.0 \
+	return rules.push and push_cooldown <= 0.0 and windup <= 0.0 and shield_t <= 0.0 \
 		and (not rules.push_costs_energy() or energy >= stats.push_cost)
 
 
@@ -305,7 +305,7 @@ func _physics_process(delta: float) -> void:
 			push_cooldown = push_cooldown_full
 			body.swell_kick(stats.push_swell * 22.0)
 			_release_push()
-	elif push_buffer > 0.0 and push_cooldown <= 0.0 and shield_t <= 0.0:
+	elif push_buffer > 0.0 and rules.push and push_cooldown <= 0.0 and shield_t <= 0.0:
 		push_buffer = 0.0
 		if not rules.push_costs_energy() or _spend(stats.push_cost):
 			windup = stats.push_windup
