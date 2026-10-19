@@ -5,6 +5,7 @@
 [ext_resource type="Theme" path="res://themes/neon/hud_theme.tres" id="3_res"]
 [ext_resource type="PackedScene" path="res://themes/neon/neon_grid.tscn" id="4_res"]
 [ext_resource type="PackedScene" path="res://themes/neon/neon_glow.tscn" id="5_res"]
+[ext_resource type="Theme" path="res://themes/neon/menu_theme.tres" id="6_res"]
 
 [sub_resource type="Resource" id="style"]
 script = ExtResource("2_style")
@@ -57,6 +58,7 @@ values = {
 "wall.kicker": Color(1, 0.3, 0.75, 1)
 }
 hud = ExtResource("3_res")
+menu = ExtResource("6_res")
 backdrop = ExtResource("4_res")
 glow = ExtResource("5_res")
 clear_color = Color(0.008, 0, 0.025, 1)

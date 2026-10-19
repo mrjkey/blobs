@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://ui/menus/lobby/lobby.gd" id="1_lobby"]
-[ext_resource type="Theme" uid="uid://clopy5laifscb" path="res://ui/themes/menu_theme.tres" id="2_theme"]
+[ext_resource type="Theme" path="res://themes/neon/menu_theme.tres" id="2_theme"]
 [ext_resource type="PackedScene" path="res://ui/menus/lobby/lobby_card.tscn" id="3_card"]
 [ext_resource type="Resource" path="res://modes/ring/ring_mode.tres" id="4_ring"]
 [ext_resource type="Resource" path="res://modes/treadmill/treadmill_mode.tres" id="10_treadmill"]
@@ -14,6 +14,8 @@
 [ext_resource type="Resource" path="res://entities/controllers/levels/aggressive.tres" id="9_aggressive"]
 [ext_resource type="PackedScene" path="res://ui/menus/options/option_row.tscn" id="13_row"]
 [ext_resource type="Script" path="res://ui/menus/prompts/prompt_bar.gd" id="14_prompts"]
+[ext_resource type="Script" path="res://ui/menus/menu_frame.gd" id="15_frame"]
+[ext_resource type="Script" path="res://ui/menus/lobby/game_tabs.gd" id="16_tabs"]
 
 [node name="Lobby" type="Control"]
 layout_mode = 3
@@ -28,14 +30,17 @@ modes = Array[Resource]([ExtResource("10_treadmill"), ExtResource("4_ring"), Ext
 bot_levels = Array[Resource]([ExtResource("5_idle"), ExtResource("6_passive"), ExtResource("7_easy"), ExtResource("8_normal"), ExtResource("9_aggressive")])
 row_scene = ExtResource("13_row")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="MenuFrame" type="Control" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.02, 0.02, 0.06, 1)
+mouse_filter = 2
+script = ExtResource("15_frame")
+stick_steps = false
 
 [node name="Players" type="Control" parent="."]
 unique_name_in_owner = true
@@ -47,17 +52,24 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Crumbs" type="RichTextLabel" parent="Players"]
+[node name="Crumbs" type="HBoxContainer" parent="Players"]
 layout_mode = 0
 offset_left = 40.0
-offset_top = 28.0
+offset_top = 26.0
 offset_right = 520.0
 offset_bottom = 60.0
-mouse_filter = 2
-bbcode_enabled = true
-text = "[color=#6f76a8]1  GAME[/color]      [color=#4be8ff]2  PLAYERS[/color]"
-scroll_active = false
-theme_override_font_sizes/normal_font_size = 18
+theme_override_constants/separation = 28
+
+[node name="Step1" type="Label" parent="Players/Crumbs"]
+layout_mode = 2
+theme_type_variation = &"DimLabel"
+text = "1  GAME"
+
+[node name="Step2" type="Label" parent="Players/Crumbs"]
+layout_mode = 2
+theme_type_variation = &"AccentLabel"
+theme_override_font_sizes/font_size = 18
+text = "2  PLAYERS"
 
 [node name="Center" type="CenterContainer" parent="Players"]
 layout_mode = 1
@@ -94,8 +106,7 @@ theme_override_constants/separation = 8
 [node name="Rules" type="Label" parent="Players/Center/Column/Header/RulesColumn"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.88, 0.45, 1)
-theme_override_font_sizes/font_size = 22
+theme_type_variation = &"AccentLabel"
 horizontal_alignment = 2
 
 [node name="RulesPrompt" type="Control" parent="Players/Center/Column/Header/RulesColumn"]
@@ -132,7 +143,7 @@ layout_mode = 2
 theme_type_variation = &"SubtitleLabel"
 horizontal_alignment = 1
 
-[node name="Banner" type="ColorRect" parent="Players"]
+[node name="Banner" type="Panel" parent="Players"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -145,7 +156,7 @@ offset_bottom = 70.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.86, 0.22, 0.42, 0.92)
+theme_type_variation = &"BannerPanel"
 
 [node name="Row" type="HBoxContainer" parent="Players/Banner"]
 layout_mode = 1
@@ -160,9 +171,8 @@ alignment = 1
 
 [node name="Ready" type="Label" parent="Players/Banner/Row"]
 layout_mode = 2
+theme_type_variation = &"TitleLabel"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0.35, 0.02, 0.12, 1)
-theme_override_constants/outline_size = 12
 theme_override_font_sizes/font_size = 72
 text = "READY!"
 vertical_alignment = 1
@@ -178,7 +188,8 @@ font_size = 28
 text_color = Color(1, 1, 1, 1)
 align = 0
 
-[node name="LegendBack" type="ColorRect" parent="Players"]
+[node name="Legend" type="Control" parent="Players"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -188,18 +199,8 @@ offset_top = -64.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
-color = Color(0.045, 0.045, 0.14, 1)
-
-[node name="Legend" type="Control" parent="Players/LegendBack"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
 script = ExtResource("14_prompts")
+background = true
 
 [node name="Game" type="Control" parent="."]
 unique_name_in_owner = true
@@ -211,100 +212,116 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Background" type="ColorRect" parent="Game"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.02, 0.02, 0.06, 1)
-
-[node name="Crumbs" type="RichTextLabel" parent="Game"]
+[node name="Crumbs" type="HBoxContainer" parent="Game"]
 layout_mode = 0
 offset_left = 40.0
-offset_top = 28.0
+offset_top = 26.0
 offset_right = 520.0
 offset_bottom = 60.0
-mouse_filter = 2
-bbcode_enabled = true
-text = "[color=#4be8ff]1  GAME[/color]      [color=#6f76a8]2  PLAYERS[/color]"
-scroll_active = false
-theme_override_font_sizes/normal_font_size = 18
+theme_override_constants/separation = 28
 
-[node name="Center" type="CenterContainer" parent="Game"]
+[node name="Step1" type="Label" parent="Game/Crumbs"]
+layout_mode = 2
+theme_type_variation = &"AccentLabel"
+theme_override_font_sizes/font_size = 18
+text = "1  GAME"
+
+[node name="Step2" type="Label" parent="Game/Crumbs"]
+layout_mode = 2
+theme_type_variation = &"DimLabel"
+text = "2  PLAYERS"
+
+[node name="Layout" type="VBoxContainer" parent="Game"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = -64.0
+offset_left = 110.0
+offset_top = 92.0
+offset_right = -110.0
+offset_bottom = -84.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+theme_override_constants/separation = 36
 
-[node name="Columns" type="HBoxContainer" parent="Game/Center"]
+[node name="GameTabs" type="Control" parent="Game/Layout"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 76)
 layout_mode = 2
-theme_override_constants/separation = 72
+focus_mode = 2
+script = ExtResource("16_tabs")
 
-[node name="About" type="VBoxContainer" parent="Game/Center/Columns"]
-custom_minimum_size = Vector2(560, 0)
+[node name="Columns" type="HBoxContainer" parent="Game/Layout"]
 layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 64
 alignment = 1
+
+[node name="About" type="VBoxContainer" parent="Game/Layout/Columns"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="GameTitle" type="Label" parent="Game/Center/Columns/About"]
+[node name="GameTitle" type="Label" parent="Game/Layout/Columns/About"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(560, 0)
+custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
 theme_type_variation = &"TitleLabel"
-theme_override_font_sizes/font_size = 68
+theme_override_font_sizes/font_size = 60
 text = "GAME"
 autowrap_mode = 2
 
-[node name="GameSubtitle" type="Label" parent="Game/Center/Columns/About"]
+[node name="GameSubtitle" type="Label" parent="Game/Layout/Columns/About"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(560, 0)
+custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
 theme_type_variation = &"SubtitleLabel"
 theme_override_font_sizes/font_size = 24
 autowrap_mode = 2
 
-[node name="Facts" type="Label" parent="Game/Center/Columns/About"]
+[node name="Facts" type="Label" parent="Game/Layout/Columns/About"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(560, 0)
+custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
 theme_type_variation = &"HintLabel"
 theme_override_font_sizes/font_size = 20
 autowrap_mode = 2
 
-[node name="List" type="VBoxContainer" parent="Game/Center/Columns"]
+[node name="List" type="VBoxContainer" parent="Game/Layout/Columns"]
 custom_minimum_size = Vector2(640, 0)
 layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 10
+theme_override_constants/separation = 6
 
-[node name="Rows" type="VBoxContainer" parent="Game/Center/Columns/List"]
+[node name="RulesHeading" type="Label" parent="Game/Layout/Columns/List"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "RULES"
+horizontal_alignment = 1
+
+[node name="Rows" type="VBoxContainer" parent="Game/Layout/Columns/List"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="Help" type="Label" parent="Game/Center/Columns/List"]
+[node name="Help" type="Label" parent="Game/Layout"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(640, 56)
+custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 theme_type_variation = &"SubtitleLabel"
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 19
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="ChooseButton" type="Button" parent="Game/Center/Columns/List"]
+[node name="ChooseButton" type="Button" parent="Game/Layout"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.3, 0.9, 1, 1)
+size_flags_horizontal = 4
+theme_type_variation = &"PrimaryButton"
 text = "CHOOSE PLAYERS"
 
-[node name="LegendBack" type="ColorRect" parent="Game"]
+[node name="GameLegend" type="Control" parent="Game"]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -314,17 +331,7 @@ offset_top = -64.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
-color = Color(0.045, 0.045, 0.14, 1)
-
-[node name="GameLegend" type="Control" parent="Game/LegendBack"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
 script = ExtResource("14_prompts")
+background = true
 
-[connection signal="pressed" from="Game/Center/Columns/List/ChooseButton" to="." method="_on_choose_button_pressed"]
+[connection signal="pressed" from="Game/Layout/ChooseButton" to="." method="_on_choose_button_pressed"]

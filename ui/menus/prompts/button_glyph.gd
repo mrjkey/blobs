@@ -7,7 +7,9 @@ extends RefCounted
 ##   "pill:START"          a named gamepad button (START, LB...), as a pill
 ##   "lr", "ud"            left/right or up/down (d-pad, stick or arrows), as triangles
 ## draw() paints one with its left edge at `at` (vertically centred) and
-## returns its width; width() only measures.
+## returns its width; width() only measures. Keycaps, pills and arrows take
+## the menu theme's ButtonGlyph colours (key_fill, key_edge, key_text,
+## pill_fill, pill_text, arrow); the face buttons keep their own.
 
 const PAD_COLORS := {
 	"a": Color(0.33, 0.86, 0.46),
@@ -16,10 +18,10 @@ const PAD_COLORS := {
 	"y": Color(1.0, 0.82, 0.28),
 }
 const INK := Color(0.03, 0.03, 0.1)
-const CAP_FILL := Color(0.11, 0.11, 0.26)
-const CAP_EDGE := Color(0.66, 0.7, 0.94)
-const PILL_FILL := Color(0.62, 0.66, 0.9)
-const ARROW := Color(0.85, 0.88, 1.0)
+const DEFAULTS := {
+	"key_fill": Color(0.11, 0.11, 0.26), "key_edge": Color(0.66, 0.7, 0.94), "key_text": Color(0.9, 0.92, 1.0),
+	"pill_fill": Color(0.62, 0.66, 0.9), "pill_text": INK, "arrow": Color(0.85, 0.88, 1.0),
+}
 
 static var _cap: StyleBoxFlat
 static var _pill: StyleBoxFlat
@@ -46,13 +48,24 @@ static func draw(ci: CanvasItem, font: Font, at: Vector2, glyph: String, h: floa
 			var tip := c + (Vector2(side * w * 0.46, 0.0) if glyph == "lr" else Vector2(0.0, side * h * 0.46))
 			var back := (Vector2(-side, 0.0) if glyph == "lr" else Vector2(0.0, -side)) * s * 1.6
 			var across := Vector2(0.0, s) if glyph == "lr" else Vector2(s, 0.0)
-			ci.draw_colored_polygon(PackedVector2Array([tip, tip + back - across, tip + back + across]), ARROW)
+			ci.draw_colored_polygon(PackedVector2Array([tip, tip + back - across, tip + back + across]), _color(ci, "arrow"))
 	else:
 		var rect := Rect2(at - Vector2(0.0, h * 0.5), Vector2(w, h))
 		var pill := glyph.begins_with("pill:")
-		(_pill_box() if pill else _cap_box()).draw(ci.get_canvas_item(), rect)
-		_centred(ci, font, c, glyph.get_slice(":", 1), _font_size(h), INK if pill else CAP_EDGE.lightened(0.3))
+		var box := _pill_box() if pill else _cap_box()
+		box.bg_color = _color(ci, "pill_fill" if pill else "key_fill")
+		box.border_color = _color(ci, "key_edge")
+		box.draw(ci.get_canvas_item(), rect)
+		_centred(ci, font, c, glyph.get_slice(":", 1), _font_size(h), _color(ci, "pill_text" if pill else "key_text"))
 	return w
+
+
+## The menu theme's colour `name` for glyphs drawn on `ci`.
+static func _color(ci: CanvasItem, name: String) -> Color:
+	var control := ci as Control
+	if control != null and control.has_theme_color(name, "ButtonGlyph"):
+		return control.get_theme_color(name, "ButtonGlyph")
+	return DEFAULTS[name]
 
 
 static func _font_size(h: float) -> int:
@@ -68,8 +81,6 @@ static func _centred(ci: CanvasItem, font: Font, c: Vector2, text: String, size:
 static func _cap_box() -> StyleBoxFlat:
 	if _cap == null:
 		_cap = StyleBoxFlat.new()
-		_cap.bg_color = CAP_FILL
-		_cap.border_color = CAP_EDGE
 		_cap.set_border_width_all(2)
 		_cap.border_width_bottom = 4
 		_cap.set_corner_radius_all(6)
@@ -79,6 +90,5 @@ static func _cap_box() -> StyleBoxFlat:
 static func _pill_box() -> StyleBoxFlat:
 	if _pill == null:
 		_pill = StyleBoxFlat.new()
-		_pill.bg_color = PILL_FILL
 		_pill.set_corner_radius_all(99)
 	return _pill

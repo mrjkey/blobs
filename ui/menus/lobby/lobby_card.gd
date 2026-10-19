@@ -7,15 +7,12 @@ extends Control
 ## join. In a team mode a strip along the top names the team. `toast` is a
 ## short "no, because" note; `hold` fills a bar while a second keyboard
 ## player holds their key to join here.
-## The lobby sets the fields; the card only draws them, in the theme's style.
+## The lobby sets the fields; the card only draws them: blobs in the game
+## theme's style, the panel in the menu theme's LobbyCard colours (panel,
+## text, dim, toast, toast_edge, toast_text).
 
 enum Kind { HUMAN, CPU, OPEN }
 
-const DIM := Color(0.45, 0.47, 0.6)
-const INK := Color(0.82, 0.85, 1.0)
-const BG := Color(0.045, 0.045, 0.11, 0.92)
-const TOAST_BG := Color(0.24, 0.04, 0.1, 0.95)
-const TOAST_EDGE := Color(1.0, 0.36, 0.54)
 const GLYPH_H := 26.0
 const PROMPT_FS := 17
 const BAND := 28.0 # the team strip
@@ -37,6 +34,11 @@ var hold_text := ""
 static var _box: StyleBoxFlat
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_THEME_CHANGED:
+		queue_redraw()
+
+
 func _draw() -> void:
 	var theme := GameTheme.current()
 	if theme.draw_override("lobby_card", self):
@@ -45,27 +47,42 @@ func _draw() -> void:
 	var font := get_theme_default_font()
 	var w := size.x
 	var human := kind == Kind.HUMAN
-	var edge := color if kind != Kind.OPEN else DIM
+	var dim := get_theme_color("dim", "LobbyCard")
+	var ink := get_theme_color("text", "LobbyCard")
+	var panel := get_theme_color("panel", "LobbyCard")
+	var edge := color if kind != Kind.OPEN else dim
 
 	var box := _panel_box()
-	box.bg_color = BG
+	box.bg_color = panel.lerp(Color(color, panel.a), 0.16) if human else panel
 	box.border_color = st.color(edge, 1.8 if human else 0.6, 1.0 if human else 0.55)
 	box.set_border_width_all(4 if human else 2)
+	# The theme's depth: a drop shadow (classic) or, on a player's panel, a glow (neon).
+	box.shadow_size = 0
+	box.shadow_offset = Vector2.ZERO
+	box.shadow_color = Color.TRANSPARENT
+	if st.shadows:
+		box.shadow_color = Color(0, 0, 0, 0.35)
+		box.shadow_offset = Vector2(0, 6)
+		box.shadow_size = 1
+	elif st.halos and human:
+		box.shadow_color = Color(color, 0.35)
+		box.shadow_size = 16
 	box.draw(get_canvas_item(), Rect2(Vector2.ZERO, size))
+	box.shadow_size = 0
 
 	if team_name != "":
 		draw_rect(Rect2(4, 4, w - 8, BAND - 4), st.color(team_color, 1.3, 0.9 if human else 0.55))
 		_text(font, Vector2(w * 0.5, 4 + (BAND - 4) * 0.5), team_name, 16, Color.WHITE)
 
-	var head_col := st.color(color.lerp(Color.WHITE, 0.3), 1.6) if kind != Kind.OPEN else DIM
+	var head_col := st.color(color.lerp(Color.WHITE, 0.3), 1.6) if kind != Kind.OPEN else dim
 	_text(font, Vector2(w * 0.5, 64), title, 40, head_col if human else Color(head_col, 0.75))
 	if detail != "":
-		_text(font, Vector2(w * 0.5, 98), detail, 15, Color(INK, 0.8 if human else 0.6))
+		_text(font, Vector2(w * 0.5, 98), detail, 15, Color(ink, 0.8 if human else 0.6))
 
 	var centre := Vector2(w * 0.5, 168)
 	if kind == Kind.OPEN:
-		st.ring(self, centre, 44.0, DIM, 2.0, 0.6, 0.4)
-		_text(font, centre, "+", 44, Color(DIM, 0.8))
+		st.ring(self, centre, 44.0, dim, 2.0, 0.6, 0.4)
+		_text(font, centre, "+", 44, Color(dim, 0.8))
 	else:
 		st.disc(self, centre, 44.0, color, 0.0, 1.0 if human else 0.6, 1.5, 3.0, true)
 		for side: float in [-1.0, 1.0]:
@@ -83,7 +100,7 @@ func _draw() -> void:
 		box.set_border_width_all(2)
 		box.draw(get_canvas_item(), row)
 		var y := row.get_center().y
-		_text_left(font, Vector2(row.position.x + 12, y), choice_label, 16, Color(INK, 0.75))
+		_text_left(font, Vector2(row.position.x + 12, y), choice_label, 16, Color(ink, 0.75))
 		var right := row.end.x - 12
 		var arrow := st.color(color.lerp(Color.WHITE, 0.4), 1.8)
 		_arrow(Vector2(right, y), 1.0, arrow)
@@ -99,23 +116,23 @@ func _draw() -> void:
 		var t := Rect2(10, 282, w - 20, 0)
 		var lines := _wrap(font, toast, 15, t.size.x - 16)
 		t.size.y = lines.size() * 19 + 12
-		draw_rect(t, TOAST_BG)
-		draw_rect(t, TOAST_EDGE, false, 1.5)
+		draw_rect(t, get_theme_color("toast", "LobbyCard"))
+		draw_rect(t, get_theme_color("toast_edge", "LobbyCard"), false, 1.5)
 		for i in lines.size():
-			_text(font, Vector2(w * 0.5, t.position.y + 15 + i * 19), lines[i], 15, Color(1.0, 0.85, 0.9))
+			_text(font, Vector2(w * 0.5, t.position.y + 15 + i * 19), lines[i], 15, get_theme_color("toast_text", "LobbyCard"))
 
 	if hold > 0.0:
 		var bar := Rect2(18, 296, w - 36, 10)
-		draw_rect(bar, Color(DIM, 0.35))
+		draw_rect(bar, Color(dim, 0.35))
 		draw_rect(Rect2(bar.position, Vector2(bar.size.x * clampf(hold, 0.0, 1.0), bar.size.y)), st.color(Color.WHITE, 1.6))
-		_text(font, Vector2(w * 0.5, 284), hold_text, 15, INK)
+		_text(font, Vector2(w * 0.5, 284), hold_text, 15, ink)
 
 	# The prompts, bottom up.
 	var y := size.y - 24.0
 	for i in range(prompts.size() - 1, -1, -1):
 		var p: Array = prompts[i]
 		var pw := PromptBar.prompt_width(font, p, GLYPH_H, PROMPT_FS)
-		PromptBar.draw_prompt(self, font, Vector2((w - pw) * 0.5, y), p, GLYPH_H, PROMPT_FS, INK)
+		PromptBar.draw_prompt(self, font, Vector2((w - pw) * 0.5, y), p, GLYPH_H, PROMPT_FS, ink)
 		y -= 36.0
 
 

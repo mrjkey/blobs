@@ -3,23 +3,8 @@
 [ext_resource type="Script" path="res://sandbox/lab/lab_menu.gd" id="1_menu"]
 [ext_resource type="PackedScene" path="res://ui/menus/options/option_row.tscn" id="2_row"]
 [ext_resource type="Script" path="res://ui/menus/options/option_list.gd" id="4_list"]
-[ext_resource type="Theme" path="res://ui/themes/menu_theme.tres" id="3_theme"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-content_margin_left = 40.0
-content_margin_top = 28.0
-content_margin_right = 40.0
-content_margin_bottom = 28.0
-bg_color = Color(0.03, 0.02, 0.08, 0.94)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.5, 0.3, 1, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+[ext_resource type="Theme" path="res://themes/neon/menu_theme.tres" id="3_theme"]
+[ext_resource type="Script" path="res://ui/menus/menu_frame.gd" id="5_frame"]
 
 [node name="LabMenu" type="CanvasLayer"]
 process_mode = 3
@@ -44,9 +29,15 @@ grow_vertical = 2
 mouse_filter = 2
 theme = ExtResource("3_theme")
 
+[node name="MenuFrame" type="Control" parent="Center"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("5_frame")
+background = false
+
 [node name="Panel" type="PanelContainer" parent="Center"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+theme_type_variation = &"MenuPanel"
 
 [node name="Column" type="VBoxContainer" parent="Center/Panel"]
 layout_mode = 2

@@ -15,9 +15,9 @@ in `themes/` (see Themes below).
 | `core/` | Machinery every mode composes: `settings/` (`GameSettings`: the player's gameplay options), `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock) |
 | `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `ball/` (`Ball`, `BallBody`: the football, a Blob with no moves), `slash/` (`Slash`: one blade swing, spawned on the blob), `shots/` (`Shot`, `Spit`: things blobs fire that fly on their own), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`), `buddy/` (`Buddy`: the character Don't Get Fat!'s blobs look after) |
 | `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`, `pitch/`: the floors and walls a mode plays on, with their own rules like ring-out, the kill lasers or goals), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`; `health/`: `BeltPickup`, `HealthItem`, `PowerUp`, `Magnet` for Don't Get Fat!), `maps/` (hand-made levels: `Map`, `SpawnPoint`, `FoodSpot`, `FinishLine`, `Gate`, and one folder per map) |
-| `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style and backdrop |
+| `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style, menu style and backdrop |
 | `modes/` | One folder per game mode (`treadmill/`, `ring/`, `football/`, `dont_get_fat/`): the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
-| `ui/` | `menus/` (main menu, `lobby/` (game and player select), settings, `pause/` (`PauseMenu`); `options/`: `OptionList`, `OptionRow`, shared by the settings screen, the lobby's GAME list and the lab; `prompts/`: `ButtonGlyph`, `PromptBar`, button prompts drawn as glyphs), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`), `themes/menu_theme.tres` |
+| `ui/` | `menus/` (`MenuFrame`: the theme's menu look, background and stick steps, first in every menu; `StickRepeat`; main menu, `lobby/` (game and player select, `GameTabs`, `LobbyCard`), settings, `pause/` (`PauseMenu`); `options/`: `OptionList`, `OptionRow`, shared by the settings screen, the lobby's GAME list and the lab; `prompts/`: `ButtonGlyph`, `PromptBar`, button prompts drawn as glyphs), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`) |
 | `sandbox/` | Test bench scene for trying components, its props, and `lab/` (the Tab menu) |
 | `docs/` | This file; `STATIC_LEVELS.md` (maps), `DONT_GET_FAT.md` (the co-op mode), `IDEAS.md` |
 | `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md); `tools/bake_track.gd` bakes a generated treadmill track into a map |
@@ -267,7 +267,8 @@ adjust it, so a new element works in every theme as soon as it draws itself:
   element's name replaces that element's whole drawing. Every element's
   `_draw()` starts with `if theme.draw_override("name", self): return`.
   None are used yet.
-- **The rest of a `GameTheme`:** `hud` (the HUD's UI theme), `backdrop` (a scene
+- **The rest of a `GameTheme`:** `hud` (the HUD's UI theme), `menu` (the
+  menus' UI theme, see Menus below), `backdrop` (a scene
   drawn behind everything, e.g. the neon grid), `glow` (a bloom scene, used when
   `Session.glow` is on), `clear_color`, `beat_zoom` (camera thump on the kick),
   and the player, P2 and bot colours. `ThemeBackdrop`, near the top of every
@@ -276,6 +277,20 @@ adjust it, so a new element works in every theme as soon as it draws itself:
 Draw order in a game scene: backdrop z -10, arena z -1, then trails (z -1,
 later in the tree), obstacles, food and blobs at 0, lasers and kill lasers z 5,
 `FxLayer` z 10.
+
+**Menus** follow the theme too. Every menu scene starts with a `MenuFrame`,
+which gives the menu the theme's `menu` (a UI `Theme` in the theme's folder,
+`menu_theme.tres`) and paints its background: the `MenuFrame` colours
+(`background`, `stripes`) and the theme's `backdrop` scene (neon: the grid,
+tinted by `backdrop_tint`, rippling where the focus moves). The menu theme
+holds every menu colour and style: buttons and labels (`TitleLabel`,
+`SubtitleLabel`, `HintLabel`, `AccentLabel`, `HeadingLabel`, `DimLabel`,
+`PrimaryButton`, `MenuPanel`, `BannerPanel`) and the drawn parts (`LobbyCard`,
+`ButtonGlyph`, `PromptBar`, `GameTabs`), which read them with
+`get_theme_color(name, "<Type>")`. Switching THEME restyles an open menu at
+once (`Session.theme_changed`). `MenuFrame` also turns stick pushes into
+single `ui_*` steps (`StickRepeat`: one per push, repeating while held); the
+lobby reads the stick itself, per player, with its own `StickRepeat`.
 
 ## The standalone rule
 
@@ -319,8 +334,9 @@ to see them (`SpawnPoint`), or draw in both (`FinishLine`, `WallBlock`).
 `LaserEmitter` (see `LaserTurret`, `LaserShip`: they only give their shape).
 
 **New theme:** a folder under `themes/` with a `<name>.tres` (a `GameTheme`
-with a `ThemeStyle` and the `values` that differ), a HUD theme, optionally a
-backdrop, and an entry in `Session.THEMES`.
+with a `ThemeStyle` and the `values` that differ), a HUD theme, a menu theme
+(copy one and change its colours and styles), optionally a backdrop, and an
+entry in `Session.THEMES`.
 
 **New controller:** a node script that sets `blob.controller = self` in
 `_ready()`, runs at physics priority -10, and writes `move_dir` /

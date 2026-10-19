@@ -4,14 +4,17 @@ extends Control
 ## glyphs (ButtonGlyph codes) and what they do, e.g.
 ##   prompts = [[["a", "key:SPACE"], "Join"], [["b", "key:ESC"], "Back"]]
 ## The lobby's legends and its READY banner use it; draw_prompt() is shared
-## with the lobby's player panels.
+## with the lobby's player panels. Text in the menu theme's PromptBar
+## font_color (unless `text_color` is set); with `background` it sits on the
+## theme's PromptBar panel style, like a legend bar along the bottom.
 
 const GLYPH_GAP := 5.0 # between the glyphs of one prompt
 const TEXT_GAP := 9.0 # between the glyphs and the text
 
 @export var glyph_height := 30.0
 @export var font_size := 20
-@export var text_color := Color(0.8, 0.83, 0.98)
+@export var text_color := Color(0, 0, 0, 0) # clear: the theme's PromptBar font_color
+@export var background := false # draw the theme's PromptBar panel behind
 @export var gap := 36.0 # between prompts
 @export_enum("Left", "Center", "Right") var align := 1
 
@@ -21,8 +24,16 @@ var prompts: Array = []:
 		queue_redraw()
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_THEME_CHANGED:
+		queue_redraw()
+
+
 func _draw() -> void:
+	if background:
+		get_theme_stylebox("panel", "PromptBar").draw(get_canvas_item(), Rect2(Vector2.ZERO, size))
 	var font := get_theme_default_font()
+	var color := text_color if text_color.a > 0.0 else get_theme_color("font_color", "PromptBar")
 	var widths: Array[float] = []
 	var total := 0.0
 	for p: Array in prompts:
@@ -32,7 +43,7 @@ func _draw() -> void:
 	total += gap * maxi(prompts.size() - 1, 0)
 	var x: float = [0.0, (size.x - total) * 0.5, size.x - total][align]
 	for i in prompts.size():
-		draw_prompt(self, font, Vector2(x, size.y * 0.5), prompts[i], glyph_height, font_size, text_color)
+		draw_prompt(self, font, Vector2(x, size.y * 0.5), prompts[i], glyph_height, font_size, color)
 		x += widths[i] + gap
 
 

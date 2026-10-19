@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://c0ge31dweawvf"]
 
 [ext_resource type="Script" uid="uid://1b62tslqpkw8" path="res://ui/menus/main_menu.gd" id="1_8gy84"]
-[ext_resource type="Theme" uid="uid://clopy5laifscb" path="res://ui/themes/menu_theme.tres" id="2_theme"]
+[ext_resource type="Theme" path="res://themes/neon/menu_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://ui/menus/menu_frame.gd" id="9_frame"]
 
 [node name="MainMenu" type="Control" unique_id=126013004]
 layout_mode = 3
@@ -16,14 +17,15 @@ lobby_path = "res://ui/menus/lobby/lobby.tscn"
 sandbox_path = "res://sandbox/sandbox.tscn"
 settings_path = "res://ui/menus/settings_menu.tscn"
 
-[node name="Background" type="ColorRect" parent="." unique_id=263078907]
+[node name="MenuFrame" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.02, 0.02, 0.06, 1)
+mouse_filter = 2
+script = ExtResource("9_frame")
 
 [node name="Center" type="CenterContainer" parent="." unique_id=336845175]
 layout_mode = 1

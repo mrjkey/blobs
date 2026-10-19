@@ -2,6 +2,8 @@ extends Node
 ## Autoload "Session": choices that must survive scene changes and reloads.
 ## Menus write here, game scenes read here in _ready().
 
+signal theme_changed # theme_name changed (the THEME setting): menus restyle (MenuFrame)
+
 const SETTINGS_PATH := "user://settings.cfg"
 ## Theme name -> its GameTheme resource (the THEME setting's choices).
 const THEMES := {
@@ -36,6 +38,7 @@ var theme_name := "neon":
 		theme_name = value if THEMES.has(value) else "neon"
 		_theme = null
 		_save()
+		theme_changed.emit()
 
 ## A theme the game in progress plays in instead of theme_name (ModeInfo.theme:
 ## a mode that only has one look). GameMode sets it while it runs. Not saved.

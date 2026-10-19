@@ -28,6 +28,7 @@ const TEAM_SECOND_COLORS: Array[Color] = [Color(0.65, 0.3, 1.0), Color(1.0, 0.6,
 
 @export_group("Screen")
 @export var hud: Theme # the HUD's text style
+@export var menu: Theme # the menus' look (MenuFrame gives it to each menu): buttons, labels, the lobby's panels, prompts and game tiles
 @export var backdrop: PackedScene # drawn behind everything (e.g. the neon grid); may be empty
 @export var glow: PackedScene # bloom, used when Session.glow is on; may be empty
 @export var clear_color := Color(0.07, 0.07, 0.11)

@@ -1,11 +1,12 @@
 extends Control
 ## The lobby, between the main menu's PLAY and a game. Two views:
 ##
-## GAME: one list, like SETTINGS. The game (one of `modes`), its options
-## (ModeInfo.options: football's time and goals, the treadmill's track and
-## rules), PLAYERS (how many play: computers fill the seats nobody joins) and
-## CPU LEVEL (one level for every computer). Anyone drives it: up/down picks
-## a row, left/right changes it, A goes on to PLAYERS, B goes back.
+## GAME: the games as a row of tiles (GameTabs) that never moves, then a list
+## like SETTINGS under it: the game's options (ModeInfo.options: football's
+## time and goals, the treadmill's track and rules), PLAYERS (how many play:
+## computers fill the seats nobody joins) and CPU LEVEL (one level for every
+## computer). Anyone drives it: up/down picks a row, left/right changes it
+## (on the tiles: the game), A goes on to PLAYERS, B goes back.
 ##
 ## PLAYERS: a panel per seat. Anyone joins with A on a controller, SPACE or
 ## ENTER on the keyboard, and takes the lowest free panel (P1, P2...). Each
@@ -26,8 +27,6 @@ enum View { GAME, PLAYERS }
 const HOLD_TO_JOIN := 0.5 # seconds a second keyboard player holds their confirm key
 const MESSAGE_TIME := 2.6
 const TOAST_TIME := 2.2
-const STICK_ON := 0.6
-const STICK_OFF := 0.35
 const JOIN_GLYPHS := ["a", "key:SPACE", "key:ENTER"]
 
 ## Keyboard keys: physical key -> [the half of the keyboard ("" = any), action].
@@ -64,17 +63,23 @@ var _came_from_players := false # PLAYERS was shown: B in GAME goes back there
 var _joins := 0
 var _keyboard_home := "keys_left" # the half a lone keyboard player joined with
 var _hold := {} # {key, half, t} while a second keyboard player holds their confirm key
-var _stick := {} # "pad:axis" -> -1, 0 or 1, so a held stick moves once
+var _sticks := StickRepeat.new() # one step per push of a stick, like the d-pad
 var _message := "" # a short note under the panels
 var _message_time := 0.0
 var _toasts := {} # card index -> [text, seconds left]
 
 @onready var cards: Array[Node] = %Cards.get_children()
 @onready var rows: VBoxContainer = %Rows
+@onready var tabs: GameTabs = %GameTabs
 
 
 func _ready() -> void:
 	info = Session.next_mode if Session.next_mode is ModeInfo and modes.has(Session.next_mode) else modes[0]
+	var titles := PackedStringArray()
+	for m in modes:
+		titles.append(m.title)
+	tabs.titles = titles
+	tabs.picked.connect(_pick_game)
 	if _restore():
 		view = View.PLAYERS
 		_came_from_players = true
@@ -83,6 +88,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	for r: Array in _sticks.repeats(delta):
+		_act("pad:%d" % r[0], r[1])
 	var redraw := false
 	if not _hold.is_empty():
 		_hold.t += delta
@@ -132,27 +139,10 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_act("pad:%d" % event.device, PAD_BUTTONS[event.button_index])
 	elif event is InputEventJoypadMotion and event.axis <= JOY_AXIS_LEFT_Y:
-		var action := _stick_action(event)
+		get_viewport().set_input_as_handled() # all of it: the rows mustn't see the stick
+		var action := _sticks.motion(event)
 		if action != "":
-			get_viewport().set_input_as_handled()
 			_act("pad:%d" % event.device, action)
-
-
-## Turns stick motion into one move per push of the stick.
-func _stick_action(event: InputEventJoypadMotion) -> String:
-	var key := "%d:%d" % [event.device, event.axis]
-	var was: int = _stick.get(key, 0)
-	var now := was
-	if absf(event.axis_value) >= STICK_ON:
-		now = 1 if event.axis_value > 0.0 else -1
-	elif absf(event.axis_value) <= STICK_OFF:
-		now = 0
-	_stick[key] = now
-	if now == 0 or now == was:
-		return ""
-	if event.axis == JOY_AXIS_LEFT_X:
-		return "right" if now > 0 else "left"
-	return "down" if now > 0 else "up"
 
 
 func _act(device: String, action: String) -> void:
@@ -171,9 +161,11 @@ func _act_game(action: String) -> void:
 			_row = posmod(_row + (1 if action == "down" else -1), list.size())
 			Sfx.play("pop", 1.4)
 		"left", "right":
-			var row := list[_row] as OptionRow
-			if row != null:
-				row.step(1 if action == "right" else -1) # _on_row_changed does the rest
+			var step := 1 if action == "right" else -1
+			if list[_row] == tabs:
+				_pick_game(posmod(modes.find(info) + step, modes.size()))
+			elif list[_row] is OptionRow:
+				(list[_row] as OptionRow).step(step) # _on_row_changed does the rest
 		"confirm":
 			_show(View.PLAYERS)
 		"back", "rules":
@@ -214,6 +206,7 @@ func _act_players(device: String, action: String) -> void:
 				_start()
 			elif not p.ready:
 				p.ready = true
+				_ripple(p.panel, 1.0)
 				Sfx.play("pop", 1.3)
 			elif _problem() != "":
 				_toast(p.panel, _problem())
@@ -249,6 +242,7 @@ func _join(device: String) -> void:
 	_joins += 1
 	players[device] = {panel = panel, slot = slot, ready = false, order = _joins}
 	_place(slot)
+	_ripple(panel, 1.6)
 	Sfx.play("pop", 1.1)
 
 
@@ -480,10 +474,6 @@ func _build_rows() -> void:
 	for r in rows.get_children():
 		rows.remove_child(r)
 		r.queue_free()
-	var games: Array = []
-	for i in modes.size():
-		games.append([str(i), modes[i].title, modes[i].subtitle])
-	_add_row({key = "game", label = "GAME", choices = games}, str(modes.find(info)))
 	for key in info.options:
 		_add_row(GameSettings.option(key), GameSettings.choice(key))
 	if info.bots:
@@ -507,9 +497,6 @@ func _add_row(option: Dictionary, current: String) -> void:
 
 func _on_row_changed(row: OptionRow) -> void:
 	match row.key():
-		"game":
-			_set_mode(modes[int(row.id())])
-			_build_rows.call_deferred() # the rows differ per game; not while this one is emitting
 		"seats":
 			Session.lobby_seats[info.resource_path] = int(row.id())
 		_:
@@ -520,13 +507,27 @@ func _on_row_changed(row: OptionRow) -> void:
 	_changed()
 
 
+## Pick the game `modes[index]` (the tiles' left/right, or a click on one).
+func _pick_game(index: int) -> void:
+	if modes[index] == info:
+		return
+	_set_mode(modes[index])
+	_build_rows()
+	Sfx.play("pop", 1.0)
+
+
 func _focusables() -> Array[Control]:
-	var out: Array[Control] = []
+	var out: Array[Control] = [tabs]
 	for r in rows.get_children():
 		if not r.is_queued_for_deletion():
 			out.append(r)
 	out.append(%ChooseButton)
 	return out
+
+
+## A ripple in the menu's backdrop (the neon grid) under panel `panel`.
+func _ripple(panel: int, strength: float) -> void:
+	%MenuFrame.ripple(cards[panel].get_global_rect().get_center(), strength)
 
 
 func _say(text: String) -> void:
@@ -557,8 +558,13 @@ func _refresh_game() -> void:
 	var focused := list[_row]
 	if view == View.GAME and is_inside_tree():
 		focused.grab_focus()
-	%Help.text = (focused as OptionRow).help_text() if focused is OptionRow \
-		else "Join, pick your %s, and get ready." % ("team" if not info.teams.is_empty() else "colour")
+	tabs.index = modes.find(info)
+	if focused is OptionRow:
+		%Help.text = (focused as OptionRow).help_text()
+	elif focused == tabs:
+		%Help.text = "Left and right pick the game."
+	else:
+		%Help.text = "Join, pick your %s, and get ready." % ("team" if not info.teams.is_empty() else "colour")
 	%GameLegend.prompts = [
 		[["ud"], "Move"],
 		[["lr"], "Change"],
