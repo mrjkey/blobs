@@ -65,7 +65,10 @@ When the host goes back to the lobby, everyone does.
   (`net_spawn()` -> `net_setup()` for what the copy needs, plus its
   position). A joined computer frees any it makes on its own. Changed
   states go out every physics frame, unreliable, and all of them every
-  half second (`ns`); made, happened and gone go reliable (`nw`).
+  half second (`ns`, in packets of up to 1000 bytes so the network never
+  splits one: a lost packet loses only its part of the frame); made,
+  happened and gone go reliable (`nw`). F3 on the host shows how big they get
+  (Football with five blobs: about 1.3 KB a frame).
 - **Smoothing**: a joined computer shows the game `_delay` in the past (the
   updates' age, plus a frame and a half, plus room for the jitter: about
   30 ms at home) and blends between the two updates either side: numbers,
@@ -73,6 +76,11 @@ When the host goes back to the lobby, everyone does.
 - **Effects**: `Juice` and `Sfx` calls, and a node's `fx_...` methods that
   call `NetGame.relay()` (the ring's wall flashing, a kicker or bumper
   lighting up), play on every computer at the same moment of the game.
+  A sound only for this computer (its own menu) uses `Sfx.play_here()`.
+- **Colours**: each computer draws in its own theme, so a joined computer
+  swaps the host's player colours for its own wherever they turn up in
+  states and effects (a shot, slime, a banner). Effects in a lightened
+  player colour (bursts) stay in the host's.
 - **The music**: a joined computer counts beats from the host's start
   (`Techno.sync_start()`), shifted by `_delay`, so the beat lasers fire when
   they're shown.

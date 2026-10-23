@@ -124,6 +124,7 @@ func _host() -> bool:
 				pressed_at = Time.get_ticks_msec() # the late one isn't watching yet: then give it a moment
 				return false
 			if Time.get_ticks_msec() - pressed_at > 2000: # the client sees it too, a moment later
+				print("host: ", scene.net.describe())
 				if game == "DON'T GET FAT!":
 					scene.buddy.weight = (scene.low + scene.high) * 0.5
 					scene._reach_gate()

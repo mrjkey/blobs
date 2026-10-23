@@ -32,7 +32,7 @@ enum Role { OFFLINE, HOST, JOINING, CLIENT }
 
 const PORT := 24680
 const DISCOVERY_PORT := 24681
-const PROTOCOL := 2 # bump when messages change: copies on another version are turned away
+const PROTOCOL := 3 # bump when messages change: copies on another version are turned away
 const MAX_CLIENTS := 7
 const CHANNELS := 2 # 0: reliable, 1: unreliable (so frequent updates never wait behind a resend)
 const JOIN_TIMEOUT := 6.0

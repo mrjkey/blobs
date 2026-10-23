@@ -15,10 +15,13 @@ extends Node
 ##   makes by itself (food a map lays out in _ready(), say).
 ## - How things are, every physics frame: each entity's net_state(), an
 ##   Array, unreliable; only what changed, and everything every REFRESH
-##   frames (in case an update was lost). The others show the game `_delay` in the past (just
-##   long enough for the updates to be there, given the connection) and
-##   blend the two updates either side of that moment: numbers, vectors and
-##   colours blend, anything else switches. net_apply() takes the result.
+##   frames (in case an update was lost). A busy frame goes in several
+##   packets of up to PACKET_BYTES, so a lost one loses only its part. The
+##   others show the game `_delay` in the past (just long enough for the
+##   updates to be there, given the connection) and blend the two updates
+##   either side of that moment: numbers, vectors and colours blend, anything
+##   else switches. net_apply() takes the result. The host's player colours
+##   become this computer's (its theme can differ: a shot, slime, a banner).
 ## - What happens: Juice and Sfx calls, and a node's methods named "fx_..."
 ##   that it passes to relay() (a wall flashing where it was hit). The others
 ##   play them at the same moment of the game.
@@ -40,6 +43,7 @@ const SNAP_USEC := 16667.0 # between the host's updates (one per physics frame)
 const MIN_DELAY := 20000.0 # usec: the least the others show the game in the past
 const AUTOLOADS := ["/root/Juice", "/root/Sfx"] # what relay()ed calls may reach besides fx_ methods
 const REFRESH := 30 # physics frames: every entity's state goes out at least this often, changed or not
+const PACKET_BYTES := 1000 # a frame's states go in packets of about this much (under the ~1400 a network packet holds)
 
 ## The game's NetGame, while one runs (hosting, relay() records into it).
 static var current: NetGame
@@ -58,6 +62,8 @@ var _ready_peers: Array[int] = []
 var _sent := {} # id -> the state last sent
 var _frame := 0
 var _told: Array[int] = [] # peers sent "match" for this game
+var _size := [0, 0] # the latest frame's states: bytes, packets (for the overlay)
+var _size_peak := 0
 
 # Joined
 var _spawning := false
@@ -69,6 +75,7 @@ var _dev := 0.0 # how much that varies
 var _readers: Array = [] # [seat, PlayerInput (outside the tree, only read), press counts]
 var _seq := 0
 var _last_usec := 0
+var _colors := {} # the host's player colours -> this computer's (its theme can differ)
 
 
 func _ready() -> void:
@@ -235,7 +242,9 @@ func _send() -> void:
 			spawns.append(_spawn_of(node))
 	_new.clear()
 	var gone := []
-	var states := []
+	var packets := [[]] # each [id, state, id, state...]
+	var room := PACKET_BYTES
+	var bytes := 0
 	_frame += 1
 	for id: Variant in _entities.keys():
 		var node: Variant = _entities[id]
@@ -249,14 +258,23 @@ func _send() -> void:
 		var s: Array = node.net_state()
 		if not s.is_empty() and (s != _sent.get(id) or (_frame + hash(id)) % REFRESH == 0):
 			_sent[id] = s
-			states.append(id)
-			states.append(s)
+			var size := var_to_bytes([id, s]).size()
+			if size > room and not packets[-1].is_empty():
+				packets.append([])
+				room = PACKET_BYTES
+			room -= size
+			bytes += size
+			packets[-1].append(id)
+			packets[-1].append(s)
 	var events := _events
 	_events = []
+	_size = [bytes, packets.size()]
+	_size_peak = maxi(_size_peak, bytes)
 	for peer in _ready_peers:
 		if not spawns.is_empty() or not events.is_empty() or not gone.is_empty():
 			Net.send(peer, "nw", [t, spawns, events, gone])
-		Net.send(peer, "ns", [t, states], false)
+		for states: Array in packets:
+			Net.send(peer, "ns", [t, states], false)
 
 
 ## [id, scene, where it goes, position, net_spawn(), net_state()]: what a joined computer needs to make its copy.
@@ -368,15 +386,18 @@ func _take_snapshot(t: int, flat: Variant) -> void:
 		var off := clampf(lat - _lat, -(_dev * 3.0 + 10000.0), _dev * 3.0 + 10000.0)
 		_lat += off * 0.05
 		_dev = lerpf(_dev, absf(off), 0.05)
-	if not _snaps.is_empty() and t <= _snaps[0][0]:
+	if not _snaps.is_empty() and t < _snaps[0][0]:
 		return # older than what's already shown
 	var states := {}
 	for i in range(0, flat.size() - 1, 2):
 		if flat[i + 1] is Array:
-			states[flat[i]] = flat[i + 1]
+			states[flat[i]] = _recolor(flat[i + 1])
 	var at := _snaps.size()
 	while at > 0 and _snaps[at - 1][0] > t:
 		at -= 1
+	if at > 0 and _snaps[at - 1][0] == t: # another packet of the same frame
+		_snaps[at - 1][1].merge(states, true)
+		return
 	_snaps.insert(at, [t, states])
 
 
@@ -392,8 +413,8 @@ func _play(w: Array, now: int) -> void:
 				_make(s)
 	if w[2] is Array and now - int(w[0]) < EVENT_TOO_LATE:
 		for e: Variant in w[2]:
-			if e is Array and e.size() == 3:
-				_call(e[0], str(e[1]), e[2])
+			if e is Array and e.size() == 3 and e[2] is Array:
+				_call(e[0], str(e[1]), _recolor(e[2]))
 	if w[3] is Array:
 		for id: Variant in w[3]:
 			var node := _find(id)
@@ -429,8 +450,26 @@ func _make(s: Array) -> void:
 	if node.has_method("net_setup") and s[4] is Array:
 		node.net_setup(s[4])
 	if s[5] is Array and not s[5].is_empty() and node.has_method("net_apply"):
-		node.net_apply(s[5])
+		node.net_apply(_recolor(s[5]))
+	var was: Variant = node.get("color")
 	mode.net_made(node)
+	if was is Color and node.get("color") is Color and node.get("color") != was:
+		_colors[was] = node.get("color")
+
+
+## `values` with the host's player colours swapped for this computer's (a shot, slime, an effect in a blob's colour).
+func _recolor(values: Array) -> Array:
+	if _colors.is_empty():
+		return values
+	var out := values
+	var copied := false
+	for i in values.size():
+		if values[i] is Color and _colors.has(values[i]):
+			if not copied:
+				out = values.duplicate()
+				copied = true
+			out[i] = _colors[values[i]]
+	return out
 
 
 func _call(where: Variant, method: String, args: Variant) -> void:
@@ -503,7 +542,8 @@ static func _blend(a: Array, b: Array, k: float) -> Array:
 ## For the network overlay (F3).
 func describe() -> String:
 	if Net.is_host():
-		return "game: %d things, sending to %d of %d computers" % [_entities.size(), _ready_peers.size(), Net.peers.size()]
+		return "game: %d things, sending to %d of %d computers; updates %d bytes in %d packets (at most %d)" % [
+			_entities.size(), _ready_peers.size(), Net.peers.size(), _size[0], _size[1], _size_peak]
 	return "game shown %d ms late   (updates %d ms old when they arrive, give or take %d)" % [
 		roundi(_delay / 1000.0), roundi(_lat / 1000.0), roundi(_dev / 1000.0)]
 

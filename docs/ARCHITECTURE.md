@@ -115,7 +115,9 @@ a colour index into `GameTheme.palette()`.
   the host picks the game and starts. In the game the host plays and the
   others show its game (`NetGame`): anything that changes during play has
   `net_state()` / `net_apply()`, one-off effects go through Juice, Sfx or an
-  `fx_` method that calls `NetGame.relay()`. Details in `docs/ONLINE.md`.
+  `fx_` method that calls `NetGame.relay()`; a sound for this computer
+  alone (a menu only it has open) is `Sfx.play_here()`. Details in
+  `docs/ONLINE.md`.
 - **Menu buttons mean one thing everywhere.** Up/down moves between rows,
   left/right changes the focused value, A / SPACE / ENTER confirms, B / ESC
   goes back one step, Y / R opens the game and rules, START / TAB plays (in a

@@ -29,7 +29,7 @@ func open(round_over: bool, quit_text: String, stop := true, can_restart := true
 	restart_button.visible = can_restart
 	quit_button.text = quit_text
 	(restart_button if round_over and can_restart else resume_button).grab_focus()
-	Sfx.play("pop", 0.8)
+	Sfx.play_here("pop", 0.8)
 
 
 func _exit_tree() -> void:
