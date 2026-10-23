@@ -14,6 +14,10 @@ extends RefCounted
 ## ModeInfo.options (match rules like football's time and goals, the
 ## treadmill's rules), plus CPU LEVEL for every mode with computers.
 ## `group` puts a heading over the SETTINGS rows that share it.
+##
+## In someone else's online game the host's choices decide the game's rules
+## (use_host_settings()): every option except the menu's and lab's own and
+## those marked `local` (how things look on this screen, like the energy bar).
 
 const OPTIONS := [
 	{key = "theme", label = "THEME", default_id = "neon", only = "menu", group = "LOOK", choices = [
@@ -88,7 +92,7 @@ const OPTIONS := [
 		["slow", "SLOW", "The same speed as in the other modes."],
 		["fast", "FAST", "Quick blobs: dodging is easy, stopping isn't."],
 	]},
-	{key = "meter", label = "BAR", default_id = "above", group = "ENERGY BAR", choices = [
+	{key = "meter", label = "BAR", default_id = "above", group = "ENERGY BAR", local = true, choices = [
 		["above", "ABOVE BLOB", "Pips over the blob's head."],
 		["below", "BELOW BLOB", "Pips under the blob."],
 		["ring", "RING", "Arcs around the blob, outside the push-cooldown ring."],
@@ -96,7 +100,7 @@ const OPTIONS := [
 		["top", "HUD TOP", "Big bars at the top centre of the screen."],
 		["bottom", "HUD BOTTOM", "Big bars at the bottom centre of the screen."],
 	]},
-	{key = "meter_bots", label = "BAR ON BOTS", default_id = "yes", group = "ENERGY BAR", choices = [
+	{key = "meter_bots", label = "BAR ON BOTS", default_id = "yes", group = "ENERGY BAR", local = true, choices = [
 		["yes", "YES", "Bots show their bar too (above, below and ring only)."],
 		["no", "NO", "Only players show a bar."],
 	]},
@@ -137,6 +141,25 @@ const OPTIONS := [
 		["normal", "NORMAL", "Computers that play properly: they push, dash and shield."],
 		["aggressive", "AGGRESSIVE", "Computers that come for you, and react fast."],
 	]},
+	{key = "net_lag", label = "PRETEND LAG", default_id = "0", only = "menu", group = "NETWORK TEST", choices = [
+		["0", "OFF", "Online games go as fast as the network allows."],
+		["50", "50 MS", "Online, this copy holds every message back: 50 ms there and back, like a busy home network."],
+		["100", "100 MS", "Online, this copy holds every message back: 100 ms there and back, like playing across a country."],
+		["150", "150 MS", "Online, this copy holds every message back: 150 ms there and back."],
+		["250", "250 MS", "Online, this copy holds every message back: 250 ms there and back, a bad connection."],
+	]},
+	{key = "net_jitter", label = "PRETEND JITTER", default_id = "0", only = "menu", group = "NETWORK TEST", choices = [
+		["0", "OFF", "Every message takes the same time."],
+		["10", "10 MS", "Messages take up to 10 ms longer, at random."],
+		["30", "30 MS", "Messages take up to 30 ms longer, at random: Wi-Fi on a bad day."],
+		["60", "60 MS", "Messages take up to 60 ms longer, at random."],
+	]},
+	{key = "net_loss", label = "PRETEND LOSS", default_id = "0", only = "menu", group = "NETWORK TEST", choices = [
+		["0", "OFF", "No messages lost (beyond what the network loses)."],
+		["2", "2%", "2% of the frequent updates get lost on the way, each way."],
+		["5", "5%", "5% of the frequent updates get lost on the way, each way."],
+		["15", "15%", "15% of the frequent updates get lost on the way, each way: a very bad connection."],
+	]},
 	{key = "props", label = "PROPS", default_id = "walls", only = "lab", choices = [
 		["walls", "WALLS + BUMPERS", "A wall, a kicker wall and two bumpers to dash into (or through)."],
 		["none", "EMPTY ROOM", "Just the room."],
@@ -156,6 +179,8 @@ static func choice(key: String) -> String:
 	var o := option(key)
 	if o.is_empty():
 		return ""
+	if Session.host_settings.has(key):
+		return Session.host_settings[key]
 	return Session.settings.get(key, o.default_id)
 
 
@@ -173,6 +198,34 @@ static func option(key: String) -> Dictionary:
 		if o.key == key:
 			return o
 	return {}
+
+
+## The choices the host's copy sends to the others in an online game: the
+## game's rules, option key -> id (see use_host_settings()).
+static func shared_choices() -> Dictionary:
+	var out := {}
+	for o: Dictionary in OPTIONS:
+		if _shared(o):
+			out[o.key] = choice(o.key)
+	return out
+
+
+## In someone else's online game: play by the host's `choices` (from
+## shared_choices()) instead of this player's own; {} goes back to them.
+static func use_host_settings(choices: Dictionary) -> void:
+	var kept := {}
+	for key: Variant in choices:
+		var o := option(str(key))
+		if _shared(o) and o.choices.any(func(c: Array) -> bool: return c[0] == choices[key]):
+			kept[o.key] = choices[key]
+	Session.host_settings = kept
+	if _rules != null:
+		_sync()
+
+
+## Whether option `o` is one the host decides in an online game.
+static func _shared(o: Dictionary) -> bool:
+	return not o.is_empty() and not o.get("only", "") in ["menu", "lab"] and not o.get("local", false)
 
 
 ## Pick `id` for option `key`, save it, and apply it.

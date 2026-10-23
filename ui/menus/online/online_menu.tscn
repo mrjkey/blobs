@@ -1,0 +1,155 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/menus/online/online_menu.gd" id="1_script"]
+[ext_resource type="Theme" path="res://themes/neon/menu_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://ui/menus/menu_frame.gd" id="3_frame"]
+[ext_resource type="PackedScene" path="res://ui/menus/online/host_row.tscn" id="4_row"]
+
+[node name="OnlineMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+main_menu_path = "res://ui/menus/main_menu.tscn"
+lobby_path = "res://ui/menus/lobby/lobby.tscn"
+row_scene = ExtResource("4_row")
+
+[node name="MenuFrame" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_frame")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Column" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(800, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Center/Column"]
+layout_mode = 2
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 64
+text = "PLAY ONLINE"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Center/Column"]
+layout_mode = 2
+theme_type_variation = &"SubtitleLabel"
+text = "Host a game for the others, or join one."
+horizontal_alignment = 1
+
+[node name="NameRow" type="HBoxContainer" parent="Center/Column"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="NameLabel" type="Label" parent="Center/Column/NameRow"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "YOUR NAME"
+
+[node name="NameEdit" type="LineEdit" parent="Center/Column/NameRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+max_length = 16
+select_all_on_focus = true
+
+[node name="HostButton" type="Button" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+text = "HOST A GAME"
+
+[node name="FoundHeading" type="Label" parent="Center/Column"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "GAMES ON YOUR NETWORK"
+horizontal_alignment = 1
+
+[node name="Found" type="VBoxContainer" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="FoundEmpty" type="Label" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DimLabel"
+text = "Looking for games...  (none hosting yet)"
+horizontal_alignment = 1
+
+[node name="RecentHeading" type="Label" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "RECENT"
+horizontal_alignment = 1
+
+[node name="Recent" type="VBoxContainer" parent="Center/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="AddressHeading" type="Label" parent="Center/Column"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "JOIN BY ADDRESS"
+horizontal_alignment = 1
+
+[node name="AddressRow" type="HBoxContainer" parent="Center/Column"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="AddressEdit" type="LineEdit" parent="Center/Column/AddressRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+placeholder_text = "192.168.1.20"
+max_length = 64
+select_all_on_focus = true
+
+[node name="JoinButton" type="Button" parent="Center/Column/AddressRow"]
+layout_mode = 2
+text = "JOIN"
+
+[node name="Status" type="Label" parent="Center/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(800, 56)
+layout_mode = 2
+theme_type_variation = &"SubtitleLabel"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="BackButton" type="Button" parent="Center/Column"]
+layout_mode = 2
+text = "BACK"
+
+[node name="Hint" type="Label" parent="Center/Column"]
+layout_mode = 2
+theme_type_variation = &"HintLabel"
+text = "Up/down or D-pad to choose     Enter, Space or A to pick     Delete or X forgets a recent game     Esc or B: back"
+horizontal_alignment = 1
+
+[connection signal="text_changed" from="Center/Column/NameRow/NameEdit" to="." method="_on_name_edit_text_changed"]
+[connection signal="pressed" from="Center/Column/HostButton" to="." method="_on_host_button_pressed"]
+[connection signal="text_submitted" from="Center/Column/AddressRow/AddressEdit" to="." method="_on_address_edit_text_submitted"]
+[connection signal="pressed" from="Center/Column/AddressRow/JoinButton" to="." method="_on_join_button_pressed"]
+[connection signal="pressed" from="Center/Column/BackButton" to="." method="_on_back_button_pressed"]

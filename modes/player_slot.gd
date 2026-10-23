@@ -18,6 +18,7 @@ const NORMAL := preload("res://entities/controllers/levels/normal.tres")
 ## spreads the computers to even the teams out. -1 = from the seat (ModeInfo.team_of).
 @export var team := -1
 @export var team_second := false # with `team` set: the team's second member, in the team's second colour
+@export var peer := 1 # the computer this seat's player is on, online (Net peer id); 1 = the host, or this one offline
 
 @export_group("Human")
 @export var profile: InputProfile = KEYS_ALL # keys and gamepad buttons
@@ -86,6 +87,29 @@ static func recolor_bots(slots: Array) -> void:
 		taken[next] = true
 
 
+## This seat as plain data, for the network (the lobby's copies on the other computers).
+func to_net() -> Dictionary:
+	return {number = number, human = human, color = color_index, team = team, second = team_second,
+		device = device, peer = peer, pad = pad_device, bot = bot_level.display_name if bot_level != null else ""}
+
+
+## A seat from to_net(). A computer's level is looked up by name in `levels` (BotLevels).
+static func from_net(d: Dictionary, levels: Array) -> PlayerSlot:
+	var s := PlayerSlot.new()
+	s.number = clampi(int(d.get("number", 1)), 1, ModeInfo.MAX_SLOTS)
+	s.human = bool(d.get("human", false))
+	s.color_index = int(d.get("color", 0))
+	s.team = int(d.get("team", -1))
+	s.team_second = bool(d.get("second", false))
+	s.device = str(d.get("device", ""))
+	s.peer = int(d.get("peer", 1))
+	s.pad_device = int(d.get("pad", -1))
+	for level: BotLevel in levels:
+		if level.display_name == str(d.get("bot", "")):
+			s.bot_level = level
+	return s
+
+
 ## The team this slot plays for in mode `info` (team_in), -1 without teams.
 func team_in(info: ModeInfo) -> int:
 	if info == null or info.teams.is_empty():
@@ -108,6 +132,8 @@ func describe() -> String:
 	if not human:
 		return "CPU  " + bot_level.display_name
 	if pad_device >= 0:
+		if peer != Net.my_id():
+			return "CONTROLLER" # on another computer: its number there isn't known here
 		var n := Input.get_connected_joypads().find(pad_device) + 1
 		return "CONTROLLER %d" % n if n > 0 else "CONTROLLER"
 	match device:

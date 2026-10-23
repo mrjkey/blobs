@@ -108,6 +108,36 @@ corner_radius_bottom_left = 16
 shadow_color = Color(0, 0, 0, 0.4)
 shadow_offset = Vector2(0, 8)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_field"]
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+bg_color = Color(0.93, 0.94, 0.98, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.08, 0.09, 0.14, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_field_focus"]
+draw_center = false
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 0.8, 0.25, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
 [resource]
 default_font_size = 22
 AccentLabel/base_type = &"Label"
@@ -155,6 +185,13 @@ Label/colors/font_shadow_color = Color(0, 0, 0, 0.4)
 Label/constants/outline_size = 0
 Label/constants/shadow_offset_x = 0
 Label/constants/shadow_offset_y = 2
+LineEdit/colors/caret_color = Color(0.12, 0.12, 0.2, 1)
+LineEdit/colors/font_color = Color(0.12, 0.12, 0.2, 1)
+LineEdit/colors/font_placeholder_color = Color(0.5, 0.52, 0.66, 1)
+LineEdit/colors/selection_color = Color(1, 0.8, 0.25, 0.6)
+LineEdit/font_sizes/font_size = 28
+LineEdit/styles/focus = SubResource("StyleBoxFlat_field_focus")
+LineEdit/styles/normal = SubResource("StyleBoxFlat_field")
 LobbyCard/colors/dim = Color(0.5, 0.52, 0.66, 1)
 LobbyCard/colors/panel = Color(0.19, 0.2, 0.3, 1)
 LobbyCard/colors/text = Color(0.93, 0.94, 1, 1)

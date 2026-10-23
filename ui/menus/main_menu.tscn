@@ -14,6 +14,7 @@ grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_8gy84")
 lobby_path = "res://ui/menus/lobby/lobby.tscn"
+online_path = "res://ui/menus/online/online_menu.tscn"
 sandbox_path = "res://sandbox/sandbox.tscn"
 settings_path = "res://ui/menus/settings_menu.tscn"
 
@@ -58,6 +59,10 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "PLAY"
 
+[node name="OnlineButton" type="Button" parent="Center/Column/Buttons"]
+layout_mode = 2
+text = "PLAY ONLINE"
+
 [node name="SandboxButton" type="Button" parent="Center/Column/Buttons" unique_id=1557065408]
 layout_mode = 2
 text = "SANDBOX"
@@ -77,6 +82,7 @@ text = "W/S, arrows or D-pad to choose     Space, Enter or A to pick"
 horizontal_alignment = 1
 
 [connection signal="pressed" from="Center/Column/Buttons/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="Center/Column/Buttons/OnlineButton" to="." method="_on_online_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/SandboxButton" to="." method="_on_sandbox_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/SettingsButton" to="." method="_on_settings_button_pressed"]
 [connection signal="pressed" from="Center/Column/Buttons/QuitButton" to="." method="_on_quit_button_pressed"]

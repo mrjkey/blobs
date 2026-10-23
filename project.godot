@@ -19,6 +19,7 @@ config/features=PackedStringArray("4.7")
 Session="*res://autoload/session.gd"
 Juice="*res://autoload/juice.gd"
 Sfx="*res://autoload/sfx.gd"
+Net="*res://autoload/net.tscn"
 ClaudeSyncGame="*uid://c377xy6tuo80b"
 
 [display]

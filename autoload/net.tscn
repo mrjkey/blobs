@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://autoload/net.gd" id="1_net"]
+[ext_resource type="PackedScene" path="res://ui/hud/net_overlay.tscn" id="2_overlay"]
+
+[node name="Net" type="Node"]
+script = ExtResource("1_net")
+overlay_scene = ExtResource("2_overlay")

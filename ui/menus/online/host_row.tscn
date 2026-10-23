@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[node name="HostRow" type="Button"]
+custom_minimum_size = Vector2(760, 0)
+theme_override_font_sizes/font_size = 24
+text = "HOST   ·   192.168.1.20   ·   in the lobby"

@@ -21,13 +21,25 @@ extends Control
 ## Every button means the same thing in both views. The lobby writes
 ## Session.lineup + Session.lineup_mode and starts the mode; back from the
 ## game it opens on PLAYERS with the same people.
+##
+## Online (Net), the host's lobby is the real one. The others show a copy:
+## the host sends its state after every change ("lobby_state") and they send
+## their players' presses to it ("lobby_act"), which it handles like its own.
+## Only the host changes the game and its rules, and starts; everyone joins
+## seats from their own keyboard and controllers. So players are keyed by
+## computer and device ("1/keys", "2/pad:0"). The strip at the top shows the
+## host's addresses (to tell the others) or whose game it is. Back with
+## nobody joined, pressed twice, stops hosting or leaves.
 
 enum View { GAME, PLAYERS }
 
 const HOLD_TO_JOIN := 0.5 # seconds a second keyboard player holds their confirm key
 const MESSAGE_TIME := 2.6
 const TOAST_TIME := 2.2
+const NETBAR_REFRESH := 1.0
 const JOIN_GLYPHS := ["a", "key:SPACE", "key:ENTER"]
+## What another computer may ask for ("lobby_act").
+const NET_ACTIONS := ["up", "down", "left", "right", "confirm", "back", "rules", "start", "join_second", "leave"]
 
 ## Keyboard keys: physical key -> [the half of the keyboard ("" = any), action].
 const KEYS := {
@@ -53,20 +65,25 @@ const PAD_BUTTONS := {
 
 var info: ModeInfo
 var view := View.GAME
-## The people who joined: device ("keys", "keys_left", "keys_right", "pad:<id>")
-## -> {panel: card index, slot: PlayerSlot, ready: bool, order: join count}.
-## "keys" is a lone keyboard player, who has every key.
+## The people who joined: "<computer>/<device>" (_key()) -> {peer, device,
+## panel: card index, slot: PlayerSlot, ready: bool, order: join count}.
+## A device is "keys" (a lone keyboard player, who has every key),
+## "keys_left", "keys_right" or "pad:<id>", on computer `peer` (1 offline).
 var players := {}
 var lineup: Array = [] # per card: the PlayerSlot that plays there, or null (free); from _make_lineup()
 var _row := 0 # the focused row in GAME
 var _came_from_players := false # PLAYERS was shown: B in GAME goes back there
 var _joins := 0
-var _keyboard_home := "keys_left" # the half a lone keyboard player joined with
+var _keyboard_home := {} # computer -> the half its lone keyboard player joined with
 var _hold := {} # {key, half, t} while a second keyboard player holds their confirm key
 var _sticks := StickRepeat.new() # one step per push of a stick, like the d-pad
 var _message := "" # a short note under the panels
 var _message_time := 0.0
 var _toasts := {} # card index -> [text, seconds left]
+var _leave_t := 0.0 # online: > 0 after back was pressed once; again stops hosting or leaves
+var _synced := false # another computer's copy: the host's state has arrived
+var _addresses := PackedStringArray() # hosting: this computer's addresses, for the others to type
+var _netbar_t := 0.0
 
 @onready var cards: Array[Node] = %Cards.get_children()
 @onready var rows: VBoxContainer = %Rows
@@ -80,24 +97,33 @@ func _ready() -> void:
 		titles.append(m.title)
 	tabs.titles = titles
 	tabs.picked.connect(_pick_game)
-	if _restore():
+	lineup.resize(cards.size())
+	if Net.is_client():
+		Net.send(1, "lobby_hello")
+	elif _restore():
 		view = View.PLAYERS
 		_came_from_players = true
+	if Net.is_host():
+		Net.set_status("")
+		_addresses = LanDiscovery.lan_addresses()
+	Net.message.connect(_on_net_message)
+	Net.peers_changed.connect(_on_peers_changed)
+	Net.status_changed.connect(_refresh_players)
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	_build_rows()
 
 
 func _process(delta: float) -> void:
+	var me := Net.my_id()
 	for r: Array in _sticks.repeats(delta):
-		_act("pad:%d" % r[0], r[1])
+		_act(me, "pad:%d" % r[0], r[1])
 	var redraw := false
 	if not _hold.is_empty():
 		_hold.t += delta
 		if _hold.t >= HOLD_TO_JOIN:
 			var half: String = _hold.half
 			_hold = {}
-			_join_second_keyboard(half)
-			_changed()
+			_act(me, half, "join_second")
 			return
 		redraw = true
 	if _message_time > 0.0:
@@ -105,16 +131,23 @@ func _process(delta: float) -> void:
 		if _message_time <= 0.0:
 			_message = ""
 			redraw = true
+	_leave_t = maxf(_leave_t - delta, 0.0)
 	for i: int in _toasts.keys():
 		_toasts[i][1] -= delta
 		if _toasts[i][1] <= 0.0:
 			_toasts.erase(i)
 			redraw = true
+	_netbar_t -= delta
+	if _netbar_t <= 0.0:
+		_netbar_t = NETBAR_REFRESH
+		_refresh_netbar()
 	if redraw:
+		_refresh_game()
 		_refresh_players()
 
 
 func _input(event: InputEvent) -> void:
+	var me := Net.my_id()
 	if event is InputEventKey and not event.echo:
 		if not KEYS.has(event.physical_keycode):
 			return
@@ -125,31 +158,36 @@ func _input(event: InputEvent) -> void:
 			# A short press of the other half's confirm key: the lone keyboard player's confirm.
 			if not _hold.is_empty() and _hold.key == event.physical_keycode:
 				_hold = {}
-				_act("keys", "confirm")
+				_act(me, "keys", "confirm")
 			return
-		var device := "keys" if players.has("keys") else half
+		var lone := players.has(_key(me, "keys"))
+		var device := "keys" if lone else half
 		if half == "":
-			device = "keys" if players.has("keys") else "keys_left"
-		if action == "confirm" and device == "keys" and half != _keyboard_home and view == View.PLAYERS:
+			device = "keys" if lone else "keys_left"
+		if action == "confirm" and device == "keys" and half != _home(me) and view == View.PLAYERS:
 			_hold = {key = event.physical_keycode, half = half, t = 0.0}
 			return
-		_act(device, action)
+		_act(me, device, action)
 	elif event is InputEventJoypadButton and event.pressed:
 		if PAD_BUTTONS.has(event.button_index):
 			get_viewport().set_input_as_handled()
-			_act("pad:%d" % event.device, PAD_BUTTONS[event.button_index])
+			_act(me, "pad:%d" % event.device, PAD_BUTTONS[event.button_index])
 	elif event is InputEventJoypadMotion and event.axis <= JOY_AXIS_LEFT_Y:
 		get_viewport().set_input_as_handled() # all of it: the rows mustn't see the stick
 		var action := _sticks.motion(event)
 		if action != "":
-			_act("pad:%d" % event.device, action)
+			_act(me, "pad:%d" % event.device, action)
 
 
-func _act(device: String, action: String) -> void:
-	if view == View.GAME:
+## `device` on computer `peer` pressed `action`. Another computer's copy
+## looks around by itself and sends the rest to the host.
+func _act(peer: int, device: String, action: String) -> void:
+	if Net.is_client():
+		_act_client(device, action)
+	elif view == View.GAME and peer == Net.my_id():
 		_act_game(action)
 	else:
-		_act_players(device, action)
+		_act_players(peer, device if action == "join_second" else _resolve(peer, device), action)
 	_changed()
 
 
@@ -169,7 +207,9 @@ func _act_game(action: String) -> void:
 		"confirm":
 			_show(View.PLAYERS)
 		"back", "rules":
-			if _came_from_players or not players.is_empty():
+			if action == "back" and Net.is_host() and not _has_players(Net.my_id()):
+				_back_out()
+			elif _came_from_players or not players.is_empty():
 				_show(View.PLAYERS)
 			else:
 				get_tree().change_scene_to_file(main_menu_path)
@@ -177,32 +217,43 @@ func _act_game(action: String) -> void:
 			_start()
 
 
-## PLAYERS: people join, and change only their own panel.
-func _act_players(device: String, action: String) -> void:
+## PLAYERS: people join, and change only their own panel. `peer` is the
+## computer the press came from: only this one's own presses change the view.
+func _act_players(peer: int, device: String, action: String) -> void:
+	var local := peer == Net.my_id()
 	match action:
 		"start":
-			_start()
+			if local or _can_start():
+				_start()
+			else:
+				_say("The host starts the game")
 			return
 		"rules":
-			_show(View.GAME)
+			if local:
+				_show(View.GAME)
 			return
-	if not players.has(device):
+		"join_second":
+			_join_second_keyboard(peer, device)
+			return
+	var key := _key(peer, device)
+	if not players.has(key):
 		match action:
 			"confirm":
-				_join(device)
+				_join(peer, device)
 			"back":
-				_show(View.GAME)
+				if local:
+					_show(View.GAME)
 		return
-	var p: Dictionary = players[device]
+	var p: Dictionary = players[key]
 	match action:
 		"left", "right":
 			if p.ready:
-				_toast(p.panel, "Ready! Press %s to change" % _key_text(device, "back"))
+				_toast(p.panel, "Ready! Press %s to change" % _key_text(peer, device, "back"))
 			else:
 				_step_choice(p.slot, 1 if action == "right" else -1)
 				Sfx.play("pop", 1.2)
 		"confirm":
-			if _banner_up():
+			if _banner_up() or (not local and _can_start()):
 				_start()
 			elif not p.ready:
 				p.ready = true
@@ -215,7 +266,47 @@ func _act_players(device: String, action: String) -> void:
 				p.ready = false
 				Sfx.play("pop", 0.9)
 			else:
-				_leave(device)
+				_leave(key)
+		"leave":
+			_leave(key)
+
+
+## On another computer's copy: looking around (the views, the GAME list)
+## happens here; joining, a player's own panel and starting go to the host.
+func _act_client(device: String, action: String) -> void:
+	var me := Net.my_id()
+	if view == View.GAME:
+		match action:
+			"up", "down":
+				_row = posmod(_row + (1 if action == "down" else -1), _focusables().size())
+				Sfx.play("pop", 1.4)
+			"left", "right":
+				_say("Only the host changes the game")
+			"back":
+				if _has_players(me):
+					_show(View.PLAYERS)
+				else:
+					_back_out()
+			"confirm", "rules":
+				_show(View.PLAYERS)
+			"start":
+				_say("The host starts the game")
+		return
+	var joined := players.has(_key(me, device))
+	match action:
+		"rules":
+			_show(View.GAME)
+			return
+		"back":
+			if not joined:
+				_show(View.GAME)
+				return
+	if Net.host_status != "":
+		_say("%s is playing %s: wait for them to come back" % [Net.host_name, Net.host_status])
+		return
+	if joined or action in ["confirm", "start", "join_second"]:
+		Net.send(1, "lobby_act", [device, action])
+		Sfx.play("pop", 1.1)
 
 
 func _show(next: View) -> void:
@@ -225,7 +316,22 @@ func _show(next: View) -> void:
 	Sfx.play("pop", 1.0)
 
 
-func _join(device: String) -> void:
+## Online, back with nobody joined: once to be sure, twice to stop hosting or leave.
+func _back_out() -> void:
+	if _leave_t <= 0.0:
+		_leave_t = MESSAGE_TIME
+		_say("Press back again to %s" % ("leave %s's game" % Net.host_name if Net.is_client() else "stop hosting"))
+		Sfx.play("pop", 0.7)
+		return
+	if Net.is_client():
+		Net.leave()
+		get_tree().change_scene_to_file(Net.online_menu_path)
+	else:
+		Net.leave("%s stopped hosting" % Net.host_name)
+		get_tree().change_scene_to_file(main_menu_path)
+
+
+func _join(peer: int, device: String) -> void:
 	if players.size() >= info.max_humans:
 		_say("%s takes %d player%s" % [info.title, info.max_humans, "" if info.max_humans == 1 else "s"])
 		return
@@ -233,56 +339,101 @@ func _join(device: String) -> void:
 	if panel < 0:
 		_say("All seats are taken")
 		return
-	if device.begins_with("keys") and not _has_keyboard_player():
-		_keyboard_home = device
+	if device.begins_with("keys") and not _has_keyboard_player(peer):
+		_keyboard_home[peer] = device if device != "keys" else "keys_left"
 		device = "keys"
 	var pad := int(device.get_slice(":", 1)) if device.begins_with("pad:") else -1
 	var slot := PlayerSlot.make_human(panel + 1, PlayerSlot.PAD_ONLY, pad)
 	slot.device = device
+	slot.peer = peer
 	_joins += 1
-	players[device] = {panel = panel, slot = slot, ready = false, order = _joins}
+	players[_key(peer, device)] = {peer = peer, device = device, panel = panel, slot = slot, ready = false, order = _joins}
 	_place(slot)
 	_ripple(panel, 1.6)
 	Sfx.play("pop", 1.1)
 
 
-## The lone keyboard player keeps their half, the new one takes `half`.
-func _join_second_keyboard(half: String) -> void:
+## Computer `peer`'s lone keyboard player keeps their half, the new one takes `half`.
+func _join_second_keyboard(peer: int, half: String) -> void:
+	var lone := _key(peer, "keys")
+	if not players.has(lone) or not half in ["keys_left", "keys_right"]:
+		return
 	if players.size() >= info.max_humans or _free_panel() < 0:
 		_say("All seats are taken")
 		return
-	var first: Dictionary = players["keys"]
-	players.erase("keys")
-	players[_keyboard_home] = first
-	first.slot.device = _keyboard_home
-	_join(half)
+	var home := "keys_left" if half == "keys_right" else "keys_right"
+	var first: Dictionary = players[lone]
+	players.erase(lone)
+	players[_key(peer, home)] = first
+	first.device = home
+	first.slot.device = home
+	_keyboard_home[peer] = home
+	_join(peer, half)
 
 
-func _leave(device: String) -> void:
-	players.erase(device)
-	_fix_keyboard()
+func _leave(key: String) -> void:
+	var peer: int = players[key].peer
+	players.erase(key)
+	_fix_keyboard(peer)
 	Sfx.play("pop", 0.7)
 
 
-## One keyboard player left of two: they get the whole keyboard again.
-func _fix_keyboard() -> void:
+## One keyboard player of two left on computer `peer`: they get the whole keyboard again.
+func _fix_keyboard(peer: int) -> void:
 	var halves: Array[String] = []
-	for d: String in players:
-		if d.begins_with("keys_"):
-			halves.append(d)
-	if halves.size() == 1 and not players.has("keys"):
-		_keyboard_home = halves[0]
+	for k: String in players:
+		if players[k].peer == peer and players[k].device.begins_with("keys_"):
+			halves.append(k)
+	if halves.size() == 1 and not players.has(_key(peer, "keys")):
 		var p: Dictionary = players[halves[0]]
+		_keyboard_home[peer] = p.device
 		players.erase(halves[0])
-		players["keys"] = p
+		players[_key(peer, "keys")] = p
+		p.device = "keys"
 		p.slot.device = "keys"
 
 
-func _has_keyboard_player() -> bool:
-	for d: String in players:
-		if d.begins_with("keys"):
+## A press from another computer can cross a change it hasn't seen yet: half
+## a keyboard when it has one keyboard player, or the whole keyboard when it
+## just got a second. Point it at the player who has that key now.
+func _resolve(peer: int, device: String) -> String:
+	if device.begins_with("keys_") and players.has(_key(peer, "keys")):
+		return "keys"
+	if device == "keys" and not players.has(_key(peer, "keys")) and _has_keyboard_player(peer):
+		return _home(peer)
+	return device
+
+
+func _key(peer: int, device: String) -> String:
+	return "%d/%s" % [peer, device]
+
+
+## The half computer `peer`'s lone keyboard player joined with (their confirm and back keys).
+func _home(peer: int) -> String:
+	return _keyboard_home.get(peer, "keys_left")
+
+
+func _has_keyboard_player(peer: int) -> bool:
+	for k: String in players:
+		if players[k].peer == peer and players[k].device.begins_with("keys"):
 			return true
 	return false
+
+
+func _has_players(peer: int) -> bool:
+	for k: String in players:
+		if players[k].peer == peer:
+			return true
+	return false
+
+
+## The computers that have players here.
+func _player_peers() -> Array[int]:
+	var out: Array[int] = []
+	for k: String in players:
+		if not out.has(players[k].peer):
+			out.append(players[k].peer)
+	return out
 
 
 ## The lowest panel no player has, or -1.
@@ -399,7 +550,7 @@ func _problem() -> String:
 		counts.resize(info.teams.size())
 		counts.fill(0)
 		for s: PlayerSlot in lineup:
-			if s != null:
+			if s != null and s.team >= 0 and s.team < counts.size():
 				counts[s.team] += 1
 		for t in counts.size():
 			if counts[t] == 0:
@@ -416,8 +567,13 @@ func _all_ready() -> bool:
 	return true
 
 
+## Everyone who joined is ready and nothing's missing: the next confirm starts.
+func _can_start() -> bool:
+	return _all_ready() and _problem() == ""
+
+
 func _banner_up() -> bool:
-	return view == View.PLAYERS and _all_ready() and _problem() == ""
+	return view == View.PLAYERS and _can_start()
 
 
 func _seats() -> int:
@@ -459,7 +615,8 @@ func _set_mode(next: ModeInfo) -> void:
 				players.erase(d)
 			else:
 				players[d].panel = free
-	_fix_keyboard()
+	for peer in _player_peers():
+		_fix_keyboard(peer)
 	for d in players:
 		var s: PlayerSlot = players[d].slot
 		s.number = players[d].panel + 1
@@ -474,17 +631,40 @@ func _build_rows() -> void:
 	for r in rows.get_children():
 		rows.remove_child(r)
 		r.queue_free()
+	for o: Array in _row_options():
+		_add_row(o[0], o[1])
+	_row = clampi(_row, 0, _focusables().size() - 1)
+	_changed()
+
+
+## The GAME list's rows: [option, chosen id] each.
+func _row_options() -> Array:
+	var out: Array = []
 	for key in info.options:
-		_add_row(GameSettings.option(key), GameSettings.choice(key))
+		out.append([GameSettings.option(key), GameSettings.choice(key)])
 	if info.bots:
 		if info.min_slots < info.max_slots:
 			var counts: Array = []
 			for n in range(info.min_slots, info.max_slots + 1):
 				counts.append([str(n), str(n), "%d blobs play: computers take the seats nobody joins." % n])
-			_add_row({key = "seats", label = "PLAYERS", choices = counts}, str(_seats()))
-		_add_row(GameSettings.option("cpu_level"), GameSettings.choice("cpu_level"))
-	_row = clampi(_row, 0, _focusables().size() - 1)
-	_changed()
+			out.append([{key = "seats", label = "PLAYERS", choices = counts}, str(_seats())])
+		out.append([GameSettings.option("cpu_level"), GameSettings.choice("cpu_level")])
+	return out
+
+
+## Show the current choices in the rows there are; a different set of rows is built anew.
+func _update_rows() -> void:
+	var options := _row_options()
+	var current := rows.get_children().filter(func(r: Node) -> bool: return not r.is_queued_for_deletion())
+	if current.size() != options.size():
+		_build_rows()
+		return
+	for i in options.size():
+		var row: OptionRow = current[i]
+		if row.key() != options[i][0].key:
+			_build_rows()
+			return
+		row.setup(options[i][0], options[i][1])
 
 
 func _add_row(option: Dictionary, current: String) -> void:
@@ -496,6 +676,11 @@ func _add_row(option: Dictionary, current: String) -> void:
 
 
 func _on_row_changed(row: OptionRow) -> void:
+	if Net.is_client():
+		_say("Only the host changes the game")
+		_update_rows()
+		_changed()
+		return
 	match row.key():
 		"seats":
 			Session.lobby_seats[info.resource_path] = int(row.id())
@@ -510,6 +695,10 @@ func _on_row_changed(row: OptionRow) -> void:
 ## Pick the game `modes[index]` (the tiles' left/right, or a click on one).
 func _pick_game(index: int) -> void:
 	if modes[index] == info:
+		return
+	if Net.is_client():
+		_say("Only the host changes the game")
+		_changed()
 		return
 	_set_mode(modes[index])
 	_build_rows()
@@ -540,11 +729,14 @@ func _toast(panel: int, text: String) -> void:
 	Sfx.play("pop", 0.6)
 
 
-## After any change: the lineup, then both views.
+## After any change: the lineup, then both views. Hosting, the others get the new state.
 func _changed() -> void:
-	lineup = _make_lineup()
+	if not Net.is_client():
+		lineup = _make_lineup()
 	_refresh_game()
 	_refresh_players()
+	if Net.is_host():
+		Net.send(0, "lobby_state", _state())
 
 
 func _refresh_game() -> void:
@@ -559,18 +751,26 @@ func _refresh_game() -> void:
 	if view == View.GAME and is_inside_tree():
 		focused.grab_focus()
 	tabs.index = modes.find(info)
-	if focused is OptionRow:
+	if _message != "":
+		%Help.text = _message
+	elif focused is OptionRow:
 		%Help.text = (focused as OptionRow).help_text()
 	elif focused == tabs:
-		%Help.text = "Left and right pick the game."
+		%Help.text = "The host picks the game." if Net.is_client() else "Left and right pick the game."
 	else:
 		%Help.text = "Join, pick your %s, and get ready." % ("team" if not info.teams.is_empty() else "colour")
-	%GameLegend.prompts = [
-		[["ud"], "Move"],
-		[["lr"], "Change"],
-		[JOIN_GLYPHS, "Choose players"],
-		[["b", "key:ESC"], "Back to players" if _came_from_players or not players.is_empty() else "Main menu"],
-	]
+	var mine := _has_players(Net.my_id())
+	var back := "Back to players" if _came_from_players or not players.is_empty() else "Main menu"
+	if Net.is_client() and not mine:
+		back = "Leave game"
+	elif Net.is_host() and not mine:
+		back = "Stop hosting"
+	var legend: Array = [[["ud"], "Move"]]
+	if not Net.is_client():
+		legend.append([["lr"], "Change"])
+	legend.append([JOIN_GLYPHS, "Choose players"])
+	legend.append([["b", "key:ESC"], back])
+	%GameLegend.prompts = legend
 
 
 ## The GAME view's line about who plays.
@@ -598,20 +798,42 @@ func _refresh_players() -> void:
 	%Banner.visible = _banner_up()
 	%BannerPrompt.prompts = [[_confirm_glyphs() + ["pill:START"], "to play"]]
 	var status := _message if not %Banner.visible else ""
+	if status == "" and Net.is_client() and not _synced:
+		status = "Getting the lobby from %s..." % Net.host_name
+	if status == "" and Net.is_client() and Net.host_status != "":
+		status = "%s is playing %s. Join a seat when they're back." % [Net.host_name, Net.host_status]
 	if status == "" and all_ready:
 		status = _problem()
 	if status == "" and not players.is_empty() and not all_ready:
 		status = "Waiting for everyone to get ready"
 	%Status.text = status
 	var legend: Array = [[_join_glyphs(), "Join"], [["y", "key:R"], "Game & rules"]]
-	if info.bots or not players.is_empty():
+	if not Net.is_client() and (info.bots or not players.is_empty()):
 		legend.append([["pill:START", "key:TAB"], "Let the computers play" if players.is_empty() else "Play now"])
-	legend.append([["b"] if _has_keyboard_player() else ["b", "key:ESC"], "Back to game"])
+	legend.append([["b"] if _has_keyboard_player(Net.my_id()) else ["b", "key:ESC"], "Back to game"])
 	%Legend.prompts = legend
+	_refresh_netbar()
+
+
+## The strip at the top, online: hosting, the addresses to tell the others
+## and who's in; joined, whose game it is and the ping.
+func _refresh_netbar() -> void:
+	%NetBar.visible = Net.is_online()
+	if Net.is_host():
+		var names := PackedStringArray()
+		for id: int in Net.peers:
+			names.append(Net.peers[id].name)
+		var where := "  /  ".join(_addresses) if not _addresses.is_empty() else "no network found"
+		if Net.port != Net.PORT:
+			where += "  port %d" % Net.port
+		%NetBar.text = "HOSTING   %s   ·   %s" % [where, "with " + ", ".join(names) if not names.is_empty() else "waiting for others to join"]
+	elif Net.is_client():
+		%NetBar.text = "ONLINE   ·   %s's game   ·   %d ms" % [Net.host_name, roundi(Net.ping_ms)]
 
 
 func _refresh_cards() -> void:
 	var theme := GameTheme.current()
+	var me := Net.my_id()
 	var next_free := _free_panel()
 	var hold_panel := next_free if not _hold.is_empty() else -1
 	for i in cards.size():
@@ -627,8 +849,8 @@ func _refresh_cards() -> void:
 		card.hold_text = "Keep holding %s" % ("SPACE" if _hold.get("half", "") == "keys_left" else "ENTER")
 		card.player_ready = false
 		var join: Array = [[_join_glyphs(), "Join"]]
-		if players.has("keys") and i == next_free:
-			join.append([["key:ENTER" if _keyboard_home == "keys_left" else "key:SPACE"], "hold: 2nd keyboard"])
+		if players.has(_key(me, "keys")) and i == next_free:
+			join.append([["key:ENTER" if _home(me) == "keys_left" else "key:SPACE"], "hold: 2nd keyboard"])
 		if s == null:
 			card.kind = LobbyCard.Kind.OPEN
 			card.title = "JOIN"
@@ -640,29 +862,29 @@ func _refresh_cards() -> void:
 			card.detail = s.bot_level.display_name
 			card.prompts = join
 		else:
-			var p: Dictionary = players[s.device]
+			var p: Dictionary = players.get(_key(s.peer, s.device), {ready = false})
 			card.kind = LobbyCard.Kind.HUMAN
 			card.title = "P%d" % s.number
-			card.detail = s.describe()
+			card.detail = s.describe() if not Net.is_online() else "%s  ·  %s" % [Net.peer_name(s.peer), s.describe()]
 			card.player_ready = p.ready
 			card.choice_label = "COLOUR" if team < 0 else "TEAM"
 			card.choice_value = "" if team < 0 else info.teams[team]
 			if p.ready:
-				card.prompts = [[_glyphs(s.device, "back"), "Not ready"]]
+				card.prompts = [[_glyphs(s.peer, s.device, "back"), "Not ready"]]
 			else:
 				card.prompts = [
-					[_glyphs(s.device, "lr"), "Team" if team >= 0 else "Colour"],
-					[_glyphs(s.device, "confirm"), "Ready"],
-					[_glyphs(s.device, "back"), "Leave"],
+					[_glyphs(s.peer, s.device, "lr"), "Team" if team >= 0 else "Colour"],
+					[_glyphs(s.peer, s.device, "confirm"), "Ready"],
+					[_glyphs(s.peer, s.device, "back"), "Leave"],
 				]
 		card.queue_redraw()
 
 
-## The glyphs for `action` on `device`'s buttons.
-func _glyphs(device: String, action: String) -> Array:
+## The glyphs for `action` on `device`'s buttons (on computer `peer`).
+func _glyphs(peer: int, device: String, action: String) -> Array:
 	if device.begins_with("pad:"):
 		return [{"confirm": "a", "back": "b", "lr": "lr"}[action]]
-	var left := (_keyboard_home if device == "keys" else device) == "keys_left"
+	var left := (_home(peer) if device == "keys" else device) == "keys_left"
 	match action:
 		"confirm":
 			return ["key:SPACE" if left else "key:ENTER"]
@@ -671,21 +893,25 @@ func _glyphs(device: String, action: String) -> Array:
 	return ["key:A", "key:D"] if left else ["lr"]
 
 
-func _key_text(device: String, action: String) -> String:
-	var g: String = _glyphs(device, action)[0]
+func _key_text(peer: int, device: String, action: String) -> String:
+	var g: String = _glyphs(peer, device, action)[0]
 	return g.get_slice(":", 1) if g.contains(":") else g.to_upper()
 
 
-## What joins: A, plus the keyboard's keys while nobody plays on it.
+## What joins: A, plus the keyboard's keys while nobody plays on this computer's.
 func _join_glyphs() -> Array:
-	return ["a"] if _has_keyboard_player() else JOIN_GLYPHS
+	return ["a"] if _has_keyboard_player(Net.my_id()) else JOIN_GLYPHS
 
 
-## What confirms for everyone who joined (the READY banner).
+## What confirms for everyone who joined here (the READY banner); everyone's if nobody did.
 func _confirm_glyphs() -> Array:
 	var out: Array = []
+	var mine := _has_players(Net.my_id())
 	for d: String in players:
-		for g in _glyphs(d, "confirm"):
+		var p: Dictionary = players[d]
+		if mine and p.peer != Net.my_id():
+			continue
+		for g in _glyphs(p.peer, p.device, "confirm"):
 			if not out.has(g):
 				out.append(g)
 	out.sort()
@@ -701,6 +927,12 @@ func _start() -> void:
 			_show(View.PLAYERS)
 		_changed()
 		return
+	for s: PlayerSlot in lineup:
+		if s != null and s.peer != Net.my_id():
+			# TODO(online step 2): start the match on every computer.
+			_say("Online matches aren't playable yet: only this computer's players can start")
+			_changed()
+			return
 	var out: Array = []
 	for s: PlayerSlot in lineup:
 		if s == null:
@@ -719,24 +951,112 @@ func _start() -> void:
 	Session.lineup = out
 	Session.lineup_mode = info.resource_path
 	Session.next_mode = info
+	Net.set_status(info.title)
 	get_tree().change_scene_to_file(info.scene)
 
 
-## Back from a game: the same players, if their device is still here.
+## Back from a game: the same players, if their device (or their computer) is still here.
 func _restore() -> bool:
 	if Session.lineup.is_empty() or Session.lineup_mode != info.resource_path:
 		return false
+	var me := Net.my_id()
 	var pads := Input.get_connected_joypads()
 	for s: PlayerSlot in Session.lineup:
 		if not s.human or s.device == "" or s.number < 1 or s.number > info.max_slots:
 			continue
-		if s.pad_device >= 0 and not pads.has(s.pad_device):
+		if s.peer != me and not Net.peers.has(s.peer):
+			continue
+		if s.peer == me and s.pad_device >= 0 and not pads.has(s.pad_device):
 			continue
 		_joins += 1
-		players[s.device] = {panel = s.number - 1, slot = s, ready = false, order = _joins}
-	if players.has("keys_left") != players.has("keys_right"):
-		_fix_keyboard()
+		players[_key(s.peer, s.device)] = {peer = s.peer, device = s.device, panel = s.number - 1, slot = s, ready = false, order = _joins}
+	for peer in _player_peers():
+		_fix_keyboard(peer)
 	return true
+
+
+## What another computer's copy needs to show the lobby (_apply_state()).
+func _state() -> Dictionary:
+	var seated: Array = []
+	for d: String in players:
+		seated.append({panel = players[d].panel, ready = players[d].ready, order = players[d].order})
+	var seats: Array = []
+	for s: PlayerSlot in lineup:
+		seats.append(s.to_net() if s != null else null)
+	return {
+		mode = modes.find(info),
+		settings = GameSettings.shared_choices(),
+		seats = _seats(),
+		lineup = seats,
+		players = seated,
+		homes = _keyboard_home,
+		message = [_message, _message_time],
+		toasts = _toasts,
+	}
+
+
+## Another computer's copy: show the host's lobby (_state()).
+func _apply_state(state: Dictionary) -> void:
+	var index := int(state.get("mode", 0))
+	if index < 0 or index >= modes.size():
+		return
+	var new_mode := modes[index] != info or not _synced
+	info = modes[index]
+	Session.next_mode = info
+	GameSettings.use_host_settings(state.get("settings", {}))
+	Session.lobby_seats[info.resource_path] = int(state.get("seats", info.default_slots))
+	lineup = []
+	lineup.resize(cards.size())
+	var seats: Array = state.get("lineup", [])
+	for i in mini(seats.size(), cards.size()):
+		if seats[i] is Dictionary:
+			lineup[i] = PlayerSlot.from_net(seats[i], bot_levels)
+	players = {}
+	for p: Variant in state.get("players", []):
+		var panel := int(p.get("panel", -1)) if p is Dictionary else -1
+		if panel < 0 or panel >= lineup.size() or lineup[panel] == null:
+			continue
+		var s: PlayerSlot = lineup[panel]
+		players[_key(s.peer, s.device)] = {peer = s.peer, device = s.device, panel = panel, slot = s,
+			ready = bool(p.get("ready", false)), order = int(p.get("order", 0))}
+	_keyboard_home = state.get("homes", {})
+	var message: Array = state.get("message", ["", 0.0])
+	if message.size() == 2:
+		_message = str(message[0])
+		_message_time = float(message[1])
+	_toasts = state.get("toasts", {})
+	_synced = true
+	if new_mode:
+		_build_rows()
+	else:
+		_update_rows()
+		_changed()
+
+
+func _on_net_message(from: int, type: String, data: Variant) -> void:
+	match type:
+		"lobby_hello":
+			if Net.is_host():
+				Net.send(from, "lobby_state", _state())
+		"lobby_act":
+			if Net.is_host() and data is Array and data.size() == 2 and data[0] is String and data[1] is String \
+					and data[1] in NET_ACTIONS and (data[0].begins_with("keys") or data[0].begins_with("pad:")):
+				_act(from, data[0], data[1])
+		"lobby_state":
+			if Net.is_client() and data is Dictionary:
+				_apply_state(data)
+
+
+## Hosting: a computer left (its players go with it) or joined (it gets the lobby).
+func _on_peers_changed() -> void:
+	if not Net.is_host():
+		_refresh_players()
+		return
+	for k: String in players.keys():
+		var peer: int = players[k].peer
+		if peer != Net.my_id() and not Net.peers.has(peer):
+			players.erase(k)
+	_changed()
 
 
 func _on_choose_button_pressed() -> void:
@@ -745,7 +1065,11 @@ func _on_choose_button_pressed() -> void:
 
 
 func _on_joy_connection_changed(device: int, connected: bool) -> void:
-	var key := "pad:%d" % device
-	if not connected and players.has(key):
-		_leave(key)
+	var pad := "pad:%d" % device
+	if connected or not players.has(_key(Net.my_id(), pad)):
+		return
+	if Net.is_client():
+		Net.send(1, "lobby_act", [pad, "leave"])
+	else:
+		_leave(_key(Net.my_id(), pad))
 		_changed()

@@ -110,6 +110,36 @@ corner_radius_bottom_left = 12
 shadow_color = Color(0.5, 0.3, 1, 0.3)
 shadow_size = 16
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_field"]
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 6.0
+bg_color = Color(0.04, 0.02, 0.12, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.25, 0.8, 0.9)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_field_focus"]
+draw_center = false
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.35, 0.85, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(1, 0.2, 0.8, 0.4)
+shadow_size = 14
+
 [resource]
 default_font_size = 22
 AccentLabel/base_type = &"Label"
@@ -154,6 +184,13 @@ HintLabel/font_sizes/font_size = 18
 Label/colors/font_color = Color(0.78, 0.8, 1, 1)
 Label/colors/font_outline_color = Color(0.08, 0, 0.18, 0.9)
 Label/constants/outline_size = 4
+LineEdit/colors/caret_color = Color(1, 0.6, 0.9, 1)
+LineEdit/colors/font_color = Color(0.85, 0.9, 1, 1)
+LineEdit/colors/font_placeholder_color = Color(0.42, 0.42, 0.7, 1)
+LineEdit/colors/selection_color = Color(0.55, 0.05, 0.45, 0.6)
+LineEdit/font_sizes/font_size = 28
+LineEdit/styles/focus = SubResource("StyleBoxFlat_field_focus")
+LineEdit/styles/normal = SubResource("StyleBoxFlat_field")
 LobbyCard/colors/dim = Color(0.42, 0.42, 0.7, 1)
 LobbyCard/colors/panel = Color(0.03, 0.015, 0.09, 0.86)
 LobbyCard/colors/text = Color(0.84, 0.86, 1, 1)
