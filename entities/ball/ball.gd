@@ -50,3 +50,14 @@ func reset(pos: Vector2) -> void:
 ## A ball never dies like a blob (no spin and fade, never freed): explode() hides it.
 func _process(_delta: float) -> void:
 	pass
+
+
+## Online (NetGame): a ball comes back after a goal (reset()), so its copy follows `alive` both ways.
+func net_state() -> Array:
+	return super.net_state() + [visible]
+
+
+func net_apply(s: Array) -> void:
+	super.net_apply(s)
+	alive = s[4]
+	visible = s[24]

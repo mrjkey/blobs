@@ -9,6 +9,7 @@ extends Node2D
 ## ends (beam_length), how they move (_idle) and their shape (_body_points,
 ## _draw_extras). Joins group "lasers"; draws above the blobs (z_index 5 in its
 ## scene). Colours from the theme: laser.beam, laser.body, laser.engine.
+## Online, a joined computer shows a copy of the host's (NetGame).
 
 const BEAM_COLOR := Color(1.0, 0.3, 0.35)
 const BODY_COLOR := Color(0.95, 0.5, 0.6)
@@ -166,12 +167,24 @@ func _fire(pos: Vector2) -> void:
 		Juice.hitstop(Juice.settings.hitstop_push)
 		Juice.shake(6.0)
 	for i in int(length / 70.0) + 1:
-		get_tree().call_group("grid", "impulse", pos + d * (i * 70.0), 260.0, 90.0)
+		Juice.ripple(pos + d * (i * 70.0), 260.0, 90.0)
 	Juice.burst(pos + d * length, GameTheme.current().value("laser.beam", BEAM_COLOR), 12, 350.0)
 
 
 func _process(_delta: float) -> void:
 	queue_redraw()
+
+
+## Online (NetGame): where it is, where it aims and when it fires.
+func net_state() -> Array:
+	return [global_position, aim, fire_beat, length]
+
+
+func net_apply(s: Array) -> void:
+	global_position = s[0]
+	aim = s[1]
+	fire_beat = s[2]
+	length = s[3]
 
 
 func _draw() -> void:

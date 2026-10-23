@@ -2,7 +2,8 @@ class_name GameCamera
 extends Camera2D
 ## Keeps `view_size` world units in view whatever the window size, and shakes
 ## by Juice.shake_amount. `zoom_pulse` adds a little extra zoom; with the
-## theme's `beat_zoom` set, it thumps on every kick of the music.
+## theme's `beat_zoom` set, it thumps on every kick of the music. Online, a
+## joined computer's follows the host's (NetGame).
 
 @export var view_size := Vector2(820.0, 820.0) # world area that must always fit on screen
 
@@ -30,3 +31,13 @@ func visible_rect() -> Rect2:
 static func view_of(node: Node) -> Rect2:
 	var cam := node.get_viewport().get_camera_2d() as GameCamera
 	return cam.visible_rect() if cam != null else Rect2()
+
+
+## Online (NetGame): where the host's camera looks.
+func net_state() -> Array:
+	return [global_position, view_size]
+
+
+func net_apply(s: Array) -> void:
+	global_position = s[0]
+	view_size = s[1]

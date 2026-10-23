@@ -30,6 +30,11 @@ func _physics_process(_delta: float) -> void:
 			return
 
 
+## Online (NetGame): food stays put, so a joined computer's copy only needs to be where the host's is.
+func net_state() -> Array:
+	return []
+
+
 func _process(delta: float) -> void:
 	age += delta
 	queue_redraw()

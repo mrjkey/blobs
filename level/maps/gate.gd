@@ -56,6 +56,19 @@ func opening() -> float:
 	return fat.half_width_at(window_high()) + 6.0
 
 
+## Online (NetGame): the window and the door, as the host's mode set them.
+func net_state() -> Array:
+	return [low, high, cheer, open, thud]
+
+
+func net_apply(s: Array) -> void:
+	low = s[0]
+	high = s[1]
+	cheer = s[2]
+	open = s[3]
+	thud = s[4]
+
+
 func _process(delta: float) -> void:
 	cheer = maxf(cheer - delta * 1.5, 0.0)
 	thud = maxf(thud - delta * 2.0, 0.0)

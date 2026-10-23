@@ -12,7 +12,8 @@ extends Node2D
 ## (the mode reads speed_factor()). Its tag shows the weight against the
 ## level's window (`low` to top()): light blue under it, green in it, red over
 ## it, when it also sweats: it won't fit through the gate. Group "buddy" (at
-## most one). Colours from the theme: buddy.color, buddy.band.
+## most one). Colours from the theme: buddy.color, buddy.band. Online, a
+## joined computer shows a copy of the host's (NetGame).
 
 const COLOR := Color(1.0, 0.74, 0.55)
 const BAND_COLOR := Color(0.95, 0.25, 0.3)
@@ -142,6 +143,31 @@ func _physics_process(delta: float) -> void:
 
 func _process(_delta: float) -> void:
 	queue_redraw()
+
+
+## Online (NetGame): what a joined computer needs to draw it, its body's counts included.
+func net_state() -> Array:
+	return [global_position, weight, shown, low, high, walking, boosts, _swell, _mood, _stuck, _step, _popups,
+		body.plate, body.treats, body.muscle, body.rest]
+
+
+func net_apply(s: Array) -> void:
+	global_position = s[0]
+	weight = s[1]
+	shown = s[2]
+	low = s[3]
+	high = s[4]
+	walking = s[5]
+	boosts = s[6]
+	_swell = s[7]
+	_mood = s[8]
+	_stuck = s[9]
+	_step = s[10]
+	_popups = s[11]
+	body.plate.assign(s[12])
+	body.treats = s[13]
+	body.muscle = s[14]
+	body.rest = s[15]
 
 
 func _draw() -> void:

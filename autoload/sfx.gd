@@ -1,7 +1,8 @@
 extends Node
 ## Autoload "Sfx": a tiny procedural sound kit, so the project needs no audio
 ## files. Sounds are synthesised once at startup and played from a small pool.
-## Volume comes from autoload/juice_settings.tres.
+## Volume comes from autoload/juice_settings.tres. Online, the host's sounds
+## play on every computer (NetGame.relay()).
 
 const RATE := 22050
 const VOICES := 10
@@ -46,6 +47,7 @@ func _ready() -> void:
 ## Play a sound. Repeats of the same sound within `min_gap` seconds are dropped
 ## so a pile-up doesn't turn into a buzz.
 func play(sound: String, pitch: float = 1.0, volume_db: float = 0.0, min_gap: float = 0.03) -> void:
+	NetGame.relay(self, "play", [sound, pitch, volume_db, min_gap])
 	var now := Time.get_ticks_msec() / 1000.0
 	if not _sounds.has(sound) or now - float(_last_played.get(sound, -1.0)) < min_gap:
 		return

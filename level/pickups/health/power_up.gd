@@ -50,6 +50,11 @@ func _float() -> void:
 	_belt_y = belt
 
 
+## Once on screen it floats, so a joined computer's copy follows it from then.
+func _still() -> bool:
+	return super._still() and not _seen
+
+
 func title() -> String:
 	return NAMES[kind]
 

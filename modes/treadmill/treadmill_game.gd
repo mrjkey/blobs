@@ -114,6 +114,11 @@ func _follow_belt() -> void:
 	get_tree().call_group("grid", "follow_y", belt_y) # a theme backdrop that scrolls with the world
 
 
+## Online, on a joined computer: a scrolling backdrop follows the camera (the host's comes in with the rest).
+func net_mirror(_delta: float) -> void:
+	get_tree().call_group("grid", "follow_y", camera.global_position.y)
+
+
 func _process(_delta: float) -> void:
 	var of := " / %d m" % int(-finish.global_position.y / 10.0) if finish != null else ""
 	hud.set_status("Distance: %d m%s     Blobs left: %d" % [int(distance / 10.0), of, living_blobs().size()])
@@ -129,7 +134,7 @@ func _check_finish(line_y: float) -> void:
 		state = State.OVER
 		_on_round_over()
 		if b.is_human():
-			hud.show_banner("YOU WIN!" if humans == 1 else "%s WINS!" % b.tag, b.color)
+			hud.show_banner("YOU WIN!" if solo else "%s WINS!" % b.tag, b.color)
 		else:
 			hud.show_banner("%s WINS" % b.display_name.to_upper(), b.color)
 		hud.set_hint("Finished!   ·   Start or Esc: rematch or quit   ·   R: rematch")
@@ -148,11 +153,11 @@ func _check_round_over() -> void:
 		return
 	state = State.OVER
 	_on_round_over()
-	if humans == 1 and humans_alive == 0:
+	if solo and humans_alive == 0:
 		hud.show_banner("GAME OVER", Color(1.0, 0.4, 0.4))
 	elif left.size() == 1 and left[0].is_human():
 		var winner := left[0]
-		hud.show_banner("YOU WIN!" if humans == 1 else "%s WINS!" % winner.tag, winner.color)
+		hud.show_banner("YOU WIN!" if solo else "%s WINS!" % winner.tag, winner.color)
 	elif left.size() == 1:
 		hud.show_banner("%s WINS" % left[0].display_name.to_upper(), left[0].color)
 	elif humans_alive == 0 and humans > 0:

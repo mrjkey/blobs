@@ -94,6 +94,26 @@ func last_level() -> bool:
 	return level >= LEVELS.size() - 1
 
 
+## Online: the run as plain data, so a joined computer can show the same one (from_net()).
+func to_net() -> Dictionary:
+	return {level = level, upgrades = upgrades, report = report, turn = turn, muscle = muscle,
+		clean_levels = clean_levels, leftovers = leftovers, prepped = prepped}
+
+
+static func from_net(d: Dictionary) -> FatRun:
+	var r := FatRun.new()
+	r.level = clampi(int(d.get("level", 0)), 0, LEVELS.size() - 1)
+	r.upgrades = d.get("upgrades", {}) if d.get("upgrades") is Dictionary else {}
+	r.report = d.get("report", []) if d.get("report") is Array else []
+	r.turn = int(d.get("turn", 0))
+	r.muscle = float(d.get("muscle", 0.0))
+	r.clean_levels = int(d.get("clean_levels", 0))
+	r.leftovers = d.get("leftovers", {}) if d.get("leftovers") is Dictionary else {}
+	if d.get("prepped") is Array and d.prepped.size() == 3:
+		r.prepped.assign(d.prepped)
+	return r
+
+
 func take(id: String) -> void:
 	upgrades[id] = upgrades.get(id, 0) + 1
 

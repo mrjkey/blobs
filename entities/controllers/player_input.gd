@@ -2,7 +2,11 @@ class_name PlayerInput
 extends Node
 ## Steers the parent Blob from the keyboard and/or one gamepad. The keys come
 ## from an InputProfile, not the InputMap, so two players can share a keyboard
-## and each use their own controller.
+## and each use their own controller. Online, it lets go while this
+## computer's menu is open (the game doesn't stop there), and on the host a
+## RemoteInput takes the place of each player on another computer.
+
+const ACTIONS := ["push", "dash", "slash", "spit", "shield"] # the buttons, as just_pressed() knows them
 
 @export var profile: InputProfile = preload("res://entities/controllers/profiles/solo.tres")
 ## Which connected gamepad to use: 0 = the first, 1 = the second, -1 = none.
@@ -24,12 +28,12 @@ func _physics_process(_delta: float) -> void:
 	if not blob.alive:
 		return
 	# Poll every frame, so a press during the countdown doesn't fire after it.
-	var pushed := _just_pressed("push", profile.push, profile.pad_push)
-	var dashed := _just_pressed("dash", profile.dash, profile.pad_dash)
-	var slashed := _just_pressed("slash", profile.slash, profile.pad_slash)
-	var spat := _just_pressed("spit", profile.spit, profile.pad_spit)
-	var shielded := _just_pressed("shield", profile.shield, profile.pad_shield)
-	if not blob.active:
+	var pushed := just_pressed("push")
+	var dashed := just_pressed("dash")
+	var slashed := just_pressed("slash")
+	var spat := just_pressed("spit")
+	var shielded := just_pressed("shield")
+	if not blob.active or _menu_open():
 		blob.move_dir = Vector2.ZERO
 		return
 	blob.move_dir = _move()
@@ -43,6 +47,22 @@ func _physics_process(_delta: float) -> void:
 		blob.request_spit()
 	if shielded:
 		blob.request_shield()
+
+
+## True only on the frame `action` (one of ACTIONS) goes down, on its keys or gamepad buttons.
+func just_pressed(action: String) -> bool:
+	match action:
+		"push":
+			return _just_pressed("push", profile.push, profile.pad_push)
+		"dash":
+			return _just_pressed("dash", profile.dash, profile.pad_dash)
+		"slash":
+			return _just_pressed("slash", profile.slash, profile.pad_slash)
+		"spit":
+			return _just_pressed("spit", profile.spit, profile.pad_spit)
+		"shield":
+			return _just_pressed("shield", profile.shield, profile.pad_shield)
+	return false
 
 
 ## For a menu over the game that this player drives (Don't Get Fat!'s upgrade
@@ -59,6 +79,11 @@ func ok_pressed() -> bool:
 ## For such a menu: true on the frame they press their dash button (B, or the dash key).
 func alt_pressed() -> bool:
 	return _just_pressed("menu_alt", profile.dash, profile.pad_dash)
+
+
+## A menu is open on this computer (online the game goes on behind it): hands off.
+func _menu_open() -> bool:
+	return get_tree().get_node_count_in_group("pause_menu") > 0
 
 
 func _pad() -> int:

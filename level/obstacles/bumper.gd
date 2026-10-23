@@ -3,7 +3,8 @@ class_name Bumper
 extends Node2D
 ## A round pinball bumper: flings any blob that touches it away at
 ## `settings.bumper_kick`, and pops bigger for a moment. Colour from the theme:
-## bumper.color (also the burst whenever anything kicks a blob).
+## bumper.color (also the burst whenever anything kicks a blob). Online, a
+## joined computer shows a copy of the host's (NetGame).
 
 const COLOR := Color(1.0, 0.8, 0.25)
 
@@ -29,7 +30,26 @@ func collide(b: Blob, _feel: PhysicsFeel) -> void:
 		return
 	var n := d / dist if dist > 0.001 else Vector2.UP
 	kick(b, n, b.radius + radius - dist, settings.bumper_kick, settings)
+	fx_flash()
+
+
+## Pop bigger for a moment. Online, everyone's does.
+func fx_flash() -> void:
+	NetGame.relay(self, "fx_flash", [])
 	flash = 1.0
+
+
+## Online (NetGame): a copy made on a joined computer (the treadmill makes bumpers as it goes) is the same size.
+func net_spawn() -> Array:
+	return [radius]
+
+
+func net_setup(d: Array) -> void:
+	radius = d[0]
+
+
+func net_state() -> Array:
+	return []
 
 
 ## Pinball-style: push `b` out by `depth` along `n` and always fling it away at
@@ -54,8 +74,10 @@ func _physics_process(delta: float) -> void:
 	flash = maxf(flash - delta * 4.0, 0.0)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not Engine.is_editor_hint():
+		if not is_physics_processing(): # online, a joined computer's copy: fade the flash here
+			flash = maxf(flash - delta * 4.0, 0.0)
 		queue_redraw()
 
 

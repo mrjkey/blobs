@@ -10,7 +10,8 @@ extends Node2D
 ## pushes and slashes and sends shots back. With `loses_mass` (set by modes whose ModeInfo asks for it) it
 ## shrinks over time and pays mass for spit and laser hits, as `rules` say;
 ## below `stats.low_mass` it flashes a warning, below `stats.min_mass` it pops.
-## Works in any scene that has a BlobPhysics node.
+## Works in any scene that has a BlobPhysics node. Online, a joined computer
+## shows a copy of the host's (net_state() and friends, see NetGame).
 
 signal pushed(blob: Blob, hits: int)
 signal ate_food(blob: Blob)
@@ -27,6 +28,7 @@ signal reflected(blob: Blob, shot: Shot) # its shield sent a shot back
 @export var tag := "" # "P1"/"P2", shown over the head in multiplayer
 @export var team := -1 # in team modes (football): 0 or 1, shown as a coloured spot under it; -1 = no team
 @export var loses_mass := false # shrinks over time, pays mass for spit and lasers, pops when too small
+@export var seat := 0 # the lineup seat (PlayerSlot.number) it plays for; 0 = none (a ball)
 @export_file("*.tscn") var slash_scene := "res://entities/slash/slash.tscn"
 @export_file("*.tscn") var spit_scene := "res://entities/shots/spit.tscn"
 
@@ -37,6 +39,7 @@ var speed_scale := 1.0 # top speed and acceleration multiplier, set by the mode 
 var alive := true
 var active := true # false = controllers leave it alone (e.g. during the countdown)
 var controller: Node # the PlayerInput or BotBrain steering this blob
+var played := false # online, a joined computer's copy of a person's blob (copies have no controller to say so)
 var push_cooldown := 0.0
 var push_buffer := 0.0 # > 0 means "push as soon as you can"
 var windup := 0.0
@@ -190,7 +193,7 @@ func is_winding_up() -> bool:
 
 
 func is_human() -> bool:
-	return controller is PlayerInput
+	return controller is PlayerInput or played
 
 
 func request_push() -> void:
@@ -595,3 +598,56 @@ func _process(delta: float) -> void:
 	rotation += delta * 12.0
 	scale = Vector2.ONE * (1.0 - k * k)
 	modulate.a = 1.0 - k
+
+
+## Online (NetGame): what a joined computer's copy needs to look like this one.
+func net_spawn() -> Array:
+	return [color, display_name, tag, team, seat, is_human(), stats.resource_path, rules.resource_path]
+
+
+func net_setup(d: Array) -> void:
+	color = d[0]
+	display_name = d[1]
+	tag = d[2]
+	team = d[3]
+	seat = d[4]
+	played = d[5]
+	if d[6] != "" and ResourceLoader.exists(d[6]):
+		stats = load(d[6])
+	if d[7] != "" and ResourceLoader.exists(d[7]):
+		rules = load(d[7])
+
+
+func net_state() -> Array:
+	return [global_position, vel, move_dir, mass, alive, _popped, loses_mass, energy, energy_denied,
+		push_cooldown, push_cooldown_full, windup, stun, ring_danger, dash_t, shield_t, shield_flash,
+		slime_t, slime_color, slash_cooldown, body.look, body.flash, body.deform, body.swell]
+
+
+func net_apply(s: Array) -> void:
+	global_position = s[0]
+	vel = s[1]
+	move_dir = s[2]
+	mass = s[3]
+	if alive and not s[4]: # out: the copy plays the same fade (die() ran on the host, its effects come from there)
+		alive = false
+		_death_t = 0.0
+		_popped = s[5]
+	loses_mass = s[6]
+	energy = s[7]
+	energy_denied = s[8]
+	push_cooldown = s[9]
+	push_cooldown_full = s[10]
+	windup = s[11]
+	stun = s[12]
+	ring_danger = s[13]
+	dash_t = s[14]
+	shield_t = s[15]
+	shield_flash = s[16]
+	slime_t = s[17]
+	slime_color = s[18]
+	slash_cooldown = s[19]
+	body.look = s[20]
+	body.flash = s[21]
+	body.deform = s[22]
+	body.swell = s[23]

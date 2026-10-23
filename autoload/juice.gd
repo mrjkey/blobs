@@ -2,7 +2,8 @@ extends Node
 ## Autoload "Juice": game feel that any component can trigger without knowing
 ## what scene it is in. Screen shake, hitstop, sparks and shockwaves, and the
 ## `impact` signal that background effects (like the neon grid) listen to.
-## Numbers live in autoload/juice_settings.tres.
+## Numbers live in autoload/juice_settings.tres. Online, the host's calls
+## play on every computer (NetGame.relay()).
 
 ## Something hit something at `pos` with roughly `strength` px/s.
 signal impact(pos: Vector2, strength: float)
@@ -32,22 +33,26 @@ func _process(_delta: float) -> void:
 
 
 func shake(amount: float) -> void:
+	NetGame.relay(self, "shake", [amount])
 	shake_amount = minf(shake_amount + amount, settings.shake_max)
 
 
 ## Freeze the game for `seconds` (real time). Overlapping calls keep the longest.
 func hitstop(seconds: float) -> void:
+	NetGame.relay(self, "hitstop", [seconds])
 	_hitstop_until = maxi(_hitstop_until, Time.get_ticks_usec() + int(seconds * 1000000.0))
 	Engine.time_scale = 0.0
 
 
 func impact_at(pos: Vector2, strength: float) -> void:
+	NetGame.relay(self, "impact_at", [pos, strength])
 	impact.emit(pos, strength)
 
 
 ## Sparks, drawn by the FxLayer in the current scene (nothing happens without one).
 ## With a `dir`, they spray that way, `spread` radians either side.
 func burst(pos: Vector2, color: Color, count: int, speed: float = 250.0, dir := Vector2.ZERO, spread := PI) -> void:
+	NetGame.relay(self, "burst", [pos, color, count, speed, dir, spread])
 	var fx := get_tree().get_first_node_in_group("fx")
 	if fx != null:
 		fx.burst(pos, color, count, speed, dir, spread)
@@ -55,6 +60,14 @@ func burst(pos: Vector2, color: Color, count: int, speed: float = 250.0, dir := 
 
 ## An expanding ring, drawn by the FxLayer in the current scene.
 func shockwave(pos: Vector2, from_r: float, to_r: float, color: Color, duration: float = 0.28) -> void:
+	NetGame.relay(self, "shockwave", [pos, from_r, to_r, color, duration])
 	var fx := get_tree().get_first_node_in_group("fx")
 	if fx != null:
 		fx.shockwave(pos, from_r, to_r, color, duration)
+
+
+## Ripple a backdrop that has a grid (the neon theme's), pushing it away from
+## `pos` within `radius`. Nothing without one.
+func ripple(pos: Vector2, strength: float, radius: float) -> void:
+	NetGame.relay(self, "ripple", [pos, strength, radius])
+	get_tree().call_group("grid", "impulse", pos, strength, radius)

@@ -3,7 +3,9 @@ extends CanvasLayer
 ## A game's pause menu: GameMode opens it on START or ESC and the game stops
 ## while it's up. RESUME (also START, ESC or B), RESTART (PLAY AGAIN once the
 ## round is over, and then it's the one picked) and QUIT, back to the lobby or
-## the main menu. It only tells the mode what was picked.
+## the main menu. It only tells the mode what was picked. Online the game
+## goes on behind it (players on this computer let go while it's open), and
+## on a joined computer there's no restart: the host decides.
 
 signal resumed
 signal restart_requested
@@ -14,13 +16,19 @@ signal quit_requested
 @onready var quit_button: Button = %QuitButton
 
 
-## `round_over`: the round is decided. `quit_text`: where QUIT goes.
-func open(round_over: bool, quit_text: String) -> void:
-	get_tree().paused = true
-	%Title.text = "ROUND OVER" if round_over else "PAUSED"
+func _enter_tree() -> void:
+	add_to_group("pause_menu")
+
+
+## `round_over`: the round is decided. `quit_text`: where QUIT goes. `stop`:
+## the game stops while it's open. `can_restart`: RESTART / PLAY AGAIN shows.
+func open(round_over: bool, quit_text: String, stop := true, can_restart := true) -> void:
+	get_tree().paused = stop
+	%Title.text = "ROUND OVER" if round_over else ("PAUSED" if stop else "MENU")
 	restart_button.text = "PLAY AGAIN" if round_over else "RESTART"
+	restart_button.visible = can_restart
 	quit_button.text = quit_text
-	(restart_button if round_over else resume_button).grab_focus()
+	(restart_button if round_over and can_restart else resume_button).grab_focus()
 	Sfx.play("pop", 0.8)
 
 

@@ -8,6 +8,7 @@ extends Node2D
 ## its shield up blocks it (Blob.try_block()) and the slasher staggers back
 ## instead. Spawned as a child of the blob, so it follows it; frees itself
 ## once the crescent has faded. Draws above the blobs (z_index 4 in its scene).
+## Online, a joined computer shows a copy of the host's (NetGame).
 
 const FADE := 0.13 # the crescent lingers this long after the blade stops
 const MARK_TIME := 0.16 # the white cut left on whoever was hit
@@ -112,6 +113,31 @@ func _blocked(b: Blob, radial: Vector2, contact: Vector2) -> void:
 
 func _process(_delta: float) -> void:
 	queue_redraw()
+
+
+## Online (NetGame): a copy on a joined computer swings the same way, and only shows.
+func net_spawn() -> Array:
+	return [dir, swing, power]
+
+
+func net_setup(d: Array) -> void:
+	slasher = get_parent() as Blob
+	if slasher == null:
+		return
+	stats = slasher.stats
+	dir = d[0]
+	swing = d[1]
+	power = d[2]
+	_launched = true
+
+
+func net_state() -> Array:
+	return [age, _marks]
+
+
+func net_apply(s: Array) -> void:
+	age = s[0]
+	_marks = s[1]
 
 
 func _draw() -> void:

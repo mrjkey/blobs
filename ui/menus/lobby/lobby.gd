@@ -82,6 +82,7 @@ var _message_time := 0.0
 var _toasts := {} # card index -> [text, seconds left]
 var _leave_t := 0.0 # online: > 0 after back was pressed once; again stops hosting or leaves
 var _synced := false # another computer's copy: the host's state has arrived
+var _starting := false # the game is loading
 var _host_view := -1 # another computer's copy: the host's view last time; when it changes, this copy follows
 var _addresses := PackedStringArray() # hosting: this computer's addresses, for the others to type
 var _netbar_t := 0.0
@@ -556,10 +557,6 @@ func _problem() -> String:
 		for t in counts.size():
 			if counts[t] == 0:
 				return "%s needs a player" % info.teams[t]
-	for s: PlayerSlot in lineup:
-		if s != null and s.peer != 1:
-			# TODO(online step 2): start the match on every computer.
-			return "Online matches come in the next update: for now only the host's own players can play"
 	return ""
 
 
@@ -924,6 +921,8 @@ func _confirm_glyphs() -> Array:
 
 
 func _start() -> void:
+	if not is_inside_tree() or _starting:
+		return # online, two START presses can arrive together
 	lineup = _make_lineup()
 	var problem := _problem()
 	if problem != "":
@@ -937,19 +936,12 @@ func _start() -> void:
 		if s == null:
 			continue
 		if s.human:
-			match s.device:
-				"keys":
-					s.profile = PlayerSlot.KEYS_ALL
-				"keys_left":
-					s.profile = PlayerSlot.KEYS_LEFT
-				"keys_right":
-					s.profile = PlayerSlot.KEYS_RIGHT
-				_:
-					s.profile = PlayerSlot.PAD_ONLY
+			s.fit_profile()
 		out.append(s)
 	Session.lineup = out
 	Session.lineup_mode = info.resource_path
 	Session.next_mode = info
+	_starting = true
 	Net.set_status(info.title)
 	get_tree().change_scene_to_file(info.scene)
 
@@ -1041,6 +1033,8 @@ func _apply_state(state: Dictionary) -> void:
 
 
 func _on_net_message(from: int, type: String, data: Variant) -> void:
+	if not is_inside_tree():
+		return # on the way out (the game is loading)
 	match type:
 		"lobby_hello":
 			if Net.is_host():

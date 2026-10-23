@@ -54,7 +54,13 @@ func collide(b: Blob, feel: PhysicsFeel) -> void:
 	var point := b.global_position + n * b.radius
 	BlobPhysics.wall_feedback(point, impact, GameTheme.current().value("ring.wall", WALL_COLOR))
 	if impact > 120.0:
-		wall_hits.append({"angle": n.angle(), "age": 0.0, "power": clampf(impact / 600.0, 0.0, 1.0)})
+		fx_wall_hit(n.angle(), clampf(impact / 600.0, 0.0, 1.0))
+
+
+## The wall flashes at `angle` (radians from the centre), brighter with `power` (0..1). Online, everyone's does.
+func fx_wall_hit(angle: float, power: float) -> void:
+	NetGame.relay(self, "fx_wall_hit", [angle, power])
+	wall_hits.append({"angle": angle, "age": 0.0, "power": power})
 
 
 func _physics_process(delta: float) -> void:

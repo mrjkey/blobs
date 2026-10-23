@@ -15,6 +15,7 @@ extends BeltPickup
 ## everything caught takes weight off and treats don't count. Junk (treats
 ## and lazing) can also be knocked off the belt with swat() (a blob's swat).
 ## Drawn for the classic look (this mode only plays in classic for now).
+## Online, the feeder's items are copied to the joined computers (NetGame).
 
 signal caught(item: HealthItem, blob: Blob)
 
@@ -50,6 +51,15 @@ var _buddy: Buddy
 var _swat := Vector2.ZERO # px/s while it's being knocked off the belt
 var _s := 24.0 # drawing scale, for _r() and _v()
 var _bob := 0.0 # drawing offset: it bobs up and down
+
+
+## Online (NetGame): a copy made on a joined computer (the feeder drops them during the game) is the same kind.
+func net_spawn() -> Array:
+	return [kind]
+
+
+func net_setup(d: Array) -> void:
+	kind = d[0]
 
 
 ## "burger", "apple"...: its key in FatSettings.weights.

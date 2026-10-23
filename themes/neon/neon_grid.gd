@@ -28,6 +28,7 @@ var _shift := 0 # whole rows scrolled (scrolling levels only)
 
 func _enter_tree() -> void:
 	add_to_group("grid")
+	add_to_group("net_local") # only animates: online, joined computers run it too
 
 
 func _ready() -> void:

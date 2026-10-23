@@ -59,6 +59,15 @@ func _physics_process(_delta: float) -> void:
 			b.global_position.y = clampf(y, top, bottom)
 
 
+## Online (NetGame): where the host's are.
+func net_state() -> Array:
+	return [global_position]
+
+
+func net_apply(s: Array) -> void:
+	global_position = s[0]
+
+
 func _process(delta: float) -> void:
 	clock += delta
 	queue_redraw()

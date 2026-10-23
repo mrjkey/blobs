@@ -74,6 +74,22 @@ func _fizzle() -> void:
 		Juice.burst(global_position, color.lightened(0.3), 5, 120.0)
 
 
+func net_state() -> Array:
+	return super.net_state() + [_travelled]
+
+
+func net_apply(s: Array) -> void:
+	var was := global_position
+	super.net_apply(s)
+	if s[7] < _travelled:
+		_trail.clear() # sent back by a shield
+	elif global_position != was:
+		_trail.push_front(was)
+		if _trail.size() > TRAIL:
+			_trail.pop_back()
+	_travelled = s[7]
+
+
 func _draw() -> void:
 	var theme := GameTheme.current()
 	if theme.draw_override("spit", self):

@@ -12,6 +12,8 @@ extends Node
 ## local network (LanDiscovery) and can pretend the network is slow (NetLag:
 ## the NETWORK TEST settings). F3 shows the network overlay. When the host
 ## goes away, a joined copy goes back to the online screen with the reason.
+## When the host loads a game (or loads it again), its NetGame sends "match"
+## and a joined copy follows it there, whatever screen it's on.
 ##
 ## Command line (also the editor's Customize Run Instances), after `--`:
 ##   --host                  host, and open the lobby
@@ -30,13 +32,18 @@ enum Role { OFFLINE, HOST, JOINING, CLIENT }
 
 const PORT := 24680
 const DISCOVERY_PORT := 24681
-const PROTOCOL := 1 # bump when messages change: copies on another version are turned away
+const PROTOCOL := 2 # bump when messages change: copies on another version are turned away
 const MAX_CLIENTS := 7
 const CHANNELS := 2 # 0: reliable, 1: unreliable (so frequent updates never wait behind a resend)
 const JOIN_TIMEOUT := 6.0
 const PING_EVERY := 0.5
 const PING_SAMPLES := 5 # ping_ms is the median of this many: one hitch (a scene loading) doesn't show
 const KICK_DELAY := 0.5 # seconds between telling a peer why and closing on it
+## ENet throttling: (interval ms, acceleration, deceleration). ENet drops
+## unreliable packets for a while after it sees the round trip jump (a scene
+## loading on the other side); the game sends a little every frame and would
+## rather have all of it, so the throttle never comes down.
+const THROTTLE := [5000, 32, 0]
 
 @export_file("*.tscn") var online_menu_path := "res://ui/menus/online/online_menu.tscn"
 @export_file("*.tscn") var lobby_path := "res://ui/menus/lobby/lobby.tscn"
@@ -313,17 +320,28 @@ func _handle(from: int, type: String, data: Variant) -> void:
 			if data is String:
 				host_status = data
 				status_changed.emit()
+		"match":
+			if role == Role.CLIENT and data is Dictionary:
+				_follow_match(data)
 		_:
 			if role == Role.HOST or role == Role.CLIENT:
 				message.emit(from, type, data)
 
 
 func _on_connected() -> void:
+	_no_throttle(1)
 	_post(1, "hello", {name = my_name(), protocol = PROTOCOL}, true)
 
 
-func _on_peer_connected(_id: int) -> void:
-	pass # nothing until its hello
+func _on_peer_connected(id: int) -> void:
+	_no_throttle(id) # and nothing else until its hello
+
+
+func _no_throttle(id: int) -> void:
+	var enet := multiplayer.multiplayer_peer as ENetMultiplayerPeer
+	var link := enet.get_peer(id) if enet != null else null
+	if link != null:
+		link.throttle_configure(THROTTLE[0], THROTTLE[1], THROTTLE[2])
 
 
 func _on_peer_disconnected(id: int) -> void:
@@ -399,6 +417,29 @@ func _on_pong(sent_usec: int, host_usec: int) -> void:
 	if _best_rtt < 0 or rtt <= _best_rtt * 1.25:
 		_best_rtt = rtt if _best_rtt < 0 else mini(_best_rtt, rtt)
 		_clock_offset = host_usec + int(rtt * 0.5) - now
+
+
+## The host loaded a game (NetGame._match_data()): load it too, with the same lineup.
+func _follow_match(data: Dictionary) -> void:
+	var scene := str(data.get("scene", ""))
+	var info_path := str(data.get("info", ""))
+	if not scene.begins_with("res://") or not ResourceLoader.exists(scene):
+		push_warning("Net: the host's game isn't in this copy: %s" % scene)
+		return
+	var lineup: Array = []
+	for d: Variant in data.get("lineup", []):
+		if d is Dictionary:
+			var s := PlayerSlot.from_net(d, [])
+			if s.human:
+				s.fit_profile()
+			lineup.append(s)
+	Session.lineup = lineup
+	Session.lineup_mode = info_path
+	if info_path.begins_with("res://") and ResourceLoader.exists(info_path):
+		Session.next_mode = load(info_path)
+	var extra: Variant = data.get("extra", {})
+	NetGame.match_info = extra if extra is Dictionary else {}
+	get_tree().change_scene_to_file(scene)
 
 
 ## The session ended without us asking: back to the online screen, saying why.
@@ -484,5 +525,7 @@ func overlay_text() -> String:
 	if _lag_out.active():
 		lines.append("PRETEND LAG  %d ms round trip  + up to %d jitter   loss %d%% each way" % [
 			roundi(_lag_out.lag_ms), roundi(_lag_out.jitter_ms), roundi(_lag_out.loss * 100.0)])
+	if NetGame.current != null:
+		lines.append(NetGame.current.describe())
 	lines.append("messages/s   out %d   in %d" % [rates.sent, rates.received])
 	return "\n".join(lines)

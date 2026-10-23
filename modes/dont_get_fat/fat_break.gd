@@ -12,6 +12,8 @@ extends Control
 ##     "" for a new hand. A snowball card shows how strong it is now.
 ##   await run_report(run, complete): the run's report card: every level
 ##     played with its stars, the upgrades, the total.
+## Online, a joined computer's copy shows the host's (`mirror`, net_show()):
+## a player there picks with their own controls, through the host.
 ## Drawn by hand, in the HUD's font.
 
 signal _done(value: Variant)
@@ -30,6 +32,7 @@ const KIND_COLORS := {"BUDDY": Color(1.0, 0.75, 0.45), "WINDOW": Color(0.4, 0.9,
 	"PICKS": Color(1.0, 0.95, 0.6), "TEAM": Color(0.6, 0.95, 0.7)}
 
 var inputs: Array[PlayerInput] = [] # every human's controls, for "go on"
+var mirror := false # online, a joined computer: shows the host's screens (net_show()) and takes no presses
 
 var _mode := ""
 var _t := 0.0
@@ -112,6 +115,8 @@ func _process(delta: float) -> void:
 		return
 	_t += delta
 	queue_redraw()
+	if mirror:
+		return
 	var ok := Input.is_action_just_pressed("ui_accept") and (_mode != "pick" or not is_instance_valid(_picker))
 	for input in inputs:
 		if is_instance_valid(input):
@@ -313,3 +318,33 @@ func _draw_run(font: Font) -> void:
 	draw_multiline_string(font, Vector2(x, y), "Upgrades: " + (", ".join(names) if not names.is_empty() else "none"),
 		HORIZONTAL_ALIGNMENT_CENTER, w, 18, 3, DIM)
 	_prompt(font, r, "A / Space: new run · Start / Esc: quit")
+
+
+## Online: what's on screen, as plain data, for a joined computer's copy (net_show()).
+func net_view() -> Dictionary:
+	return {mode = _mode, t = _t, entry = _entry, picks = _picks, hand = _hand, choice = _choice, who = _who,
+		who_color = _who_color, pick_n = _pick_n, pick_of = _pick_of, swaps = _swaps, complete = _complete,
+		run = _run.to_net() if _run != null else null}
+
+
+## Show the host's screen (net_view()), or nothing with an empty one.
+func net_show(v: Dictionary) -> void:
+	_mode = str(v.get("mode", ""))
+	visible = _mode != ""
+	if not visible:
+		return
+	_t = float(v.get("t", 0.0))
+	_entry = v.get("entry", {})
+	_picks = int(v.get("picks", -1))
+	_hand.assign(v.get("hand", []))
+	_choice = int(v.get("choice", 0))
+	_who = str(v.get("who", ""))
+	_who_color = v.get("who_color", Color.WHITE)
+	_pick_n = int(v.get("pick_n", 0))
+	_pick_of = int(v.get("pick_of", 0))
+	_swaps = int(v.get("swaps", 0))
+	_complete = bool(v.get("complete", false))
+	if v.get("run") is Dictionary:
+		_run = FatRun.from_net(v.run)
+		_taken = _run.upgrades
+		FatRun.current = _run # the cards' numbers count the host's upgrades

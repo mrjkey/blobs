@@ -136,7 +136,7 @@ func _finish() -> void:
 	var mine := _human_team()
 	if score[0] == score[1]:
 		hud.show_banner("DRAW!", Color.WHITE)
-	elif mine >= 0 and humans == 1:
+	elif mine >= 0 and solo:
 		hud.show_banner("YOU WIN!" if mine == winner else "%s WINS" % _team_name(winner), col)
 	else:
 		hud.show_banner("%s WINS!" % _team_name(winner), col)

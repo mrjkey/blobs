@@ -11,6 +11,13 @@ extends Node2D
 ## Who plays comes from the lobby (Session.lineup). Started on its own (F6),
 ## a mode makes the default lineup from `info`: P1 on the keyboard, a
 ## connected gamepad as P2, computers in the other seats.
+##
+## Online, a NetGame child keeps the other computers' copies in step: the
+## host plays the game and seats on other computers get a RemoteInput; a
+## joined computer loads the same scene but plays none of it, and shows the
+## host's (net_state()/net_apply(), and net_mirror() for what a mode keeps up
+## there itself). There the menu doesn't stop the game, and only the host
+## restarts.
 
 enum State { COUNTDOWN, PLAYING, OVER }
 
@@ -33,6 +40,8 @@ enum State { COUNTDOWN, PLAYING, OVER }
 var state := State.COUNTDOWN
 var slots: Array[PlayerSlot] = [] # who plays, one blob each
 var humans := 0 # how many of the slots are human
+var solo := false # one person plays, on this computer: the banners say YOU (online, never: everyone gets a tag)
+var net: NetGame # online: keeps the other computers' copies in step
 
 
 ## Before any child is ready, so everything in the scene draws in the mode's own theme, if it has one.
@@ -50,7 +59,13 @@ func _ready() -> void:
 	for s in slots:
 		if s.human:
 			humans += 1
+	solo = humans == 1 and not Net.is_online()
 	hud.set_hint(hint)
+	if Net.is_online():
+		net = NetGame.new()
+		add_child(net)
+		if Net.is_client():
+			return # a copy of the host's game: NetGame shows it
 	_spawn_blobs()
 	await hud.play_countdown(countdown_time, go_text)
 	if state != State.COUNTDOWN:
@@ -67,7 +82,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if esc or start:
 		get_viewport().set_input_as_handled()
 		pause()
-	elif event is InputEventKey and event.is_action_pressed("restart"):
+	elif event is InputEventKey and event.is_action_pressed("restart") and not Net.is_client():
 		restart()
 
 
@@ -77,14 +92,17 @@ func pause() -> void:
 	add_child(menu)
 	menu.restart_requested.connect(restart)
 	menu.quit_requested.connect(leave)
-	menu.open(state == State.OVER, "QUIT TO LOBBY" if from_lobby() else "QUIT TO MENU")
+	menu.open(state == State.OVER, "QUIT TO LOBBY" if from_lobby() else "QUIT TO MENU", not Net.is_online(), not Net.is_client())
 
 
+## Online, on the host, everyone restarts (NetGame tells the others to load the game again).
 func restart() -> void:
 	get_tree().reload_current_scene()
 
 
 ## Back to the lobby (same players) or, started on its own, the main menu.
+## Online, the host takes everyone back to the lobby; a joined computer goes
+## alone, and comes back for the next game.
 func leave() -> void:
 	if from_lobby():
 		Session.next_mode = info
@@ -162,13 +180,14 @@ func _spawn_slot_blob(i: int, pos: Vector2) -> Blob:
 	var slot := slots[i]
 	var color := slot.color_in(info)
 	if slot.human:
-		var input := PlayerInput.new()
+		# Online, a player on another computer gets a RemoteInput.
+		var input: PlayerInput = PlayerInput.new() if slot.peer == Net.my_id() else RemoteInput.of(slot)
 		input.profile = slot.profile
 		input.pad_device = slot.pad_device
 		input.pad_slot = 0 if slot.any_pad else -1
-		var who := player_name if humans == 1 else "Player %d" % slot.number
-		var b := spawn_blob(pos, color, who, input)
-		if humans > 1:
+		var b := spawn_blob(pos, color, _human_name(slot), input)
+		b.seat = slot.number
+		if not solo:
 			b.tag = "P%d" % slot.number
 		return b
 	var bot_index := 0
@@ -177,7 +196,24 @@ func _spawn_slot_blob(i: int, pos: Vector2) -> Blob:
 			bot_index += 1
 	var brain := _new_brain()
 	brain.level = slot.bot_level
-	return spawn_blob(pos, color, bot_names[bot_index % bot_names.size()], brain)
+	var bot := spawn_blob(pos, color, bot_names[bot_index % bot_names.size()], brain)
+	bot.seat = slot.number
+	return bot
+
+
+## "You" alone, "Player 2" with others; online, the name of the player's
+## computer ("LAPTOP", or "LAPTOP P2" when it has more than one player).
+func _human_name(slot: PlayerSlot) -> String:
+	if solo:
+		return player_name
+	if not Net.is_online():
+		return "Player %d" % slot.number
+	var here := 0
+	for s in slots:
+		if s.human and s.peer == slot.peer:
+			here += 1
+	var computer: String = Net.peer_name(slot.peer)
+	return computer if here == 1 else "%s P%d" % [computer, slot.number]
 
 
 func living_blobs() -> Array[Blob]:
@@ -217,3 +253,36 @@ func _check_round_over() -> void:
 	else:
 		hud.show_banner("%s WINS" % left[0].display_name.to_upper(), left[0].color)
 	hud.set_hint("Start or Esc: play again or quit   ·   R: play again")
+
+
+## Online (NetGame): what a joined computer needs to show the round. Modes add theirs.
+func net_state() -> Array:
+	return [state]
+
+
+func net_apply(s: Array) -> void:
+	state = s[0]
+
+
+## Online, hosting: what a joined computer needs to set this game up the way
+## the host did (NetGame.match_info there), e.g. which level. None by default.
+func net_match_info() -> Dictionary:
+	return {}
+
+
+## Online, on a joined computer: NetGame made a copy of the host's `node`.
+## A blob plays in its seat's colour in this computer's theme.
+func net_made(node: Node) -> void:
+	var b := node as Blob
+	if b == null or b.seat <= 0:
+		return
+	for i in slots.size():
+		if slots[i].number == b.seat:
+			b.color = slots[i].color_in(info)
+
+
+## Online, on a joined computer: called every frame after the host's state is
+## shown, for what the mode keeps up there itself (its _process and
+## _physics_process don't run there). Nothing by default.
+func net_mirror(_delta: float) -> void:
+	pass

@@ -28,6 +28,10 @@ extends GameMode
 ##
 ## Classic theme only for now (ModeInfo.theme): the items, the buddy and the
 ## gate are drawn for the classic look, and nothing here is tuned for neon.
+##
+## Online, a joined computer plays the host's run and level (net_match_info())
+## and shows the host's FatHud and screens between levels (net_state()). A
+## player there picks upgrade cards with their own controls, through the host.
 
 ## Team power-ups the buddy holds, as shown beside the plate.
 const BOOSTS := {"golden": PowerUp.Kind.GOLDEN, "sneakers": PowerUp.Kind.SNEAKERS, "sugar_crash": PowerUp.Kind.SUGAR_CRASH}
@@ -79,7 +83,12 @@ var _last_catch := [null, -10.0] # the blob that last caught plate food, and whe
 func _ready() -> void:
 	process_physics_priority = -8 # scroll before BlobPhysics and the pickups look at the view
 	_rng.randomize()
-	if GameSettings.choice("fat_level") == "run" and map_path == "":
+	if Net.is_client(): # a copy of the host's game: its run and level
+		var played := NetGame.match_info
+		run = FatRun.from_net(played.run) if played.get("run") is Dictionary else null
+		FatRun.current = run
+		map_path = str(played.get("map", ""))
+	elif GameSettings.choice("fat_level") == "run" and map_path == "":
 		run = FatRun.current if FatRun.current != null else FatRun.start()
 	else:
 		FatRun.stop()
@@ -156,6 +165,7 @@ func _make_screens() -> void:
 	fat_hud.track_half = track.track_width * 0.5
 	frame.add_child(fat_hud)
 	between = FatBreak.new()
+	between.mirror = Net.is_client()
 	frame.add_child(between)
 	hud.set_score([])
 
@@ -588,3 +598,28 @@ func _process(delta: float) -> void:
 			var kind: int = BOOSTS[key]
 			pieces.append(["%s %d" % [PowerUp.NAMES[kind], ceili(buddy.boosts[key])], PowerUp.COLORS[kind]])
 	fat_hud.boosts = pieces
+
+
+## Online: the run and the level a joined computer plays (NetGame.match_info there).
+func net_match_info() -> Dictionary:
+	return {map = map.scene_file_path if map != null else "", run = run.to_net() if run != null else null}
+
+
+## Online (NetGame): the FatHud's numbers and the screen between levels, for a joined computer.
+func net_state() -> Array:
+	return super.net_state() + [fat_hud.low, fat_hud.high, fat_hud.high_base, fat_hud.in_zone, fat_hud.plate_on,
+		fat_hud.target, fat_hud.treat_slots, fat_hud.progress, fat_hud.boosts, between.net_view() if between.visible else {}]
+
+
+func net_apply(s: Array) -> void:
+	super.net_apply(s)
+	fat_hud.low = s[1]
+	fat_hud.high = s[2]
+	fat_hud.high_base = s[3]
+	fat_hud.in_zone = s[4]
+	fat_hud.plate_on = s[5]
+	fat_hud.target = s[6]
+	fat_hud.treat_slots = s[7]
+	fat_hud.progress = s[8]
+	fat_hud.boosts = s[9]
+	between.net_show(s[10])

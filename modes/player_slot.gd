@@ -127,6 +127,19 @@ func color_in(info: ModeInfo) -> Color:
 	return theme.palette_color(color_index)
 
 
+## The keys that go with what joined in the lobby (`device`): all of them, one half, or none (a gamepad).
+func fit_profile() -> void:
+	match device:
+		"keys":
+			profile = KEYS_ALL
+		"keys_left":
+			profile = KEYS_LEFT
+		"keys_right":
+			profile = KEYS_RIGHT
+		_:
+			profile = PAD_ONLY
+
+
 ## Who this is in a menu: "KEYBOARD  WASD", "CONTROLLER 2", "CPU  NORMAL".
 func describe() -> String:
 	if not human:

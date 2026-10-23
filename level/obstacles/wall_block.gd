@@ -7,6 +7,7 @@ extends Node2D
 ## and is drawn hatched so players can tell. With `slide` it slides side to
 ## side that many px either way, `slide_time` seconds there and back (Don't
 ## Get Fat!'s moving walls). Colours from the theme: wall.color, wall.kicker.
+## Online, a joined computer shows a copy of the host's (NetGame).
 
 const COLOR := Color(0.55, 0.6, 0.8)
 const KICKER_COLOR := Color(1.0, 0.45, 0.7)
@@ -79,11 +80,37 @@ func collide(b: Blob, feel: PhysicsFeel) -> void:
 		depth = nearest + b.radius
 	if kicker:
 		Bumper.kick(b, n, depth, settings.kicker_speed, settings)
-		flash = 1.0
+		fx_flash()
 	else:
 		var impact := BlobPhysics.bounce(b, n, depth, feel.wall_restitution)
 		if impact > 0.0:
 			BlobPhysics.wall_feedback(b.global_position - n * b.radius, impact, GameTheme.current().value("wall.color", COLOR))
+
+
+## Light up (a kicker flinging a blob). Online, everyone's does.
+func fx_flash() -> void:
+	NetGame.relay(self, "fx_flash", [])
+	flash = 1.0
+
+
+## Online (NetGame): a copy made on a joined computer (the treadmill makes
+## walls as it goes) has the same shape; a sliding wall's copy follows it.
+func net_spawn() -> Array:
+	return [size, kicker, ghost_proof]
+
+
+func net_setup(d: Array) -> void:
+	size = d[0]
+	kicker = d[1]
+	ghost_proof = d[2]
+
+
+func net_state() -> Array:
+	return [position] if slide != 0.0 else []
+
+
+func net_apply(s: Array) -> void:
+	position = s[0]
 
 
 func _physics_process(delta: float) -> void:
@@ -93,8 +120,10 @@ func _physics_process(delta: float) -> void:
 		position = _home + Vector2(sin(_age * TAU / maxf(slide_time, 0.1)) * slide, 0.0)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not Engine.is_editor_hint():
+		if not is_physics_processing(): # online, a joined computer's copy: fade the flash here
+			flash = maxf(flash - delta * 4.0, 0.0)
 		queue_redraw()
 
 

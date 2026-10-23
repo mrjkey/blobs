@@ -4,6 +4,7 @@ extends Node
 ## kick, claps, hats, a rolling bass line and a low pad. It renders on a worker
 ## thread at startup, then loops. Also the beat clock: anything that pulses to
 ## the music finds this node in group "music" (current_beat() / current_kick()).
+## Online, a joined computer counts beats from the host's start (sync_start()).
 
 const RATE := 22050
 const BARS := 4
@@ -62,6 +63,19 @@ func _exit_tree() -> void:
 
 func _elapsed() -> float:
 	return (Time.get_ticks_usec() - _start_usec) / 1000000.0
+
+
+## When the beats started counting (Time.get_ticks_usec()).
+func started_at() -> int:
+	return _start_usec
+
+
+## Count beats from `usec` (this computer's clock) instead: online, the host's
+## start, so the music and everything on the beat line up with the host's.
+func sync_start(usec: int) -> void:
+	_start_usec = usec
+	if _player.playing:
+		_player.seek(fposmod(_elapsed(), loop_len))
 
 
 ## Beats since the scene started (keeps counting across loops).

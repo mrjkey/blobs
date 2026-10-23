@@ -12,8 +12,8 @@ in `themes/` (see Themes below).
 | Folder | What goes there |
 |---|---|
 | `autoload/` | Global singletons: `Session` (choices that survive scene changes, saved settings and gameplay settings, the chosen theme), `Juice` (shake, hitstop, sparks, the `impact` signal) + its settings `.tres`, `Sfx` (synthesised sound kit), `Net` (online play: hosting, joining, messages; see `docs/ONLINE.md`) |
-| `core/` | Machinery every mode composes: `settings/` (`GameSettings`: the player's gameplay options), `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock), `net/` (`LanDiscovery`: finding hosted games; `NetLag`: pretend lag for testing) |
-| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `ball/` (`Ball`, `BallBody`: the football, a Blob with no moves), `slash/` (`Slash`: one blade swing, spawned on the blob), `shots/` (`Shot`, `Spit`: things blobs fire that fly on their own), `controllers/` (`PlayerInput` + `profiles/`, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`), `buddy/` (`Buddy`: the character Don't Get Fat!'s blobs look after) |
+| `core/` | Machinery every mode composes: `settings/` (`GameSettings`: the player's gameplay options), `physics/` (`BlobPhysics`, `PhysicsFeel`), `camera/` (`GameCamera`), `fx/` (`FxLayer`), `audio/` (`Techno`: music + beat clock), `net/` (`LanDiscovery`: finding hosted games; `NetLag`: pretend lag for testing; `NetGame`: a game on several computers) |
+| `entities/` | Things that act. `blob/` (`Blob`, `BlobBody`, `BlobTrail`, `EnergyMeter`, `BlobStats` + `stats/`, `MoveRules`), `ball/` (`Ball`, `BallBody`: the football, a Blob with no moves), `slash/` (`Slash`: one blade swing, spawned on the blob), `shots/` (`Shot`, `Spit`: things blobs fire that fly on their own), `controllers/` (`PlayerInput` + `profiles/`, `RemoteInput`: online, a player on another computer, `BotBrain` and its subclasses, `BotLevel` + `levels/`), `enemies/` (`lasers/`: `LaserEmitter`, `LaserTurret`, `LaserShip`, `LaserDirector`, `LaserSettings`), `buddy/` (`Buddy`: the character Don't Get Fat!'s blobs look after) |
 | `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`, `pitch/`: the floors and walls a mode plays on, with their own rules like ring-out, the kill lasers or goals), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`; `health/`: `BeltPickup`, `HealthItem`, `PowerUp` for Don't Get Fat!), `maps/` (hand-made levels: `Map`, `SpawnPoint`, `FoodSpot`, `FinishLine`, `Gate`, `BeltSign`, `RushZone`, and one folder per map) |
 | `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style, menu style and backdrop |
 | `modes/` | One folder per game mode (`treadmill/`, `ring/`, `football/`, `dont_get_fat/`): the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
@@ -56,7 +56,10 @@ finds what it needs:
   - `music`: at most one `Techno`. `Techno.current_beat()` / `Techno.current_kick()` read it (a steady 128 BPM / no kick without it).
   - `lasers`: every `LaserEmitter`; the `LaserDirector` schedules them.
   - `shots`: every `Shot` in flight; bots watch them to raise their shields.
-  - `grid`: the neon backdrop's `NeonGrid`; call `impulse(world_pos, strength, radius)` on the group to ripple it, `follow_y(y)` to scroll it.
+  - `grid`: the neon backdrop's `NeonGrid`; ripple it with `Juice.ripple(world_pos, strength, radius)` (online it ripples everywhere), `follow_y(y)` on the group to scroll it.
+  - `net_local`: online, keeps its `_physics_process` on joined computers (it only animates: the neon grid). See `docs/ONLINE.md`.
+  - `pause_menu`: the open `PauseMenu`; online the game goes on behind it, and `PlayerInput` lets go.
+  - `remote_inputs`: online, on the host, every `RemoteInput`.
   - `kill_lasers`: at most one `KillLasers` (the treadmill's belt: two lines `belt_height()` apart, centred on the node); `kill_top()` / `kill_bottom()` for treadmill bots and the generator.
   - `finish`: a map's `FinishLine`; treadmill bots race for it once it's inside the belt.
   - `buddy`: at most one `Buddy` (Don't Get Fat!). `HealthItem`s fly to it and `feed()` it; `PowerUp`s `boost()` it.
@@ -69,7 +72,8 @@ finds what it needs:
   mode script connects to them. Anything that knocks a blob out calls
   `blob.die()`; the mode only listens to `Blob.died`.
 - **Autoloads** for feedback anything can trigger: `Juice.shake()`,
-  `Juice.hitstop()`, `Juice.burst()`, `Juice.impact_at()`, `Sfx.play()`.
+  `Juice.hitstop()`, `Juice.burst()`, `Juice.impact_at()`, `Juice.ripple()`, `Sfx.play()`.
+  Online, the host's calls play on every computer.
 - **Missing collaborators are fine.** No `FxLayer`? No sparks. No arena? No mud,
   and ring bots assume a ring at the origin. Never crash because a scene is
   missing something.
@@ -108,7 +112,10 @@ a colour index into `GameTheme.palette()`.
 - **Online.** PLAY ONLINE hosts or joins (`Net`); the host's lobby is the
   real one and the others show a copy, sending their presses to it. Players
   are keyed by computer and device; `PlayerSlot.peer` is the computer. Only
-  the host picks the game and starts. Details in `docs/ONLINE.md`.
+  the host picks the game and starts. In the game the host plays and the
+  others show its game (`NetGame`): anything that changes during play has
+  `net_state()` / `net_apply()`, one-off effects go through Juice, Sfx or an
+  `fx_` method that calls `NetGame.relay()`. Details in `docs/ONLINE.md`.
 - **Menu buttons mean one thing everywhere.** Up/down moves between rows,
   left/right changes the focused value, A / SPACE / ENTER confirms, B / ESC
   goes back one step, Y / R opens the game and rules, START / TAB plays (in a
@@ -398,6 +405,8 @@ W=$(wslpath -w .)
 - Screenshots: the same `--script` approach without `--headless` opens a window
   and can save `root.get_viewport().get_texture().get_image()` as PNG.
 - Online play: `tools/net_test.sh` runs a host and a client headless and
-  prints PASS or FAIL (`--lag=200 --loss=15` after it for a bad connection).
+  prints PASS or FAIL (`--lag=200 --loss=15` after it for a bad connection,
+  `GAME=FOOTBALL` before it for another game, `LATE=1` for someone joining
+  mid-game).
 - Check new `class_name`s against Godot's built-in classes (`Skin` is one):
   shadowing a native class is a compile error.

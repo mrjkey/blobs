@@ -7,7 +7,8 @@ extends Node2D
 ## _caught() says what that does, and _carried() runs every frame after (a
 ## HealthItem flies to the buddy). Once it's past the helpers' zone
 ## (BeltBounds) it fades away untouched. Group "on_belt" until it's caught.
-## @tool so maps show it in the editor.
+## @tool so maps show it in the editor. Online, a joined computer shows a
+## copy of the host's (NetGame); one that sits still sends nothing.
 
 @export var sway := 0.0 # drifts this many px either way (0 = stays put, < 0 = starts the other way)
 @export var sway_time := 3.0 # seconds per sway, there and back
@@ -63,9 +64,33 @@ func _carried(_delta: float) -> void:
 	pass
 
 
-func _process(_delta: float) -> void:
+## Online (NetGame): where it is and how it looks, once it moves at all.
+func net_state() -> Array:
+	if _still():
+		return []
+	return [position, age, taken, modulate.a, rotation, scale, z_index]
+
+
+func net_apply(s: Array) -> void:
+	position = s[0]
+	age = s[1]
+	taken = s[2]
+	modulate.a = s[3]
+	rotation = s[4]
+	scale = s[5]
+	z_index = s[6]
+
+
+## Sitting where the map put it, untouched: a joined computer's copy needs no updates.
+func _still() -> bool:
+	return not taken and sway == 0.0 and _fade >= 1.0
+
+
+func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+	if not is_physics_processing(): # online, a joined computer's copy: its own clock, for the bob
+		age += delta
 	var view := GameCamera.view_of(self)
 	if not view.has_area() or view.grow(120.0).has_point(global_position):
 		queue_redraw()

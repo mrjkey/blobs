@@ -7,7 +7,8 @@ extends Node2D
 ## Subclasses give the rest: how it moves (_advance), what it touches
 ## (_touches), what a hit does (_hit_blob), how a shield turns it round
 ## (_reflect), when it's spent, and how bots see it coming (time_to_reach).
-## Joins "shots"; draws above the blobs (z_index 4 in its scene).
+## Joins "shots"; draws above the blobs (z_index 4 in its scene). Online, a
+## joined computer shows a copy of the host's (NetGame).
 
 var shooter: Blob # who fired it last; it never hits them
 var stats: BlobStats # the numbers: those of whoever fired it
@@ -108,3 +109,27 @@ func _fizzle() -> void:
 
 func _process(_delta: float) -> void:
 	queue_redraw()
+
+
+## Online (NetGame): a copy on a joined computer has the shooter's numbers, and only shows.
+func net_spawn() -> Array:
+	return [stats.resource_path if stats != null else ""]
+
+
+func net_setup(d: Array) -> void:
+	stats = load(d[0]) if d[0] != "" and ResourceLoader.exists(d[0]) else BlobStats.new()
+	_launched = true
+
+
+func net_state() -> Array:
+	return [global_position, dir, speed, color, reflections, power, age]
+
+
+func net_apply(s: Array) -> void:
+	global_position = s[0]
+	dir = s[1]
+	speed = s[2]
+	color = s[3]
+	reflections = s[4]
+	power = s[5]
+	age = s[6]

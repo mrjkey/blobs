@@ -68,6 +68,18 @@ func _physics_process(delta: float) -> void:
 			_spared.erase(b)
 
 
+## Online (NetGame): where the host's lines are.
+func net_state() -> Array:
+	return [global_position, top, bottom, lethal]
+
+
+func net_apply(s: Array) -> void:
+	global_position = s[0]
+	top = s[1]
+	bottom = s[2]
+	lethal = s[3]
+
+
 func _process(delta: float) -> void:
 	_clock += delta
 	queue_redraw()

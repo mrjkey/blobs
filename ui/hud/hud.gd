@@ -2,6 +2,7 @@ class_name Hud
 extends CanvasLayer
 ## On-screen text for a round: a status line (top left), a hint (bottom), a
 ## big banner in the middle and a scoreboard (top centre, team modes). The text style is the current theme's `hud`.
+## Online, a joined computer shows the host's (NetGame).
 
 signal countdown_finished
 
@@ -84,3 +85,17 @@ func _process(delta: float) -> void:
 		banner.modulate.a = clampf(_banner_life / BANNER_FADE, 0.0, 1.0)
 		if _banner_life <= 0.0:
 			banner.text = ""
+
+
+## Online (NetGame): the host's text, for a joined computer's HUD.
+func net_state() -> Array:
+	return [status.text, hint.text, banner.text, banner.modulate, _banner_life, score.pieces]
+
+
+func net_apply(s: Array) -> void:
+	status.text = s[0]
+	hint.text = s[1]
+	banner.text = s[2]
+	banner.modulate = s[3]
+	_banner_life = s[4]
+	set_score(s[5])
