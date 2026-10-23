@@ -82,6 +82,7 @@ var _message_time := 0.0
 var _toasts := {} # card index -> [text, seconds left]
 var _leave_t := 0.0 # online: > 0 after back was pressed once; again stops hosting or leaves
 var _synced := false # another computer's copy: the host's state has arrived
+var _host_view := -1 # another computer's copy: the host's view last time; when it changes, this copy follows
 var _addresses := PackedStringArray() # hosting: this computer's addresses, for the others to type
 var _netbar_t := 0.0
 
@@ -555,6 +556,10 @@ func _problem() -> String:
 		for t in counts.size():
 			if counts[t] == 0:
 				return "%s needs a player" % info.teams[t]
+	for s: PlayerSlot in lineup:
+		if s != null and s.peer != 1:
+			# TODO(online step 2): start the match on every computer.
+			return "Online matches come in the next update: for now only the host's own players can play"
 	return ""
 
 
@@ -927,12 +932,6 @@ func _start() -> void:
 			_show(View.PLAYERS)
 		_changed()
 		return
-	for s: PlayerSlot in lineup:
-		if s != null and s.peer != Net.my_id():
-			# TODO(online step 2): start the match on every computer.
-			_say("Online matches aren't playable yet: only this computer's players can start")
-			_changed()
-			return
 	var out: Array = []
 	for s: PlayerSlot in lineup:
 		if s == null:
@@ -992,10 +991,12 @@ func _state() -> Dictionary:
 		homes = _keyboard_home,
 		message = [_message, _message_time],
 		toasts = _toasts,
+		view = view,
 	}
 
 
-## Another computer's copy: show the host's lobby (_state()).
+## Another computer's copy: show the host's lobby (_state()). When the host
+## switches between GAME and PLAYERS, this copy goes along.
 func _apply_state(state: Dictionary) -> void:
 	var index := int(state.get("mode", 0))
 	if index < 0 or index >= modes.size():
@@ -1025,6 +1026,12 @@ func _apply_state(state: Dictionary) -> void:
 		_message = str(message[0])
 		_message_time = float(message[1])
 	_toasts = state.get("toasts", {})
+	var host_view := int(state.get("view", View.GAME))
+	if host_view != _host_view:
+		_host_view = host_view
+		view = View.PLAYERS if host_view == View.PLAYERS else View.GAME
+		if view == View.PLAYERS:
+			_came_from_players = true
 	_synced = true
 	if new_mode:
 		_build_rows()

@@ -41,7 +41,8 @@ The host's lobby is the real one; the others show a copy. After every
 change the host sends `lobby_state` (the game, the shared settings, PLAYERS,
 the seats, who's ready, the keyboard halves, messages). A joined computer
 reads its own keyboard and controllers as before, keeps looking around
-(GAME/PLAYERS, the GAME list's focus) to itself, and sends the presses that
+(GAME/PLAYERS, the GAME list's focus) to itself, but goes along when the
+host switches between GAME and PLAYERS, and sends the presses that
 change something as `lobby_act` [device, action]; the host handles them
 like its own, keyed `"<peer>/<device>"`. Only the host changes the game and
 the rules and starts; a client's confirm starts the game when everyone's
@@ -81,7 +82,8 @@ can't play online (ENet needs real UDP sockets).
 1. ~~Exports, the online screen, hosting and joining, the lobby on every computer.~~
 2. Ring: blobs, shots, slashes and effects over the network. Matches start
    on every computer; until then the lobby only starts games without other
-   computers' players (`lobby.gd` `_start()`). Try 100 ms with pretend lag
+   computers' players (`lobby.gd` `_problem()` says so, and the START
+   banner stays down). Try 100 ms with pretend lag
    here, then decide on prediction.
 3. Football: the ball, the clock, goals.
 4. Treadmill: the track, lasers, food.

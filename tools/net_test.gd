@@ -1,9 +1,11 @@
 extends SceneTree
 ## Online play end to end, without a screen. tools/net_test.sh runs two
-## copies on this computer: role=host hosts and opens the lobby; role=client
-## joins, takes a seat from the keyboard and readies up. The host sees the
-## player arrive ready, then switches the game; the client sees the switch
-## and that it has to ready up again, then leaves; the host sees it go. Each
+## copies on this computer: role=host hosts and opens the lobby, and goes to
+## PLAYERS once someone's in; role=client joins, follows the host to PLAYERS,
+## takes a seat from the keyboard and readies up. The host sees the player
+## arrive ready and that it can't start yet (online matches come in step 2),
+## then switches the game; the client sees the switch and that it has to
+## ready up again, then leaves; the host sees it go. Each
 ## copy prints PASS or FAIL and quits. Net's own options work too
 ## (--lag=200 --jitter=30 --loss=10: a bad connection).
 ## No project class names in here: see "Checking work without the editor"
@@ -49,9 +51,15 @@ func _host() -> bool:
 		1:
 			if lobby == null or not "players" in lobby:
 				return false
+			if lobby.view == 0 and not net.peers.is_empty():
+				lobby._show(1) # PLAYERS: the client should follow
+				lobby._changed()
 			for p: Dictionary in lobby.players.values():
 				if p.peer != 1 and p.ready:
 					print("host: %s's player is in seat P%d, ready" % [net.peer_name(p.peer), p.panel + 1])
+					if lobby._can_start():
+						return _done(false, "the host could start with another computer's player seated")
+					print("host: can't start yet: ", lobby._problem())
 					mode_before = lobby.modes.find(lobby.info)
 					lobby._pick_game((mode_before + 1) % lobby.modes.size())
 					print("host: switched the game to ", lobby.info.title)
@@ -81,10 +89,9 @@ func _client() -> bool:
 				step = 2
 		2:
 			if lobby != null and "_synced" in lobby and lobby._synced:
-				_press(KEY_SPACE) # GAME -> PLAYERS (looking around stays on this computer)
 				step = 3
 		3:
-			if lobby.view == 1:
+			if lobby.view == 1: # the host went to PLAYERS
 				_press(KEY_SPACE) # join
 				pressed_at = Time.get_ticks_msec()
 				step = 4
