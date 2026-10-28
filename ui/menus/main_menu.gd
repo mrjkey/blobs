@@ -18,6 +18,9 @@ extends Control
 
 func _ready() -> void:
 	Net.leave()
+	if OS.has_feature("web"): # a browser can't open UDP sockets (ENet) or quit
+		$Center/Column/Buttons/OnlineButton.hide()
+		$Center/Column/Buttons/QuitButton.hide()
 	play_button.grab_focus()
 
 

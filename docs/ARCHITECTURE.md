@@ -20,7 +20,7 @@ in `themes/` (see Themes below).
 | `ui/` | `menus/` (`MenuFrame`: the theme's menu look, background and stick steps, first in every menu; `StickRepeat`; main menu, `lobby/` (game and player select, `GameTabs`, `LobbyCard`), settings, `online/` (PLAY ONLINE: host, join, recent games), `pause/` (`PauseMenu`), `how_to/` (`HowToPlay`: a game's moves and their buttons); `options/`: `OptionList`, `OptionRow`, shared by the settings screen, the lobby's GAME list and the lab; `prompts/`: `ButtonGlyph`, `PromptBar`, button prompts drawn as glyphs), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`, the F3 network overlay) |
 | `sandbox/` | Test bench scene for trying components, its props, and `lab/` (the Tab menu) |
 | `docs/` | This file; `ONLINE.md` (playing on several computers), `STATIC_LEVELS.md` (maps), `DONT_GET_FAT.md` (the co-op mode), `IDEAS.md` |
-| `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md); `tools/export_builds.sh` builds the Windows and Linux versions; `tools/net_test.sh` tests online play headless; `tools/bake_track.gd` bakes a generated treadmill track into a map; `tools/make_fat_levels.py` lays out Don't Get Fat!'s levels (DONT_GET_FAT.md) |
+| `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md); `tools/export_builds.sh` builds the Linux, Windows and web versions and `tools/release.sh` publishes them (see Builds and releases); `tools/net_test.sh` tests online play headless; `tools/bake_track.gd` bakes a generated treadmill track into a map; `tools/make_fat_levels.py` lays out Don't Get Fat!'s levels (DONT_GET_FAT.md) |
 
 Where a new thing goes: something that acts on its own (an enemy, a new kind of
 blob) under `entities/`; something placed in a level under `level/`: a solid
@@ -416,3 +416,23 @@ W=$(wslpath -w .)
   mid-game).
 - Check new `class_name`s against Godot's built-in classes (`Skin` is one):
   shadowing a native class is a compile error.
+
+## Builds and releases
+
+The `Makefile` runs the build tools from WSL, with the Windows Godot binary
+and its export templates. Builds land in `C:/godot_exports/bumper_blobs/`.
+
+```sh
+make                          # Linux, Windows and web (or: make linux / windows / web)
+make serve                    # play the web build at http://localhost:8000
+make release VERSION=v0.2.0   # build, zip and publish a GitHub release
+```
+
+- `make release` needs a clean working tree and the commit pushed: it tags
+  that commit on GitHub, so the tag is exactly what was built. The release
+  notes list the commits since the last release (`NOTES=file.md` for your own).
+- The version is stamped into the build copy's `project.godot`
+  (`application/config/version`, also the Windows file version), not the real one.
+- The web build is single-threaded (`variant/thread_support=false`), so it
+  runs on any static host without cross-origin isolation headers. Browsers
+  can't use ENet, so the main menu hides PLAY ONLINE (and QUIT) on web.
