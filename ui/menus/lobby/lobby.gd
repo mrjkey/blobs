@@ -790,7 +790,11 @@ func _refresh_players() -> void:
 	%GameName.text = info.title
 	var rules: Array[String] = []
 	for key in info.options:
-		rules.append(GameSettings.choice_label(key))
+		var o := GameSettings.option(key)
+		if o.default_id != "normal": # the game's main choice (track, time, level): its value says it all
+			rules.append(GameSettings.choice_label(key))
+		elif GameSettings.choice(key) != "normal": # a tuning knob: only when changed, with its name
+			rules.append("%s %s" % [o.label, GameSettings.choice_label(key)])
 	if info.bots:
 		rules.append("CPU " + GameSettings.choice_label("cpu_level"))
 	%Rules.text = "   ·   ".join(rules)
