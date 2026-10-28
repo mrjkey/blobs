@@ -34,9 +34,9 @@ var glow := false:
 		_save()
 
 ## The visual theme picked in SETTINGS (a key of THEMES). Saved between runs.
-var theme_name := "neon":
+var theme_name := "classic":
 	set(value):
-		theme_name = value if THEMES.has(value) else "neon"
+		theme_name = value if THEMES.has(value) else "classic"
 		_theme = null
 		_save()
 		theme_changed.emit()
@@ -82,7 +82,7 @@ func _ready() -> void:
 		player_name = cfg.get_value("online", "name", "")
 		recent_hosts = cfg.get_value("online", "recent", [])
 		glow = cfg.get_value("video", "glow", false)
-		theme_name = cfg.get_value("video", "theme", "neon")
+		theme_name = cfg.get_value("video", "theme", "classic")
 	if player_name.strip_edges() == "":
 		player_name = computer_name()
 

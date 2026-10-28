@@ -47,7 +47,7 @@ Bumper Blobs $VERSION
 ## Downloads
 - **Windows**: \`BumperBlobs-$VERSION-windows.zip\`. Unzip and run \`BumperBlobs.exe\`. Windows may warn that the app is unrecognised: More info, then Run anyway.
 - **Linux**: \`BumperBlobs-$VERSION-linux.zip\`. Unzip and run \`./BumperBlobs.x86_64\` (\`chmod +x\` it if your unzip tool dropped the permission).
-- **Web**: \`BumperBlobs-$VERSION-web.zip\`. Upload the files to any static web host (itch.io as an HTML game, GitHub Pages, ...), or try it locally with \`python3 -m http.server\` in the unzipped folder and open http://localhost:8000. It has to be served over http; opening \`index.html\` as a file doesn't work.
+- **Web**: \`BumperBlobs-$VERSION-web.zip\`. On itch.io: upload the zip as an HTML game ("This file will be played in the browser"), viewport 1440 x 1000 or smaller, and tick "SharedArrayBuffer support": the game uses threads, which browsers only allow with it. Other hosts have to send the \`Cross-Origin-Opener-Policy: same-origin\` and \`Cross-Origin-Embedder-Policy: require-corp\` headers (\`tools/serve_web.py\` does, for testing). Opening \`index.html\` as a file doesn't work.
 
 Online play (PLAY ONLINE) is in the Windows and Linux builds only: browsers can't open the network connections it uses.
 EOF

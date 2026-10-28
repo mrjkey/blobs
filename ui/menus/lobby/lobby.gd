@@ -73,7 +73,6 @@ var view := View.GAME
 var players := {}
 var lineup: Array = [] # per card: the PlayerSlot that plays there, or null (free); from _make_lineup()
 var _row := 0 # the focused row in GAME
-var _came_from_players := false # PLAYERS was shown: B in GAME goes back there
 var _joins := 0
 var _keyboard_home := {} # computer -> the half its lone keyboard player joined with
 var _hold := {} # {key, half, t} while a second keyboard player holds their confirm key
@@ -105,7 +104,6 @@ func _ready() -> void:
 		Net.send(1, "lobby_hello")
 	elif _restore():
 		view = View.PLAYERS
-		_came_from_players = true
 	if Net.is_host():
 		Net.set_status("")
 		_addresses = LanDiscovery.lan_addresses()
@@ -209,10 +207,12 @@ func _act_game(action: String) -> void:
 				(list[_row] as OptionRow).step(step) # _on_row_changed does the rest
 		"confirm":
 			_show(View.PLAYERS)
-		"back", "rules":
-			if action == "back" and Net.is_host() and not _has_players(Net.my_id()):
+		"rules":
+			_show(View.PLAYERS)
+		"back":
+			if Net.is_host() and not _has_players(Net.my_id()):
 				_back_out()
-			elif _came_from_players or not players.is_empty():
+			elif not players.is_empty():
 				_show(View.PLAYERS)
 			else:
 				get_tree().change_scene_to_file(main_menu_path)
@@ -314,8 +314,6 @@ func _act_client(device: String, action: String) -> void:
 
 func _show(next: View) -> void:
 	view = next
-	if next == View.PLAYERS:
-		_came_from_players = true
 	Sfx.play("pop", 1.0)
 
 
@@ -764,7 +762,7 @@ func _refresh_game() -> void:
 	else:
 		%Help.text = "Join, pick your %s, and get ready." % ("team" if not info.teams.is_empty() else "colour")
 	var mine := _has_players(Net.my_id())
-	var back := "Back to players" if _came_from_players or not players.is_empty() else "Main menu"
+	var back := "Back to players" if not players.is_empty() else "Main menu"
 	if Net.is_client() and not mine:
 		back = "Leave game"
 	elif Net.is_host() and not mine:
@@ -1038,8 +1036,6 @@ func _apply_state(state: Dictionary) -> void:
 	if host_view != _host_view:
 		_host_view = host_view
 		view = View.PLAYERS if host_view == View.PLAYERS else View.GAME
-		if view == View.PLAYERS:
-			_came_from_players = true
 	_synced = true
 	if new_mode:
 		_build_rows()

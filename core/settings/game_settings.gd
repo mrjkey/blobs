@@ -20,7 +20,7 @@ extends RefCounted
 ## those marked `local` (how things look on this screen, like the energy bar).
 
 const OPTIONS := [
-	{key = "theme", label = "THEME", default_id = "neon", only = "menu", group = "LOOK", choices = [
+	{key = "theme", label = "THEME", default_id = "classic", only = "menu", group = "LOOK", choices = [
 		["neon", "NEON", "Glowing colours on a dark grid that pulses with the music."],
 		["classic", "CLASSIC", "Plain, solid colours with drop shadows."],
 	]},

@@ -44,10 +44,10 @@ gets it; with two, one each.
 
 ## Themes
 Everything can be drawn in more than one style; pick one in the main menu.
-- **Neon** (default): glowing outlines, a warping background grid that ripples on hits,
+- **Neon**: glowing outlines, a warping background grid that ripples on hits,
   motion trails, a camera that thumps on the beat. With GLOW on, anything drawn brighter
   than 1.0 blooms (needs the Forward+ or Mobile renderer).
-- **Classic**: flat, solid shapes with drop shadows and cartoon eyes.
+- **Classic** (default): flat, solid shapes with drop shadows and cartoon eyes.
 
 Every element has one drawing; a theme only changes its style and colours.
 

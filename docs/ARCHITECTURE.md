@@ -433,6 +433,11 @@ make release VERSION=v0.2.0   # build, zip and publish a GitHub release
   notes list the commits since the last release (`NOTES=file.md` for your own).
 - The version is stamped into the build copy's `project.godot`
   (`application/config/version`, also the Windows file version), not the real one.
-- The web build is single-threaded (`variant/thread_support=false`), so it
-  runs on any static host without cross-origin isolation headers. Browsers
-  can't use ENet, so the main menu hides PLAY ONLINE (and QUIT) on web.
+- The web build needs threads (`variant/thread_support=true`): `Techno`
+  renders the music on a worker thread, and without threads there's no music.
+  Browsers only allow threads on cross-origin isolated pages, so the host must
+  send `Cross-Origin-Opener-Policy: same-origin` and
+  `Cross-Origin-Embedder-Policy: require-corp`. On itch.io, tick
+  "SharedArrayBuffer support" in the embed options; `make serve`
+  (`tools/serve_web.py`) sends them locally.
+- Browsers can't use ENet, so the main menu hides PLAY ONLINE (and QUIT) on web.

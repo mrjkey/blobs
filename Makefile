@@ -22,7 +22,7 @@ linux windows web:
 
 serve:
 	@test -f "$(OUT)/web/index.html" || { echo "No web build: run make web first"; exit 1; }
-	python3 -m http.server $(PORT) --bind 127.0.0.1 --directory "$(OUT)/web"
+	python3 tools/serve_web.py "$(OUT)/web" $(PORT)
 
 package:
 	@test -n "$(VERSION)" || { echo "Usage: make package VERSION=v0.2.0"; exit 1; }
