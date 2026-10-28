@@ -12,3 +12,7 @@ max_slots = 4
 default_slots = 4
 teams = PackedStringArray("BLUE", "RED")
 options = PackedStringArray("football_time", "football_goals")
+goal = "Push the ball into the other team's goal. The first team to the goal count wins, or the one ahead when time runs out."
+move_texts = {
+"push": ["KICK", "Blast the ball (and anyone near) away from you"]
+}

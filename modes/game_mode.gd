@@ -6,7 +6,7 @@ extends Node2D
 ## _new_brain(), starts its hazards in _on_play_started() and stops them in
 ## _on_round_over(). Whatever knocks a blob out (an arena, a laser) just calls
 ## `blob.die()`; the mode hears it through `Blob.died`. START or ESC pauses
-## (PauseMenu: resume, restart, quit); R restarts at once on the keyboard.
+## (PauseMenu: resume, how to play, restart, quit); R restarts at once on the keyboard.
 ##
 ## Who plays comes from the lobby (Session.lineup). Started on its own (F6),
 ## a mode makes the default lineup from `info`: P1 on the keyboard, a
@@ -92,7 +92,18 @@ func pause() -> void:
 	add_child(menu)
 	menu.restart_requested.connect(restart)
 	menu.quit_requested.connect(leave)
+	if info != null:
+		menu.how_to(info, info.move_rules(), _my_keyboards())
 	menu.open(state == State.OVER, "QUIT TO LOBBY" if from_lobby() else "QUIT TO MENU", not Net.is_online(), not Net.is_client())
+
+
+## The keys of the players on this computer's keyboard (the pause menu's HOW TO PLAY).
+func _my_keyboards() -> Array[InputProfile]:
+	var out: Array[InputProfile] = []
+	for s in slots:
+		if s.human and s.peer == Net.my_id() and not s.profile.push.is_empty() and not out.has(s.profile):
+			out.append(s.profile)
+	return out
 
 
 ## Online, on the host, everyone restarts (NetGame tells the others to load the game again).

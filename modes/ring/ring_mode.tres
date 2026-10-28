@@ -10,3 +10,5 @@ scene = "res://modes/ring/ring.tscn"
 min_slots = 2
 max_slots = 4
 default_slots = 2
+goal = "Push the others out of the ring. The last blob in wins."
+tips = PackedStringArray("Food makes you bigger, and harder to push.")

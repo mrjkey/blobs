@@ -17,7 +17,7 @@ in `themes/` (see Themes below).
 | `level/` | What the level is made of. `arenas/` (`box_room/`, `ring/`, `track/`, `pitch/`: the floors and walls a mode plays on, with their own rules like ring-out, the kill lasers or goals), `obstacles/` (`WallBlock`, `Bumper`), `pickups/` (`food/`: `Food`, `FoodSpawner`; `health/`: `BeltPickup`, `HealthItem`, `PowerUp` for Don't Get Fat!), `maps/` (hand-made levels: `Map`, `SpawnPoint`, `FoodSpot`, `FinishLine`, `Gate`, `BeltSign`, `RushZone`, and one folder per map) |
 | `themes/` | `GameTheme`, `ThemeStyle`, `ThemeBackdrop`, `ThemeSkin` (rare overrides); one folder per theme (`classic/`, `neon/`) with its `.tres`, HUD style, menu style and backdrop |
 | `modes/` | One folder per game mode (`treadmill/`, `ring/`, `football/`, `dont_get_fat/`): the scene that composes components, the round rules (`GameMode` subclasses) and its `ModeInfo`. Also `PlayerSlot` (one seat of a lineup) |
-| `ui/` | `menus/` (`MenuFrame`: the theme's menu look, background and stick steps, first in every menu; `StickRepeat`; main menu, `lobby/` (game and player select, `GameTabs`, `LobbyCard`), settings, `online/` (PLAY ONLINE: host, join, recent games), `pause/` (`PauseMenu`); `options/`: `OptionList`, `OptionRow`, shared by the settings screen, the lobby's GAME list and the lab; `prompts/`: `ButtonGlyph`, `PromptBar`, button prompts drawn as glyphs), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`, the F3 network overlay) |
+| `ui/` | `menus/` (`MenuFrame`: the theme's menu look, background and stick steps, first in every menu; `StickRepeat`; main menu, `lobby/` (game and player select, `GameTabs`, `LobbyCard`), settings, `online/` (PLAY ONLINE: host, join, recent games), `pause/` (`PauseMenu`), `how_to/` (`HowToPlay`: a game's moves and their buttons); `options/`: `OptionList`, `OptionRow`, shared by the settings screen, the lobby's GAME list and the lab; `prompts/`: `ButtonGlyph`, `PromptBar`, button prompts drawn as glyphs), `hud/` (`Hud`, `EnergyHud`, `ScoreBar`, the F3 network overlay) |
 | `sandbox/` | Test bench scene for trying components, its props, and `lab/` (the Tab menu) |
 | `docs/` | This file; `ONLINE.md` (playing on several computers), `STATIC_LEVELS.md` (maps), `DONT_GET_FAT.md` (the co-op mode), `IDEAS.md` |
 | `addons/`, `tools/` | Live-reload plumbing (see CLAUDE.md); `tools/export_builds.sh` builds the Windows and Linux versions; `tools/net_test.sh` tests online play headless; `tools/bake_track.gd` bakes a generated treadmill track into a map; `tools/make_fat_levels.py` lays out Don't Get Fat!'s levels (DONT_GET_FAT.md) |
@@ -105,8 +105,10 @@ a colour index into `GameTheme.palette()`.
   only ever change their own panel (their team in a team mode, else their
   colour; ready; leave). Computers fill the seats nobody joined up to
   PLAYERS (not in a mode whose `ModeInfo` has `bots` off: someone has to
-  join). Once everyone is ready a READY banner shows and the next confirm
-  starts. The last game picked is kept in `Session.next_mode`; the lobby
+  join). Once everyone is ready the HOW TO PLAY page shows (`HowToPlay`: the
+  game's goal, a card per move with a looping picture and its keys and
+  controller button, tips) and the next confirm starts; the pause menu's HOW
+  TO PLAY shows it again. The last game picked is kept in `Session.next_mode`; the lobby
   writes `Session.lineup` + `Session.lineup_mode` and starts the mode.
   Quitting from the game's pause menu comes back to PLAYERS with the same people.
 - **Online.** PLAY ONLINE hosts or joins (`Net`); the host's lobby is the
@@ -367,7 +369,9 @@ that extends `GameMode`: place one blob per slot in `_spawn_blobs()` with
 hazards on in `_on_play_started()` and off in `_on_round_over()`, override
 `_check_round_over()` for other win rules. Add a `ModeInfo` `.tres` (set it as
 the scene's `info`) and add it to the lobby's `modes` (`ui/menus/lobby/lobby.tscn`).
-Team modes set `teams` in it; match rules go in `options`. See `modes/ring/`
+Team modes set `teams` in it; match rules go in `options`. For HOW TO PLAY give it a
+`goal` and `tips`, `moves` if the mode gives its blobs its own `MoveRules`, and
+`move_texts` for a move that's named or works differently there (football's KICK). See `modes/ring/`
 (every blob for itself) and `modes/football/` (teams, a ball, a clock).
 
 ## Working with the editor open

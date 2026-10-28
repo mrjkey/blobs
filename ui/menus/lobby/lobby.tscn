@@ -16,6 +16,7 @@
 [ext_resource type="Script" path="res://ui/menus/prompts/prompt_bar.gd" id="14_prompts"]
 [ext_resource type="Script" path="res://ui/menus/menu_frame.gd" id="15_frame"]
 [ext_resource type="Script" path="res://ui/menus/lobby/game_tabs.gd" id="16_tabs"]
+[ext_resource type="Script" path="res://ui/menus/how_to/how_to_play.gd" id="17_howto"]
 
 [node name="Lobby" type="Control"]
 layout_mode = 3
@@ -143,50 +144,20 @@ layout_mode = 2
 theme_type_variation = &"SubtitleLabel"
 horizontal_alignment = 1
 
-[node name="Banner" type="Panel" parent="Players"]
+[node name="HowTo" type="Control" parent="Players"]
 unique_name_in_owner = true
 visible = false
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_top = -40.0
-offset_bottom = 70.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_type_variation = &"BannerPanel"
-
-[node name="Row" type="HBoxContainer" parent="Players/Banner"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 68.0
+offset_right = -40.0
+offset_bottom = -76.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
-theme_override_constants/separation = 40
-alignment = 1
-
-[node name="Ready" type="Label" parent="Players/Banner/Row"]
-layout_mode = 2
-theme_type_variation = &"TitleLabel"
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 72
-text = "READY!"
-vertical_alignment = 1
-
-[node name="BannerPrompt" type="Control" parent="Players/Banner/Row"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(440, 0)
-layout_mode = 2
-mouse_filter = 2
-script = ExtResource("14_prompts")
-glyph_height = 40.0
-font_size = 28
-text_color = Color(1, 1, 1, 1)
-align = 0
+script = ExtResource("17_howto")
 
 [node name="Legend" type="Control" parent="Players"]
 unique_name_in_owner = true

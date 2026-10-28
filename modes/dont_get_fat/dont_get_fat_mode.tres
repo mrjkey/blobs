@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="ModeInfo" format=3]
 
 [ext_resource type="Script" path="res://modes/mode_info.gd" id="1_info"]
+[ext_resource type="Resource" path="res://modes/dont_get_fat/fat_moves.tres" id="2_moves"]
 
 [resource]
 script = ExtResource("1_info")
@@ -13,3 +14,9 @@ default_slots = 1
 options = PackedStringArray("fat_level")
 bots = false
 theme = "classic"
+goal = "Work together: catch good food for your buddy, keep the junk away, and get it through the door at the right weight."
+moves = ExtResource("2_moves")
+move_texts = {
+"slash": ["SWAT", "Knock junk food off the belt"]
+}
+tips = PackedStringArray("Don't get shoved into the laser at the bottom.")

@@ -12,3 +12,5 @@ max_slots = 4
 default_slots = 4
 options = PackedStringArray("track_map", "track_speed", "blob_speed", "track_view", "food", "shrink", "spit_mass", "laser_mass")
 mass_loss = true
+goal = "The belt keeps climbing: keep up. Fall behind the bottom laser, or past the top one, and you're out."
+tips = PackedStringArray("Eat food to grow, but don't get too big for the gaps.")

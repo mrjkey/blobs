@@ -12,6 +12,11 @@ extends Resource
 ## for the mode (match length and the like). A mode without `bots` is for
 ## humans only: the lobby never fills a seat with a computer. A mode with a
 ## `theme` always plays in that look, whatever the THEME setting says.
+##
+## The HOW TO PLAY page (HowToPlay: the lobby once everyone's ready, and the
+## pause menu) shows `goal`, a card for each move blobs have here (`moves`,
+## or the player's settings), named and explained as `move_texts` says, and
+## `tips`.
 
 const MAX_SLOTS := 4
 
@@ -27,6 +32,19 @@ const MAX_SLOTS := 4
 @export var bots := true # computers can take seats; false = humans only (co-op modes)
 @export var theme := "" # a key of Session.THEMES this mode always plays in (e.g. "classic"); "" = the player's pick
 @export var mass_loss := false # blobs shrink over time, pay mass for spit and lasers, and pop when too small (Blob.loses_mass)
+
+@export_group("How to play")
+@export_multiline var goal := "" # how to win, a sentence or two; "" = the subtitle
+@export var tips := PackedStringArray() # short lines under the moves
+@export var moves: MoveRules # the moves this game always has (the mode gives them to its blobs); null = the player's settings
+## A move's name and what it does in this game, when it isn't the usual
+## (HowToPlay.MOVES), e.g. {"push": ["KICK", "Blast the ball away"]}.
+@export var move_texts := {}
+
+
+## The moves blobs have in this game: its own, or the player's settings.
+func move_rules() -> MoveRules:
+	return moves if moves != null else GameSettings.rules()
 
 
 ## The team of the seat with index `seat` (0..3), or -1 in a mode without teams.

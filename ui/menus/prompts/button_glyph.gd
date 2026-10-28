@@ -6,6 +6,7 @@ extends RefCounted
 ##   "key:SPACE"           a keyboard key, as a keycap
 ##   "pill:START"          a named gamepad button (START, LB...), as a pill
 ##   "lr", "ud"            left/right or up/down (d-pad, stick or arrows), as triangles
+##   "stick"               a gamepad's left stick, as a ring with the stick's top in it
 ## draw() paints one with its left edge at `at` (vertically centred) and
 ## returns its width; width() only measures. Keycaps, pills and arrows take
 ## the menu theme's ButtonGlyph colours (key_fill, key_edge, key_text,
@@ -32,6 +33,8 @@ static func width(font: Font, glyph: String, h: float) -> float:
 		return h
 	if glyph == "lr" or glyph == "ud":
 		return h * 1.25
+	if glyph == "stick":
+		return h
 	var text := glyph.get_slice(":", 1)
 	return maxf(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(h)).x + h * 0.6, h)
 
@@ -49,6 +52,10 @@ static func draw(ci: CanvasItem, font: Font, at: Vector2, glyph: String, h: floa
 			var back := (Vector2(-side, 0.0) if glyph == "lr" else Vector2(0.0, -side)) * s * 1.6
 			var across := Vector2(0.0, s) if glyph == "lr" else Vector2(s, 0.0)
 			ci.draw_colored_polygon(PackedVector2Array([tip, tip + back - across, tip + back + across]), _color(ci, "arrow"))
+	elif glyph == "stick":
+		ci.draw_circle(c, h * 0.5, _color(ci, "pill_fill"))
+		ci.draw_circle(c, h * 0.3, _color(ci, "key_fill"))
+		ci.draw_arc(c, h * 0.3, 0.0, TAU, 24, _color(ci, "key_edge"), 2.0, true)
 	else:
 		var rect := Rect2(at - Vector2(0.0, h * 0.5), Vector2(w, h))
 		var pill := glyph.begins_with("pill:")

@@ -18,7 +18,7 @@ extends GameMode
 ## (FatRules) drops workouts, beds, water, food and treats onto the belt at a
 ## steady pace, and some cards drop more. While the buddy is in the Bull's-eye
 ## the blobs are faster (in the zone).
-## Blobs can move, dash and swat (`move_rules`); a swat knocks junk off the
+## Blobs can move, dash and swat (the ModeInfo's `moves`); a swat knocks junk off the
 ## belt. They stay in the helpers' zone (BeltBounds), whose bottom edge is a
 ## laser while the belt runs: running into it just bumps a blob back, but a
 ## wall that shoves one through it pops it, and it comes back RESPAWN_TIME
@@ -52,7 +52,6 @@ const FAIL_COLOR := Color(1.0, 0.35, 0.3)
 @export var camera: GameCamera
 @export var bounds: BeltBounds
 @export var buddy: Buddy
-@export var move_rules: MoveRules = preload("res://modes/dont_get_fat/fat_moves.tres")
 @export_file("*.tscn") var map_path := "" # a level to play on its own instead of the lobby's LEVEL pick
 
 var map: Map
@@ -193,7 +192,7 @@ func _spawn_blobs() -> void:
 func _add_blob(i: int, at: Vector2) -> Blob:
 	var b := spawn_slot(i, at)
 	_slot_of[b] = i
-	b.rules = move_rules
+	b.rules = info.move_rules()
 	b.body.look = Vector2.UP
 	b.slashed.connect(_on_slash)
 	if FatRun.count("small_blob") > 0:

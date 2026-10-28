@@ -15,8 +15,9 @@ extends Control
 ## keyboard player has every key; a second one joins by holding the other
 ## half's confirm key (SPACE: WASD + ESC, ENTER: arrows + BACKSPACE). Y or R
 ## opens GAME again, START or TAB plays right away (just computers if
-## nobody joined). Once every player is ready a READY banner shows and the
-## next A (or START) starts the game.
+## nobody joined). Once every player is ready the HOW TO PLAY page shows
+## (HowToPlay: the game's moves and their buttons) and the next A (or START)
+## starts the game; B un-readies.
 ##
 ## Every button means the same thing in both views. The lobby writes
 ## Session.lineup + Session.lineup_mode and starts the mode; back from the
@@ -255,7 +256,7 @@ func _act_players(peer: int, device: String, action: String) -> void:
 				_step_choice(p.slot, 1 if action == "right" else -1)
 				Sfx.play("pop", 1.2)
 		"confirm":
-			if _banner_up() or (not local and _can_start()):
+			if _how_to_up() or (not local and _can_start()):
 				_start()
 			elif not p.ready:
 				p.ready = true
@@ -574,7 +575,8 @@ func _can_start() -> bool:
 	return _all_ready() and _problem() == ""
 
 
-func _banner_up() -> bool:
+## Everyone's ready: the HOW TO PLAY page is up, and the next confirm starts.
+func _how_to_up() -> bool:
 	return view == View.PLAYERS and _can_start()
 
 
@@ -797,9 +799,12 @@ func _refresh_players() -> void:
 	%RulesPrompt.prompts = [[["y", "key:R"], "Game & rules"]]
 	_refresh_cards()
 	var all_ready := _all_ready()
-	%Banner.visible = _banner_up()
-	%BannerPrompt.prompts = [[_confirm_glyphs() + ["pill:START"], "to play"]]
-	var status := _message if not %Banner.visible else ""
+	var how_to: HowToPlay = %HowTo
+	how_to.visible = _how_to_up()
+	if how_to.visible:
+		how_to.show_game(info, info.move_rules(), _my_keyboards())
+		how_to.prompts = [[_my_glyphs("confirm") + ["pill:START"], "Play"], [_my_glyphs("back"), "Not ready"]]
+	var status := _message if not how_to.visible else ""
 	if status == "" and Net.is_client() and not _synced:
 		status = "Getting the lobby from %s..." % Net.host_name
 	if status == "" and Net.is_client() and Net.host_status != "":
@@ -905,15 +910,26 @@ func _join_glyphs() -> Array:
 	return ["a"] if _has_keyboard_player(Net.my_id()) else JOIN_GLYPHS
 
 
-## What confirms for everyone who joined here (the READY banner); everyone's if nobody did.
-func _confirm_glyphs() -> Array:
+## The keys of this computer's keyboard players, for HOW TO PLAY (none: the page shows the whole keyboard's).
+func _my_keyboards() -> Array[InputProfile]:
+	var out: Array[InputProfile] = []
+	for half: String in ["keys", "keys_left", "keys_right"]:
+		for p: Dictionary in players.values():
+			if p.peer == Net.my_id() and p.device == half:
+				out.append({"keys": PlayerSlot.KEYS_ALL, "keys_left": PlayerSlot.KEYS_LEFT}.get(half, PlayerSlot.KEYS_RIGHT))
+				break
+	return out
+
+
+## What does `action` ("confirm", "back") for everyone who joined here (HOW TO PLAY's prompts); everyone's if nobody did.
+func _my_glyphs(action: String) -> Array:
 	var out: Array = []
 	var mine := _has_players(Net.my_id())
 	for d: String in players:
 		var p: Dictionary = players[d]
 		if mine and p.peer != Net.my_id():
 			continue
-		for g in _glyphs(p.peer, p.device, "confirm"):
+		for g in _glyphs(p.peer, p.device, action):
 			if not out.has(g):
 				out.append(g)
 	out.sort()

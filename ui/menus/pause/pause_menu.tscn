@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://ui/menus/pause/pause_menu.gd" id="1_menu"]
 [ext_resource type="Theme" path="res://themes/neon/menu_theme.tres" id="2_theme"]
 [ext_resource type="Script" path="res://ui/menus/menu_frame.gd" id="9_frame"]
+[ext_resource type="Script" path="res://ui/menus/how_to/how_to_play.gd" id="10_how_to"]
 
 [node name="PauseMenu" type="CanvasLayer"]
 process_mode = 3
@@ -67,6 +68,12 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "RESUME"
 
+[node name="HowToButton" type="Button" parent="Root/Center/Panel/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "HOW TO PLAY"
+
 [node name="RestartButton" type="Button" parent="Root/Center/Panel/Column"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -83,6 +90,22 @@ theme_type_variation = &"HintLabel"
 text = "W/S, arrows or D-pad to choose     Space, Enter or A to pick     Esc, B or Start to resume"
 horizontal_alignment = 1
 
+[node name="HowTo" type="Control" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 40.0
+offset_right = -40.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("10_how_to")
+
 [connection signal="pressed" from="Root/Center/Panel/Column/ResumeButton" to="." method="_on_resume_button_pressed"]
+[connection signal="pressed" from="Root/Center/Panel/Column/HowToButton" to="." method="_on_how_to_button_pressed"]
 [connection signal="pressed" from="Root/Center/Panel/Column/RestartButton" to="." method="_on_restart_button_pressed"]
 [connection signal="pressed" from="Root/Center/Panel/Column/QuitButton" to="." method="_on_quit_button_pressed"]
